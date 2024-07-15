@@ -8,8 +8,26 @@ from fastapi import FastAPI, HTTPException
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from collections import defaultdict
+from bs4 import BeautifulSoup
+import re
+
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 
 load_dotenv()
+
+chrome_options = Options()
+chrome_options.add_argument('--headless')
+chrome_options.add_argument('--no-sandbox')
+chrome_options.add_argument('--disable-dev-shm-usage')
+
+service = Service(ChromeDriverManager().install())
+driver = webdriver.Chrome(service=service, options=chrome_options)
+
+
 
 NAVER_API_HEADERS = {
     'X-Naver-Client-Id': os.getenv('NAVER_API_CLIENT_ID'),
@@ -43,7 +61,24 @@ def get_clova_summary_result(content, tone=0, summary_count=1):
             "summaryCount": summary_count
         }
     }
-    return requests.post(CLOVA_SUMMARY_API_ENDPOINT, headers=CLOVA_API_HEADERS, data=json.dumps(data))
+
+    try:
+        response = requests.post(CLOVA_SUMMARY_API_ENDPOINT, headers=CLOVA_API_HEADERS, data=json.dumps(data))
+        response.raise_for_status()
+        return response.json()['summary']
+    except requests.exceptions.HTTPError as http_err:
+        print(f"HTTP error occurred: {http_err}")  # HTTP 에러 출력
+        print(f"Response content: {response.content.decode()}")  # 응답 본문 출력
+        return None
+    except Exception as err:
+        print(f"Other error occurred: {err}")  # 기타 에러 출력
+
+
+
+def get_suggestions(query):
+    suggestions_api_url = f"http://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q={query}&hl=ko"
+    suggestions_response = requests.get(suggestions_api_url)
+    return suggestions_response.json()[1]
 
 
 app = FastAPI()
@@ -78,20 +113,25 @@ def get_timeline_preview(q: str):
 
 @app.get("/today-issue-summary")
 def get_today_issue_summary(q: str):
-    naver_news_response = get_naver_news(q, display=30, sort='date')
-    news_items = naver_news_response.json().get('items', [])
-    news_items = [news_item for news_item in news_items if
-                  datetime.strptime(news_item['pubDate'], "%a, %d %b %Y %H:%M:%S %z").date() == datetime.now().date()]
-    target_summary_data = ""
+    issue_summary = []
 
-    for news_item in news_items:
-        target_summary_data += news_item['title'] + '\n'
-    print(target_summary_data)
-    summary_result_response = get_clova_summary_result(target_summary_data, tone=1, summary_count=3)
-    if not summary_result_response.ok:
-        raise HTTPException(500)
+    suggestions = get_suggestions(q)
 
-    return summary_result_response.json()['summary']
+    for suggestion in suggestions:
+        naver_news_response = get_naver_news(suggestion, display=1, sort='sim')
+        if naver_news_response.status_code != 200:
+            raise HTTPException(status_code=500, detail="NEWS API 호출 오류")
+
+        news_items = naver_news_response.json().get('items', [])
+        news_items = [news_item for news_item in news_items if
+                      news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
+        for news_item in news_items:
+            driver.get(news_item['link'])
+            article_body = driver.find_element(By.ID, "dic_area").text
+            issue_summary.append(get_clova_summary_result(article_body[:400], tone=0, summary_count=1))
+
+    return issue_summary
+
 
 
 uvicorn.run(app, host='0.0.0.0', port=8000)
