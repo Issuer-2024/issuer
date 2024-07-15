@@ -38,6 +38,8 @@ def get_timeline_preview(q: str):
 
     news_items = naver_news_response.json().get('items', [])
 
+    news_items = [news_item for news_item in news_items if news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
+
     for news_item in news_items:
         timeline_data_item = TimelineDataItem(
             title=news_item['title'],
