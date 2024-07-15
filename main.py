@@ -4,7 +4,8 @@ from datetime import datetime, timedelta
 
 import requests
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from collections import defaultdict
@@ -15,6 +16,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from starlette.responses import HTMLResponse
+from starlette.templating import Jinja2Templates
 from webdriver_manager.chrome import ChromeDriverManager
 
 load_dotenv()
@@ -27,7 +30,9 @@ chrome_options.add_argument('--disable-dev-shm-usage')
 service = Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=service, options=chrome_options)
 
-
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
 
 NAVER_API_HEADERS = {
     'X-Naver-Client-Id': os.getenv('NAVER_API_CLIENT_ID'),
@@ -81,8 +86,6 @@ def get_suggestions(query):
     return suggestions_response.json()[1]
 
 
-app = FastAPI()
-
 
 @app.get("/timeline")
 def get_timeline_preview(q: str):
@@ -111,7 +114,6 @@ def get_timeline_preview(q: str):
     return timeline_data
 
 
-@app.get("/today-issue-summary")
 def get_today_issue_summary(q: str):
     issue_summary = []
 
@@ -132,6 +134,16 @@ def get_today_issue_summary(q: str):
 
     return issue_summary
 
+@app.get("/")
+async def render_main(request: Request):
+    return templates.TemplateResponse(
+        request=request, name="index.html"
+    )
 
+@app.get("/report")
+def render_report(q: str, request: Request):
+    return templates.TemplateResponse(
+        request=request, name="report.html", context={"issue_summary": get_today_issue_summary(q)}
+    )
 
 uvicorn.run(app, host='0.0.0.0', port=8000)
