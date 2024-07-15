@@ -51,7 +51,11 @@ def get_timeline_preview(q: str):
 
 @app.get("/today-issue-summary")
 def get_today_issue_summary(q: str):
-    pass
+    naver_news_response = get_naver_news(q, display=100, sort='date')
+    news_items = naver_news_response.json().get('items', [])
+    news_items = [news_item for news_item in news_items if datetime.strptime(news_item['pubDate'], "%a, %d %b %Y %H:%M:%S %z").date() == datetime.now().date()]
+    target_summary_data = ""
+
 
 
 uvicorn.run(app, host='0.0.0.0', port=8000)
