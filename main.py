@@ -106,28 +106,24 @@ def get_today_issue_summary(q: str):
 
     return issue_summary
 
-def get_trend_searh_data(time_unit: str, keyword_groups: list):
+def get_trend_searh_data(start_date: str, end_date: str, time_unit: str, keyword_groups: list):
     # 구간단위 - date, week, month
     # group data => groupName, keywords:list
+    # 날짜 형식 yyyy-mm-dd
     naver_trend_search_api_endpoint = "https://openapi.naver.com/v1/datalab/search"
 
     request_body = {
-        "startDate": "2023-01-01",
-        "endDate": "2023-06-30",
-        "timeUnit": "month",
-        "keywordGroups": [
-            {
-                "groupName": "여행 관련 키워드",
-                "keywords": ["여행", "비행기", "호텔"]
-            }
-        ]
+        "startDate": start_date,
+        "endDate": end_date,
+        "timeUnit": time_unit,
+        "keywordGroups": keyword_groups
     }
 
     try:
         response = requests.post(naver_trend_search_api_endpoint, headers=NAVER_API_HEADERS,
                                  data=json.dumps(request_body))
         response.raise_for_status()
-        return response.json()['summary']
+        return response.json()['results'][0]['data']
     except requests.exceptions.HTTPError as http_err:
         print(f"HTTP error occurred: {http_err}")  # HTTP 에러 출력
         print(f"Response content: {response.content.decode()}")  # 응답 본문 출력
@@ -135,8 +131,30 @@ def get_trend_searh_data(time_unit: str, keyword_groups: list):
     except Exception as err:
         print(f"Other error occurred: {err}")  # 기타 에러 출력
 
-def get_trend_variation(time_unit: str, keyword_groups: list):
-    pass
+def get_trend_variation(q: str):
+
+    trend_variation = {"date": 0, "week": 0, "month": 0}
+
+    today = datetime.today()
+    two_months_ago = (today - timedelta(days=60)).replace(day=1)
+    two_months_ago = two_months_ago.strftime('%Y-%m-01')
+    today = today.strftime('%Y-%m-%d')
+
+    keyword_groups = [{'groupName': q, 'keywords': [suggestion for suggestion in get_suggestions(q)]}]
+
+    trend_search_data = get_trend_searh_data(two_months_ago, today, 'date', keyword_groups)
+    daily_variation = (trend_search_data[-1]['ratio'] / trend_search_data[-2]['ratio'] * 100) - 100
+    two_weeks_ago_ratio = sum([entry['ratio'] for entry in trend_search_data[-14:-7]])
+    one_weeks_ago_ratio = sum([entry['ratio'] for entry in trend_search_data[-7:]])
+    weekly_variation = (one_weeks_ago_ratio / two_weeks_ago_ratio * 100) - 100
+
+    two_months_ago_ratio = sum([entry['ratio'] for entry in trend_search_data[-60:30]])
+    one_months_ago_ratio = sum([entry['ratio'] for entry in trend_search_data[-30:]])
+    monthly_variation = (one_months_ago_ratio / two_months_ago_ratio * 100) - 100
+
+    trend_variation['date'], trend_variation['week'], trend_variation['month'] = daily_variation, weekly_variation, monthly_variation
+
+    return trend_variation
 
 @app.get("/")
 async def render_main(request: Request):
@@ -147,7 +165,9 @@ async def render_main(request: Request):
 @app.get("/report")
 def render_report(q: str, request: Request):
     return templates.TemplateResponse(
-        request=request, name="report.html", context={"issue_summary": get_today_issue_summary(q)}
+        request=request, name="report.html", context={"issue_summary": get_today_issue_summary(q),
+                                                      "trend_variation": get_trend_variation(q),
+                                                      }
     )
 
 uvicorn.run(app, host='0.0.0.0', port=8000)
