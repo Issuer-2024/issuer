@@ -91,15 +91,16 @@ def get_today_issue_summary(q: str):
     suggestions = get_suggestions(q)
 
     for suggestion in suggestions:
-        naver_news_response = get_naver_news(suggestion, display=1, sort='sim')
+        naver_news_response = get_naver_news(suggestion, display=100, sort='sim')
         if naver_news_response.status_code != 200:
             raise HTTPException(status_code=500, detail="NEWS API 호출 오류")
 
         news_items = naver_news_response.json().get('items', [])
         news_items = [news_item for news_item in news_items if
                       news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
-        for news_item in news_items:
-            driver.get(news_item['link'])
+
+        if news_items:
+            driver.get(news_items[0]['link'])
             article_body = driver.find_element(By.ID, "dic_area").text
             issue_summary.append(get_clova_summary_result(article_body[:400], tone=0, summary_count=1))
 
