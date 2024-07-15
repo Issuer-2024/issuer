@@ -20,9 +20,11 @@ app = FastAPI()
 @app.get("/timeline")
 def get_timeline_preview(q: str):
 
-    def get_naver_news(query, display, start, sort):
+    def get_naver_news(query, display, start=1, sort='date'):
         naver_news_api_url = f'https://openapi.naver.com/v1/search/news.json?query={query}&display={display}&start={start}&sort={sort}'
         return requests.get(naver_news_api_url, headers=NAVER_API_HEADERS)
+
+
 
     pass
 
