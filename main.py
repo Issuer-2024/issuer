@@ -31,6 +31,7 @@ def get_naver_news(query, display, start=1, sort='date'):
 
 
 def get_clova_summary_result(content, tone=0, summary_count=1):
+    # tone - 0: 원문 어투, 1: 해요체 2: 정중체, 3: 명사형 종결체
     data = {
         "document": {
             "content": content
@@ -77,7 +78,7 @@ def get_timeline_preview(q: str):
 
 @app.get("/today-issue-summary")
 def get_today_issue_summary(q: str):
-    naver_news_response = get_naver_news(q, display=100, sort='date')
+    naver_news_response = get_naver_news(q, display=30, sort='date')
     news_items = naver_news_response.json().get('items', [])
     news_items = [news_item for news_item in news_items if
                   datetime.strptime(news_item['pubDate'], "%a, %d %b %Y %H:%M:%S %z").date() == datetime.now().date()]
@@ -85,6 +86,12 @@ def get_today_issue_summary(q: str):
 
     for news_item in news_items:
         target_summary_data += news_item['title'] + '\n'
+    print(target_summary_data)
+    summary_result_response = get_clova_summary_result(target_summary_data, tone=1, summary_count=3)
+    if not summary_result_response.ok:
+        raise HTTPException(500)
+
+    return summary_result_response.json()['summary']
 
 
 uvicorn.run(app, host='0.0.0.0', port=8000)
