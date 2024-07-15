@@ -16,6 +16,9 @@ NAVER_API_HEADERS = {
 }
 
 
+def get_naver_news(query, display, start=1, sort='date'):
+    naver_news_api_url = f'https://openapi.naver.com/v1/search/news.json?query={query}&display={display}&start={start}&sort={sort}'
+    return requests.get(naver_news_api_url, headers=NAVER_API_HEADERS)
 
 app = FastAPI()
 
@@ -28,10 +31,6 @@ def get_timeline_preview(q: str):
         title: str
         link: str
         pub_date: str
-
-    def get_naver_news(query, display, start=1, sort='date'):
-        naver_news_api_url = f'https://openapi.naver.com/v1/search/news.json?query={query}&display={display}&start={start}&sort={sort}'
-        return requests.get(naver_news_api_url, headers=NAVER_API_HEADERS)
 
     timeline_data = defaultdict(list)
     naver_news_response = get_naver_news(q, display=100, sort='sim')
@@ -50,6 +49,9 @@ def get_timeline_preview(q: str):
         timeline_data[date_parts].append(timeline_data_item)
     return timeline_data
 
+@app.get("/today-issue-summary")
+def get_today_issue_summary(q: str):
+    pass
 
 
 uvicorn.run(app, host='0.0.0.0', port=8000)
