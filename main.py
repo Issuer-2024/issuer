@@ -86,34 +86,6 @@ def get_suggestions(query):
     return suggestions_response.json()[1]
 
 
-
-@app.get("/timeline")
-def get_timeline_preview(q: str):
-    # 각 타임라인에 들어갈 아이템
-    class TimelineDataItem(BaseModel):
-        title: str
-        link: str
-        pub_date: str
-
-    timeline_data = defaultdict(list)
-    naver_news_response = get_naver_news(q, display=100, sort='sim')
-
-    news_items = naver_news_response.json().get('items', [])
-
-    news_items = [news_item for news_item in news_items if
-                  news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
-
-    for news_item in news_items:
-        timeline_data_item = TimelineDataItem(
-            title=news_item['title'],
-            link=news_item['link'],
-            pub_date=news_item['pubDate'],
-        )
-        date_parts = ' '.join(timeline_data_item.pub_date.split(' ')[:3])
-        timeline_data[date_parts].append(timeline_data_item)
-    return timeline_data
-
-
 def get_today_issue_summary(q: str):
     issue_summary = []
 
@@ -133,6 +105,38 @@ def get_today_issue_summary(q: str):
             issue_summary.append(get_clova_summary_result(article_body[:400], tone=0, summary_count=1))
 
     return issue_summary
+
+def get_trend_searh_data(time_unit: str, keyword_groups: list):
+    # 구간단위 - date, week, month
+    # group data => groupName, keywords:list
+    naver_trend_search_api_endpoint = "https://openapi.naver.com/v1/datalab/search"
+
+    request_body = {
+        "startDate": "2023-01-01",
+        "endDate": "2023-06-30",
+        "timeUnit": "month",
+        "keywordGroups": [
+            {
+                "groupName": "여행 관련 키워드",
+                "keywords": ["여행", "비행기", "호텔"]
+            }
+        ]
+    }
+
+    try:
+        response = requests.post(naver_trend_search_api_endpoint, headers=NAVER_API_HEADERS,
+                                 data=json.dumps(request_body))
+        response.raise_for_status()
+        return response.json()['summary']
+    except requests.exceptions.HTTPError as http_err:
+        print(f"HTTP error occurred: {http_err}")  # HTTP 에러 출력
+        print(f"Response content: {response.content.decode()}")  # 응답 본문 출력
+        return None
+    except Exception as err:
+        print(f"Other error occurred: {err}")  # 기타 에러 출력
+
+def get_trend_variation(time_unit: str, keyword_groups: list):
+    pass
 
 @app.get("/")
 async def render_main(request: Request):
