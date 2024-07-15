@@ -79,7 +79,6 @@ def get_clova_summary_result(content, tone=0, summary_count=1):
         print(f"Other error occurred: {err}")  # 기타 에러 출력
 
 
-
 def get_suggestions(query):
     suggestions_api_url = f"http://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q={query}&hl=ko"
     suggestions_response = requests.get(suggestions_api_url)
@@ -106,6 +105,7 @@ def get_today_issue_summary(q: str):
 
     return issue_summary
 
+
 def get_trend_searh_data(start_date: str, end_date: str, time_unit: str, keyword_groups: list):
     # 구간단위 - date, week, month
     # group data => groupName, keywords:list
@@ -131,10 +131,8 @@ def get_trend_searh_data(start_date: str, end_date: str, time_unit: str, keyword
     except Exception as err:
         print(f"Other error occurred: {err}")  # 기타 에러 출력
 
+
 def get_trend_variation(q: str):
-
-    trend_variation = {"date": 0, "week": 0, "month": 0}
-
     today = datetime.today()
     two_months_ago = (today - timedelta(days=60)).replace(day=1)
     two_months_ago = two_months_ago.strftime('%Y-%m-01')
@@ -152,15 +150,36 @@ def get_trend_variation(q: str):
     one_months_ago_ratio = sum([entry['ratio'] for entry in trend_search_data[-30:]])
     monthly_variation = (one_months_ago_ratio / two_months_ago_ratio * 100) - 100
 
-    trend_variation['date'], trend_variation['week'], trend_variation['month'] = daily_variation, weekly_variation, monthly_variation
+    today = datetime.now()
+    yesterday = today - timedelta(days=1)
+    one_weeks_ago = today - timedelta(days=7)
+    one_months_ago = today - timedelta(days=30)
+    today_str = today.strftime('%Y.%m.%d')
+    yesterday_str = yesterday.strftime('%Y.%m.%d')
+    one_weeks_ago_str = one_weeks_ago.strftime('%Y.%m.%d')
+    one_months_ago_str = one_months_ago.strftime('%Y.%m.%d')
+
+    trend_variation = {"date":
+                           {'ratio': daily_variation,
+                            'duration': f"{today_str} ~ {yesterday_str}"},
+                       "week": {
+                           'ratio': weekly_variation,
+                           'duration': f"{today_str} ~ {one_weeks_ago_str}",
+                       },
+                       "month": {
+                           'ratio': monthly_variation,
+                           'duration': f"{today_str} ~ {one_months_ago_str}"
+                       }}
 
     return trend_variation
+
 
 @app.get("/")
 async def render_main(request: Request):
     return templates.TemplateResponse(
         request=request, name="index.html"
     )
+
 
 @app.get("/report")
 def render_report(q: str, request: Request):
@@ -169,5 +188,6 @@ def render_report(q: str, request: Request):
                                                       "trend_variation": get_trend_variation(q),
                                                       }
     )
+
 
 uvicorn.run(app, host='0.0.0.0', port=8000)
