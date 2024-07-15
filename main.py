@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timedelta
 
 import requests
 import uvicorn
@@ -24,7 +25,7 @@ def get_timeline_preview(q: str):
         naver_news_api_url = f'https://openapi.naver.com/v1/search/news.json?query={query}&display={display}&start={start}&sort={sort}'
         return requests.get(naver_news_api_url, headers=NAVER_API_HEADERS)
 
-
+    main_timeline_data = {(datetime.today() - timedelta(days=i)).strftime('%Y-%m-%d'): [] for i in range(7)}
 
     pass
 
