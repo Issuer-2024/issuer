@@ -125,8 +125,8 @@ def get_today_issue_summary(q: str):
             raise HTTPException(status_code=500, detail="NEWS API 호출 오류")
 
         news_items = naver_news_response.json().get('items', [])
-        news_items = [news_item for news_item in news_items if
-                      news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
+        # news_items = [news_item for news_item in news_items if
+        #               news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
 
         for news_item in news_items:
             news_title.append(clean_and_extract_korean_english(news_item['title']))
@@ -228,12 +228,11 @@ def get_trend_variation(q: str):
 
 def get_suggestion_trend(q: str):
     today = datetime.today()
-    two_months_ago = (today - timedelta(days=60)).replace(day=1)
-    two_months_ago = two_months_ago.strftime('%Y-%m-01')
+    one_week_ago = (today - timedelta(days=7)).strftime('%Y-%m-%d')
     today = today.strftime('%Y-%m-%d')
     suggestions = get_suggestions(q)
     keyword_groups = [{'groupName': suggestion, 'keywords': [suggestion]} for suggestion in suggestions[1:6]]
-    return get_trend_searh_data(two_months_ago, today, 'date', keyword_groups)
+    return get_trend_searh_data(one_week_ago, today, 'date', keyword_groups)
 
 
 def get_suggestion_trend_score(trend_data: list):
@@ -244,18 +243,31 @@ def get_suggestion_trend_score(trend_data: list):
 
 
 def get_most_trend_day(trend_data: list):
-    max_ratio_entry = max(trend_data, key=lambda x: x['ratio'])
-    return max_ratio_entry['period']
+    # 'ratio' 필드가 있는 항목만 필터링
+    filtered_trend_data = list(filter(lambda x: 'ratio' in x, trend_data))
+
+    # 필터링된 데이터가 비어 있지 않으면, 최대 ratio 값을 가진 항목을 찾습니다.
+    if filtered_trend_data:
+        max_ratio_entry = max(filtered_trend_data, key=lambda x: x['ratio'])
+        return max_ratio_entry['period']
+    else:
+        return None  # 'ratio' 필드가 있는 항목이 없는 경우 None을 반환합니다.
 
 
 def get_suggestion_entire_data(q: str):
     suggestion_entire_data = []
     suggestion_trend = get_suggestion_trend(q)
 
-    for data in suggestion_trend:  # title, keywords, data
-        tmp = {'keyword': data['title'], 'trend': data['data'], 'score': get_suggestion_trend_score(data['data']),
+    for i, data in enumerate(suggestion_trend):  # title, keywords, data
+        tmp = {'id': i, 'keyword': data['title'], 'trend': data['data'], 'score': get_suggestion_trend_score(data['data']),
                'most_trend_day': get_most_trend_day(data['data'])}
         suggestion_entire_data.append(tmp)
+
+    total_score = sum(item['score'] for item in suggestion_entire_data)
+    for i in range(len(suggestion_entire_data)):
+        suggestion_entire_data[i]['trend_proportion'] = suggestion_entire_data[i]['score'] / total_score * 100
+
+    suggestion_entire_data.sort(key=lambda x: x['score'], reverse=True)
     return suggestion_entire_data
 
 

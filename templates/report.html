@@ -6,6 +6,7 @@
     <title>Table Example</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
         body {
             font-family: 'Noto Sans KR', sans-serif;
@@ -134,10 +135,10 @@
                 <thead>
                     <tr class="bg-green-100 text-gray-800 uppercase text-sm leading-normal">
                         <th class="py-3 px-6 text-left">키워드</th>
+                        <th class="py-3 px-6 text-left">트랜드 비율</th>
                         <th class="py-3 px-6 text-left">이슈 날짜</th>
                         <th class="py-3 px-6 text-left">트랜드</th>
                         <th class="py-3 px-6 text-left">트랜드 점수</th>
-                        <th class="py-3 px-6 text-left">트랜드 비율</th>
                     </tr>
                 </thead>
                 <tbody class="text-gray-600 text-sm font-light">
@@ -145,10 +146,16 @@
                 {% for item in suggestion_trend_data %}
                     <tr class="border-b border-gray-200 hover:bg-gray-100">
                         <td class="py-3 px-6 text-left">{{ item.keyword }}</td>
-                        <td class="py-3 px-6 text-left">{{ item.most_trend_day }}</td>
-                        <td class="py-3 px-6 text-left">{{ item.trend }}</td>
-                        <td class="py-3 px-6 text-left">{{ item.score }}</td>
-                        <td class="py-3 px-6 text-left">33%</td>
+                        <td class="py-3 px-6 text-left">{{ item.trend_proportion | round(2) }}%</td>
+                        <td class="py-3 px-6 text-left">
+                            {{ item.most_trend_day }}
+                        </td>
+                        <td class="py-3 px-6 text-left">
+                            {% with trend=item.trend, chart_id=item.id %}
+                                {% include "main_report_graph.html" %}
+                            {% endwith %}</td>
+                        <td class="py-3 px-6 text-left">{{ item.score | round(2) }}</td>
+
                     </tr>
                 {% endfor %}
                 </tbody>
