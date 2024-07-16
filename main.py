@@ -34,6 +34,7 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
+
 class CompletionExecutor:
     def __init__(self, host, api_key, api_key_primary_val, request_id):
         self._host = host
@@ -54,11 +55,17 @@ class CompletionExecutor:
                                  headers=headers, json=completion_request)
 
         if response.status_code == 200:
-            return response.json()
+            return response.json()['result']['message']['content']
         else:
             response.raise_for_status()
 
-
+def clean_and_extract_korean_english(text):
+    # HTML 태그와 특수 문자를 제거
+    clean_text = re.sub(r'(&quot;|<[^>]*>|\\)', '', text)
+    # 한글과 영어 문자만 추출하는 정규 표현식
+    korean_english_text = re.findall(r'[가-힣a-zA-Z]+', clean_text)
+    # 추출한 문자열들을 공백으로 이어 붙여서 반환
+    return ' '.join(korean_english_text)
 
 
 NAVER_API_HEADERS = {
@@ -113,12 +120,12 @@ def get_suggestions(query):
 
 
 def get_today_issue_summary(q: str):
-    issue_summary = []
+    news_title = []
 
     suggestions = get_suggestions(q)
 
-    for suggestion in suggestions:
-        naver_news_response = get_naver_news(suggestion, display=100, sort='sim')
+    for suggestion in suggestions[:3]:
+        naver_news_response = get_naver_news(suggestion, display=3, sort='sim')
         if naver_news_response.status_code != 200:
             raise HTTPException(status_code=500, detail="NEWS API 호출 오류")
 
@@ -126,12 +133,18 @@ def get_today_issue_summary(q: str):
         news_items = [news_item for news_item in news_items if
                       news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
 
-        if news_items:
-            driver.get(news_items[0]['link'])
-            article_body = driver.find_element(By.ID, "dic_area").text
-            issue_summary.append(get_clova_summary_result(article_body[:400], tone=0, summary_count=1))
+        for news_item in news_items:
+            news_title.append(clean_and_extract_korean_english(news_item['title']))
 
-    return issue_summary
+    completion_executor = CompletionExecutor(
+        host='https://clovastudio.stream.ntruss.com',
+        api_key= os.getenv("CLOVA_CHAT_COMPLETION_CLIENT_KEY"),
+        api_key_primary_val=os.getenv("CLOVA_CHAT_COMPLETION_CLIENT_KEY_PRIMARY_VAR"),
+        request_id=os.getenv("CLOVA_CHAT_COMPLETION_REQUEST_ID")
+    )
+
+    preset_text = [{"role": "system", "content": "요약"}, {"role": "user", "content": "content": f"다음 뉴스 제목을 6개의 간결하고 명확한 문장으로 요약하여 주요 문제를 강조해 주세요: \"{news_title}\""}]
+    return completion_executor.execute(preset_text)
 
 
 def get_trend_searh_data(start_date: str, end_date: str, time_unit: str, keyword_groups: list):
