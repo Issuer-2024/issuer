@@ -54,7 +54,6 @@ class CompletionExecutor:
             response.raise_for_status()
 
 
-
 NAVER_API_HEADERS = {
     'X-Naver-Client-Id': os.getenv('NAVER_API_CLIENT_ID'),
     'X-Naver-Client-Secret': os.getenv('NAVER_API_CLIENT_SECRET'),
@@ -67,6 +66,7 @@ CLOVA_API_HEADERS = {
 }
 
 CLOVA_SUMMARY_API_ENDPOINT = "https://naveropenapi.apigw.ntruss.com/text-summary/v1/summarize"
+
 
 def clean_and_extract_korean_english(text):
     # HTML 태그와 특수 문자를 제거
@@ -225,6 +225,7 @@ def get_trend_variation(q: str):
 
     return trend_variation
 
+
 def get_suggestion_trend(q: str):
     today = datetime.today()
     two_months_ago = (today - timedelta(days=60)).replace(day=1)
@@ -235,11 +236,29 @@ def get_suggestion_trend(q: str):
     return get_trend_searh_data(two_months_ago, today, 'date', keyword_groups)
 
 
-def get_suggestion_trend_score(q: str, trend_data: list):
+def get_suggestion_trend_score(trend_data: list):
     score = 0
     for data in trend_data:
         score += data['ratio']
+    return score
 
+
+def get_most_trend_day(trend_data: list):
+    max_ratio_entry = max(trend_data, key=lambda x: x['ratio'])
+    return max_ratio_entry['period']
+
+
+def get_suggestion_entire_data(q: str):
+    suggestion_entire_data = []
+    suggestion_trend = get_suggestion_trend(q)
+
+    for data in suggestion_trend:  # title, keywords, data
+        tmp = {}
+        tmp[data['title']]['trend'] = data['data']
+        tmp[data['title']]['score'] = get_suggestion_trend_score(data['data'])
+        tmp[data['title']]['most_trend_day'] = get_most_trend_day(data['data'])
+        suggestion_entire_data.append(tmp)
+    return suggestion_entire_data
 
 
 @app.get("/")
@@ -254,6 +273,7 @@ def render_report(q: str, request: Request):
     return templates.TemplateResponse(
         request=request, name="report.html", context={"issue_summary": get_today_issue_summary(q),
                                                       "trend_variation": get_trend_variation(q),
+                                                      "suggestion_trend_data": get_suggestion_entire_data(q)
                                                       }
     )
 
