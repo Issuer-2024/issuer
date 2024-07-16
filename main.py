@@ -54,14 +54,6 @@ class CompletionExecutor:
             response.raise_for_status()
 
 
-def clean_and_extract_korean_english(text):
-    # HTML 태그와 특수 문자를 제거
-    clean_text = re.sub(r'(&quot;|<[^>]*>|\\)', '', text)
-    # 한글과 영어 문자만 추출하는 정규 표현식
-    korean_english_text = re.findall(r'[가-힣a-zA-Z]+', clean_text)
-    # 추출한 문자열들을 공백으로 이어 붙여서 반환
-    return ' '.join(korean_english_text)
-
 
 NAVER_API_HEADERS = {
     'X-Naver-Client-Id': os.getenv('NAVER_API_CLIENT_ID'),
@@ -75,6 +67,14 @@ CLOVA_API_HEADERS = {
 }
 
 CLOVA_SUMMARY_API_ENDPOINT = "https://naveropenapi.apigw.ntruss.com/text-summary/v1/summarize"
+
+def clean_and_extract_korean_english(text):
+    # HTML 태그와 특수 문자를 제거
+    clean_text = re.sub(r'(&quot;|<[^>]*>|\\)', '', text)
+    # 한글과 영어 문자만 추출하는 정규 표현식
+    korean_english_text = re.findall(r'[가-힣a-zA-Z0-9]+', clean_text)
+    # 추출한 문자열들을 공백으로 이어 붙여서 반환
+    return ' '.join(korean_english_text)
 
 
 def get_naver_news(query, display, start=1, sort='date'):
@@ -119,7 +119,7 @@ def get_today_issue_summary(q: str):
 
     suggestions = get_suggestions(q)
 
-    for suggestion in suggestions[:3]:
+    for suggestion in suggestions[1:4]:
         naver_news_response = get_naver_news(suggestion, display=3, sort='sim')
         if naver_news_response.status_code != 200:
             raise HTTPException(status_code=500, detail="NEWS API 호출 오류")
@@ -138,8 +138,11 @@ def get_today_issue_summary(q: str):
         request_id=os.getenv("CLOVA_CHAT_COMPLETION_REQUEST_ID")
     )
 
-    preset_text = [{"role": "system", "content": "요약"},
-                   {"role": "user", "content": f"다음 뉴스 제목을 최대 6개의 간결하고 명확한 문장으로 요약하여 주요 문제를 강조해 주세요: \"{news_title}\""}]
+    preset_text = [{"role": "system", "content": "당신은 뉴스 기사를 요약하는 도우미입니다."},
+                   {"role": "user", "content": f"다음 뉴스 제목을 최소 3개, 최대 6개의 간결하고 명확한 순서형 목록으로 요약하여 주요 문제를 강조해 주세요. "
+                                               f"순서형 목록만을 보여주고"
+                                               f"문체는 정중체로 ~니다로 종결합니다.: "
+                                               f"\"{news_title}\""}]
 
     request_data = {
         'messages': preset_text,
@@ -152,7 +155,7 @@ def get_today_issue_summary(q: str):
         'includeAiFilters': False,
         'seed': 0
     }
-    return completion_executor.execute(request_data)
+    return completion_executor.execute(request_data).split('\n')
 
 
 def get_trend_searh_data(start_date: str, end_date: str, time_unit: str, keyword_groups: list):
