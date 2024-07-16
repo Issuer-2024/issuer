@@ -1,22 +1,16 @@
 import json
 import os
+import re
 from datetime import datetime, timedelta
 
 import requests
 import uvicorn
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
-from dotenv import load_dotenv
-from pydantic import BaseModel
-from collections import defaultdict
-from bs4 import BeautifulSoup
-import re
-
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-from starlette.responses import HTMLResponse
+from selenium.webdriver.chrome.service import Service
 from starlette.templating import Jinja2Templates
 from webdriver_manager.chrome import ChromeDriverManager
 
@@ -58,6 +52,7 @@ class CompletionExecutor:
             return response.json()['result']['message']['content']
         else:
             response.raise_for_status()
+
 
 def clean_and_extract_korean_english(text):
     # HTML 태그와 특수 문자를 제거
@@ -138,13 +133,26 @@ def get_today_issue_summary(q: str):
 
     completion_executor = CompletionExecutor(
         host='https://clovastudio.stream.ntruss.com',
-        api_key= os.getenv("CLOVA_CHAT_COMPLETION_CLIENT_KEY"),
+        api_key=os.getenv("CLOVA_CHAT_COMPLETION_CLIENT_KEY"),
         api_key_primary_val=os.getenv("CLOVA_CHAT_COMPLETION_CLIENT_KEY_PRIMARY_VAR"),
         request_id=os.getenv("CLOVA_CHAT_COMPLETION_REQUEST_ID")
     )
 
-    preset_text = [{"role": "system", "content": "요약"}, {"role": "user", "content": "content": f"다음 뉴스 제목을 6개의 간결하고 명확한 문장으로 요약하여 주요 문제를 강조해 주세요: \"{news_title}\""}]
-    return completion_executor.execute(preset_text)
+    preset_text = [{"role": "system", "content": "요약"},
+                   {"role": "user", "content": f"다음 뉴스 제목을 최대 6개의 간결하고 명확한 문장으로 요약하여 주요 문제를 강조해 주세요: \"{news_title}\""}]
+
+    request_data = {
+        'messages': preset_text,
+        'topP': 0.8,
+        'topK': 0,
+        'maxTokens': 256,
+        'temperature': 0.5,
+        'repeatPenalty': 5.0,
+        'stopBefore': [],
+        'includeAiFilters': False,
+        'seed': 0
+    }
+    return completion_executor.execute(request_data)
 
 
 def get_trend_searh_data(start_date: str, end_date: str, time_unit: str, keyword_groups: list):
