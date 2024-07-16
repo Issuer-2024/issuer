@@ -1,0 +1,66 @@
+<div>
+    <canvas id="{{ chart_id }}"></canvas>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // 데이터 설정
+        const data = {{ trend | tojson }};
+
+        // Chart.js 데이터 형식으로 변환
+        const labels = data.map(item => item.period);
+        const dataValues = data.map(item => item.ratio);
+        const chartId = "{{ chart_id }}";
+
+        const ctx = document.getElementById(chartId).getContext('2d');
+        const myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Ratio Over Time',
+                    data: dataValues,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false // 레전드를 숨깁니다.
+                    },
+                    title: {
+                        display: false,
+                        text: 'Ratio Over Time'
+                    },
+                    tooltip: {
+                        enabled: false // 도구 설명을 비활성화합니다.
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Period'
+                        },
+                        grid: {
+                            display: false // X축 그리드를 숨깁니다.
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Ratio'
+                        },
+                        grid: {
+                            display: false // Y축 그리드를 숨깁니다.
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
