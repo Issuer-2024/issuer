@@ -253,10 +253,8 @@ def get_suggestion_entire_data(q: str):
     suggestion_trend = get_suggestion_trend(q)
 
     for data in suggestion_trend:  # title, keywords, data
-        tmp = {}
-        tmp[data['title']]['trend'] = data['data']
-        tmp[data['title']]['score'] = get_suggestion_trend_score(data['data'])
-        tmp[data['title']]['most_trend_day'] = get_most_trend_day(data['data'])
+        tmp = {'keyword': data['title'], 'trend': data['data'], 'score': get_suggestion_trend_score(data['data']),
+               'most_trend_day': get_most_trend_day(data['data'])}
         suggestion_entire_data.append(tmp)
     return suggestion_entire_data
 
