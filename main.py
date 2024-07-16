@@ -175,7 +175,7 @@ def get_trend_searh_data(start_date: str, end_date: str, time_unit: str, keyword
         response = requests.post(naver_trend_search_api_endpoint, headers=NAVER_API_HEADERS,
                                  data=json.dumps(request_body))
         response.raise_for_status()
-        return response.json()['results'][0]['data']
+        return response.json()['results']
     except requests.exceptions.HTTPError as http_err:
         print(f"HTTP error occurred: {http_err}")  # HTTP 에러 출력
         print(f"Response content: {response.content.decode()}")  # 응답 본문 출력
@@ -192,7 +192,7 @@ def get_trend_variation(q: str):
 
     keyword_groups = [{'groupName': q, 'keywords': [suggestion for suggestion in get_suggestions(q)]}]
 
-    trend_search_data = get_trend_searh_data(two_months_ago, today, 'date', keyword_groups)
+    trend_search_data = get_trend_searh_data(two_months_ago, today, 'date', keyword_groups)[0]['data']
     daily_variation = (trend_search_data[-1]['ratio'] / trend_search_data[-2]['ratio'] * 100) - 100
     two_weeks_ago_ratio = sum([entry['ratio'] for entry in trend_search_data[-14:-7]])
     one_weeks_ago_ratio = sum([entry['ratio'] for entry in trend_search_data[-7:]])
@@ -224,6 +224,22 @@ def get_trend_variation(q: str):
                        }}
 
     return trend_variation
+
+def get_suggestion_trend(q: str):
+    today = datetime.today()
+    two_months_ago = (today - timedelta(days=60)).replace(day=1)
+    two_months_ago = two_months_ago.strftime('%Y-%m-01')
+    today = today.strftime('%Y-%m-%d')
+    suggestions = get_suggestions(q)
+    keyword_groups = [{'groupName': suggestion, 'keywords': [suggestion]} for suggestion in suggestions[1:6]]
+    return get_trend_searh_data(two_months_ago, today, 'date', keyword_groups)
+
+
+def get_suggestion_trend_score(q: str, trend_data: list):
+    score = 0
+    for data in trend_data:
+        score += data['ratio']
+
 
 
 @app.get("/")
