@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top 5 Friends Invitations</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .more-info {
+            display: none;
+        }
+    </style>
+    <script>
+        function toggleInfo(index) {
+            const info = document.getElementById(`more-info-${index}`);
+            info.style.display = info.style.display === 'block' ? 'none' : 'block';
+        }
+    </script>
+</head>
+
+<body class="bg-gray-100 p-6">
+    <div class="max-w-lg mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl">
+        <div class="md:flex">
+            <div class="p-8 w-full">
+                <div class="uppercase tracking-wide text-sm text-indigo-500 font-semibold flex justify-between">
+                    <span>댓글 TOP 10</span>
+                    <span>트랜딩 수치</span>
+                </div>
+                <div class="mt-4 space-y-2">
+                    {% for item in opinions %}
+                    <div class="flex justify-between items-center w-full" onclick="toggleInfo({{ loop.index }})">
+                        <div>
+                            <span class="text-lg font-bold text-blue-700 cursor-pointer">{{ loop.index }}위</span>
+                            <span class="text-lg">{{ item.title }}</span>
+                        </div>
+                        <span class="text-lg text-blue-500">{{ item.ratio | round(2) }}점</span>
+                    </div>
+                    <div id="more-info-{{ loop.index }}" class="more-info p-4 bg-gray-100 rounded-lg">
+                        <p> {{ item.result }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
