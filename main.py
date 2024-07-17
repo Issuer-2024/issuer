@@ -10,12 +10,10 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from starlette.templating import Jinja2Templates
-from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 
 load_dotenv()
@@ -24,8 +22,6 @@ chrome_options = Options()
 chrome_options.add_argument('--headless')
 chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--disable-dev-shm-usage')
-
-service = Service(ChromeDriverManager().install())
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -85,11 +81,15 @@ class NewsCommentsCrawler:
         return int(elem.select_one('span.u_cbox_reply_cnt').text.strip())
 
     def parse(self, url):
-        driver = webdriver.Chrome(service=service, options=chrome_options)
+        driver = webdriver.Remote(
+            command_executor=os.getenv('WEB_DRIVER_HUB_URL'),
+            options=chrome_options
+        )
         driver.get(url)
         # 페이지 소스 파싱
-        WebDriverWait(driver, 3).until(
-                            EC.presence_of_element_located((By.LINK_TEXT, "더보기"))
+        print(url)
+        WebDriverWait(driver, 10).until(
+                            EC.presence_of_element_located((By.LINK_TEXT, "MY댓글"))
                         )
         soup = BeautifulSoup(driver.page_source, "html.parser")
         # 댓글 추출
@@ -108,7 +108,8 @@ class NewsCommentsCrawler:
             else:
                 continue
         driver.quit()
-        print(comments)
+        node_url = os.getenv('WEB_DRIVER_HUB_URL') + '/session/' + driver.session_id  # 노드 URL 및 세션 ID 설정
+        response = requests.delete(node_url)
         return comments
 
 
@@ -354,7 +355,7 @@ def extract_first_two_parentheses_content(text):
 
 def get_comment_sentiment_data(q: str):
 
-    comment_sentiment_data = {"긍정": {'키워드': [], ''}, "중립": [], "부정": []}
+    comment_sentiment_data = []
 
     suggestions = get_suggestions(q)
     news_link = []
@@ -373,7 +374,6 @@ def get_comment_sentiment_data(q: str):
     news_comments_crawler = NewsCommentsCrawler()
 
     for link in news_link:
-        print(convert_news_url_to_comment_url(link))
         tmp = news_comments_crawler.parse(convert_news_url_to_comment_url(link))
         comments += tmp
 
@@ -386,13 +386,13 @@ def get_comment_sentiment_data(q: str):
 
     for comment in comments[:10]:
         preset_text = [{"role": "system",
-                        "content": "댓글의 감정을 분석하는 AI 어시스턴트 입니다.\n반드시 주어진 출력 형식에 맞게 출력해주세요.\n\n출력 형식: \"(target), (명사형 감정 표현)\" "},
+                        "content": "댓글을 분석하는 AI 어시스턴트 입니다.\n주어진 내용의 글의 세부적인 감정표현을 1줄로 표현해주세요.\n\n출력 형식: {긍정, 중립, 부정}: {target}에(의) 대한 {명사형 감정 표현}"},
                        {"role": "user", "content": f"{comment['내용']}"}]
 
         request_data = {
             'messages': preset_text,
             'topP': 0.8,
-            'topK': 3,
+            'topK': 0,
             'maxTokens': 20,
             'temperature': 0.5,
             'repeatPenalty': 1.0,
@@ -401,9 +401,7 @@ def get_comment_sentiment_data(q: str):
             'seed': 0
         }
         result = completion_executor.execute(request_data)
-        result = extract_first_two_parentheses_content(result)
-        if len(result) >= 2:
-            comment_sentiment_data[result[1]].append(result[0])
+        comment_sentiment_data.append(result)
     return comment_sentiment_data
 
 
