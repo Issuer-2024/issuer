@@ -94,6 +94,7 @@ class NewsCommentsCrawler:
         soup = BeautifulSoup(driver.page_source, "html.parser")
         # 댓글 추출
         comments = []
+        title = soup.select("h2#title_area")[0].text.strip()
         comment_elements = soup.select("ul.u_cbox_list li.u_cbox_comment")
         for comment_element in comment_elements:
 
@@ -101,16 +102,15 @@ class NewsCommentsCrawler:
                 if self._get_recomm(comment_element) >= 30:
                     comments.append({
                         "내용": self._get_text(comment_element),
-                        "추천 수": self._get_recomm(comment_element),
-                        "비추천 수": self._get_recomm(comment_element),
-                        "대댓글 수": self._get_reply_num(comment_element)
+                        "공감 비율": self._get_recomm(comment_element) / self._get_unrecomm(comment_element),
+                        #"대댓글 수": self._get_reply_num(comment_element)
                     })
             else:
                 continue
         driver.quit()
         node_url = os.getenv('WEB_DRIVER_HUB_URL') + '/session/' + driver.session_id  # 노드 URL 및 세션 ID 설정
         response = requests.delete(node_url)
-        return comments
+        return {"링크": url, "제목": title, "댓글": comments}
 
 
 NAVER_API_HEADERS = {
@@ -376,6 +376,10 @@ def get_comment_sentiment_data(q: str):
     for link in news_link:
         tmp = news_comments_crawler.parse(convert_news_url_to_comment_url(link))
         comments += tmp
+        if len(comments) >= 100:
+            break
+
+    comments.sort(key=lambda x: x['공감 비율'], reverse=True)
 
     completion_executor = CompletionExecutor(
         host='https://clovastudio.stream.ntruss.com',
@@ -386,7 +390,7 @@ def get_comment_sentiment_data(q: str):
 
     for comment in comments[:10]:
         preset_text = [{"role": "system",
-                        "content": "댓글을 분석하는 AI 어시스턴트 입니다.\n주어진 내용의 글의 세부적인 감정표현을 1줄로 표현해주세요.\n\n출력 형식: {긍정, 중립, 부정}: {target}에(의) 대한 {명사형 감정 표현}"},
+                        "content": "댓글을 분석하는 AI 어시스턴트 입니다.\n출력 형식: {target}에 대한 {긍정, 중립, 부정}\n\n"},
                        {"role": "user", "content": f"{comment['내용']}"}]
 
         request_data = {
@@ -401,7 +405,7 @@ def get_comment_sentiment_data(q: str):
             'seed': 0
         }
         result = completion_executor.execute(request_data)
-        comment_sentiment_data.append(result)
+        comment_sentiment_data.append({'raw': comment['내용'], "result": result, "ratio": comment['공감 비율']})
     return comment_sentiment_data
 
 
@@ -414,12 +418,17 @@ async def render_main(request: Request):
 
 @app.get("/report")
 def render_report(q: str, request: Request):
-    print(get_comment_sentiment_data(q))
     return templates.TemplateResponse(
         request=request, name="report.html", context={"issue_summary": get_today_issue_summary(q),
                                                       "trend_variation": get_trend_variation(q),
                                                       "suggestion_trend_data": get_suggestion_entire_data(q)
                                                       }
+    )
+
+@app.get("/opinion")
+def render_opinion(q: str, request: Request):
+    return templates.TemplateResponse(
+        request=request, name="opinion.html", context={"opinions": get_comment_sentiment_data(q) }
     )
 
 
