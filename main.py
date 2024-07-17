@@ -92,25 +92,35 @@ class NewsCommentsCrawler:
                             EC.presence_of_element_located((By.LINK_TEXT, "MY댓글"))
                         )
         soup = BeautifulSoup(driver.page_source, "html.parser")
+
+        if int(soup.select("span.u_cbox_info_txt")[0].text.strip()) <= 30:
+            driver.quit()
+            node_url = os.getenv('WEB_DRIVER_HUB_URL') + '/session/' + driver.session_id  # 노드 URL 및 세션 ID 설정
+            response = requests.delete(node_url)
+            return None
+
         # 댓글 추출
         comments = []
         title = soup.select("h2#title_area")[0].text.strip()
         comment_elements = soup.select("ul.u_cbox_list li.u_cbox_comment")
+        trend_score = 0
         for comment_element in comment_elements:
 
             if comment_element.select_one("div.u_cbox_text_wrap span.u_cbox_contents"):  #삭제된 댓글 처리
-                if self._get_recomm(comment_element) >= 30:
-                    comments.append({
-                        "내용": self._get_text(comment_element),
-                        "공감 비율": self._get_recomm(comment_element) / self._get_unrecomm(comment_element),
-                        #"대댓글 수": self._get_reply_num(comment_element)
-                    })
+                trend_score += self._get_recomm(comment_element) + self._get_unrecomm(comment_element) + self._get_reply_num(comment_element)
+                if self._get_recomm(comment_element) >= 10:
+                    comments.append(self._get_text(comment_element))
+                    # comments.append({
+                    #     "내용": self._get_text(comment_element),
+                    #     #"공감 비율": self._get_recomm(comment_element) / (self._get_unrecomm(comment_element)+1),
+                    #     #"대댓글 수": self._get_reply_num(comment_element)
+                    # })
             else:
                 continue
         driver.quit()
         node_url = os.getenv('WEB_DRIVER_HUB_URL') + '/session/' + driver.session_id  # 노드 URL 및 세션 ID 설정
         response = requests.delete(node_url)
-        return {"링크": url, "제목": title, "댓글": comments}
+        return {"링크": url, "제목": title, "댓글": comments, "트랜드 수치": trend_score}
 
 
 NAVER_API_HEADERS = {
@@ -360,26 +370,24 @@ def get_comment_sentiment_data(q: str):
     suggestions = get_suggestions(q)
     news_link = []
     for suggestion in suggestions[:1]:
-        naver_news_response = get_naver_news(suggestion, display=10, sort='sim')
+        naver_news_response = get_naver_news(suggestion, display=100, sort='sim')
         if naver_news_response.status_code != 200:
             raise HTTPException(status_code=500, detail="NEWS API 호출 오류")
 
         news_items = naver_news_response.json().get('items', [])
         news_items = [news_item for news_item in news_items if
                       news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
-
         for news_item in news_items:
             news_link.append(news_item['link'])
-    comments = []
+    raw_data = []
     news_comments_crawler = NewsCommentsCrawler()
 
     for link in news_link:
         tmp = news_comments_crawler.parse(convert_news_url_to_comment_url(link))
-        comments += tmp
-        if len(comments) >= 100:
+        if tmp:
+            raw_data.append(tmp)
+        if len(raw_data) >= 10:
             break
-
-    comments.sort(key=lambda x: x['공감 비율'], reverse=True)
 
     completion_executor = CompletionExecutor(
         host='https://clovastudio.stream.ntruss.com',
@@ -388,16 +396,16 @@ def get_comment_sentiment_data(q: str):
         request_id=os.getenv("CLOVA_CHAT_COMPLETION_REQUEST_ID")
     )
 
-    for comment in comments[:10]:
+    for item in raw_data:
         preset_text = [{"role": "system",
-                        "content": "댓글을 분석하는 AI 어시스턴트 입니다.\n출력 형식: {target}에 대한 {긍정, 중립, 부정}\n\n"},
-                       {"role": "user", "content": f"{comment['내용']}"}]
+                        "content": "댓글을 분석하는 AI 어시스턴트 입니다.\n출력 형식: 다음 입력에 대해 3줄로 명확하게 사용자 여론을 표현해주세요.\n\n"},
+                       {"role": "user", "content": f"{item['댓글']}"}]
 
         request_data = {
             'messages': preset_text,
             'topP': 0.8,
             'topK': 0,
-            'maxTokens': 20,
+            'maxTokens': 256,
             'temperature': 0.5,
             'repeatPenalty': 1.0,
             'stopBefore': [],
@@ -405,7 +413,8 @@ def get_comment_sentiment_data(q: str):
             'seed': 0
         }
         result = completion_executor.execute(request_data)
-        comment_sentiment_data.append({'raw': comment['내용'], "result": result, "ratio": comment['공감 비율']})
+        comment_sentiment_data.append({'title': item['제목'], "result": result, "ratio": item['트랜드 수치']})
+        comment_sentiment_data.sort(key=lambda x: x['ratio'], reverse=True)
     return comment_sentiment_data
 
 

@@ -25,19 +25,19 @@
             <div class="p-8 w-full">
                 <div class="uppercase tracking-wide text-sm text-indigo-500 font-semibold flex justify-between">
                     <span>댓글 TOP 10</span>
-                    <span>공감 비율</span>
+                    <span>트랜딩 수치</span>
                 </div>
                 <div class="mt-4 space-y-2">
                     {% for item in opinions %}
                     <div class="flex justify-between items-center w-full" onclick="toggleInfo({{ loop.index }})">
                         <div>
                             <span class="text-lg font-bold text-blue-700 cursor-pointer">{{ loop.index }}위</span>
-                            <span class="text-lg">{{ item.result }}</span>
+                            <span class="text-lg">{{ item.title }}</span>
                         </div>
-                        <span class="text-lg text-blue-500">{{ item.ratio | round(2) }}%</span>
+                        <span class="text-lg text-blue-500">{{ item.ratio | round(2) }}점</span>
                     </div>
                     <div id="more-info-{{ loop.index }}" class="more-info p-4 bg-gray-100 rounded-lg">
-                        <p> {{ item.raw }}</p>
+                        <p> {{ item.result }}</p>
                     </div>
                     {% endfor %}
                 </div>
