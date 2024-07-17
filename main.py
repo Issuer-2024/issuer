@@ -26,7 +26,6 @@ chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--disable-dev-shm-usage')
 
 service = Service(ChromeDriverManager().install())
-driver = webdriver.Chrome(service=service, options=chrome_options)
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -60,19 +59,16 @@ class CompletionExecutor:
 
 class NewsCommentsCrawler:
 
-    def __init__(self):
-        self.driver = webdriver.Chrome(service=service, options=chrome_options)
-
-    def _wait_more_btn(self):
-        while True:
-            try:
-                WebDriverWait(self.driver, 3).until(
-                    EC.presence_of_element_located((By.LINK_TEXT, "더보기"))
-                )
-                more_button = self.driver.find_element(by=By.LINK_TEXT, value='더보기')
-                more_button.click()
-            except Exception as e:
-                break
+    # def _wait_more_btn(self):
+    #     while True:
+    #         try:
+    #             WebDriverWait(self.driver, 3).until(
+    #                 EC.presence_of_element_located((By.LINK_TEXT, "더보기"))
+    #             )
+    #             more_button = self.driver.find_element(by=By.LINK_TEXT, value='더보기')
+    #             more_button.click()
+    #         except Exception as e:
+    #             break
 
     def _get_text(self, elem):
         return elem.select_one(
@@ -89,26 +85,26 @@ class NewsCommentsCrawler:
         return int(elem.select_one('span.u_cbox_reply_cnt').text.strip())
 
     def parse(self, url):
-        # '더보기' 버튼을 클릭하여 더 많은 댓글 로드
-        self.driver.get(url)
-        self._wait_more_btn()
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+        driver.get(url)
         # 페이지 소스 파싱
-        soup = BeautifulSoup(self.driver.page_source, "html.parser")
+        soup = BeautifulSoup(driver.page_source, "html.parser")
         # 댓글 추출
         comments = []
         comment_elements = soup.select("ul.u_cbox_list li.u_cbox_comment")
         for comment_element in comment_elements:
 
             if comment_element.select_one("div.u_cbox_text_wrap span.u_cbox_contents"):  #삭제된 댓글 처리
-                comments.append({
-                    "내용": self._get_text(comment_element),
-                    "추천 수": self._get_recomm(comment_element),
-                    "비추천 수": self._get_recomm(comment_element),
-                    "대댓글 수": self._get_reply_num(comment_element)
-                })
+                if self._get_recomm(comment_element) >= 200:
+                    comments.append({
+                        "내용": self._get_text(comment_element),
+                        "추천 수": self._get_recomm(comment_element),
+                        "비추천 수": self._get_recomm(comment_element),
+                        "대댓글 수": self._get_reply_num(comment_element)
+                    })
             else:
                 continue
-        self.driver.quit()
+        driver.quit()
         return comments
 
 
@@ -358,8 +354,8 @@ def get_comment_sentiment_data(q: str):
 
     suggestions = get_suggestions(q)
     news_link = []
-    for suggestion in suggestions[:3]:
-        naver_news_response = get_naver_news(suggestion, display=3, sort='sim')
+    for suggestion in suggestions[:1]:
+        naver_news_response = get_naver_news(suggestion, display=10, sort='sim')
         if naver_news_response.status_code != 200:
             raise HTTPException(status_code=500, detail="NEWS API 호출 오류")
 
@@ -372,7 +368,8 @@ def get_comment_sentiment_data(q: str):
     comments = []
     news_comments_crawler = NewsCommentsCrawler()
 
-    for link in news_link[2:3]:
+    for link in news_link:
+        print(convert_news_url_to_comment_url(link))
         tmp = news_comments_crawler.parse(convert_news_url_to_comment_url(link))
         comments += tmp
 
@@ -415,6 +412,7 @@ async def render_main(request: Request):
 
 @app.get("/report")
 def render_report(q: str, request: Request):
+    print(get_comment_sentiment_data(q))
     return templates.TemplateResponse(
         request=request, name="report.html", context={"issue_summary": get_today_issue_summary(q),
                                                       "trend_variation": get_trend_variation(q),
