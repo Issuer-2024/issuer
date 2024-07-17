@@ -354,7 +354,7 @@ def extract_first_two_parentheses_content(text):
 
 def get_comment_sentiment_data(q: str):
 
-    comment_sentiment_data = {"긍정": [], "중립": [], "부정": []}
+    comment_sentiment_data = {"긍정": {'키워드': [], ''}, "중립": [], "부정": []}
 
     suggestions = get_suggestions(q)
     news_link = []
@@ -386,7 +386,7 @@ def get_comment_sentiment_data(q: str):
 
     for comment in comments[:10]:
         preset_text = [{"role": "system",
-                        "content": "댓글의 감정을 분석하는 AI 어시스턴트 입니다.\n반드시 주어진 출력 형식에 맞게 출력해주세요.\n\n출력 형식: \"(target), (긍정, 중립, 부정)\" "},
+                        "content": "댓글의 감정을 분석하는 AI 어시스턴트 입니다.\n반드시 주어진 출력 형식에 맞게 출력해주세요.\n\n출력 형식: \"(target), (명사형 감정 표현)\" "},
                        {"role": "user", "content": f"{comment['내용']}"}]
 
         request_data = {
