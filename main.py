@@ -54,6 +54,60 @@ class CompletionExecutor:
             response.raise_for_status()
 
 
+class NewsCommentsCrawler:
+
+    def __init__(self):
+        self.driver = webdriver.Chrome(service=service, options=chrome_options)
+
+    def _wait_more_btn(self):
+        while True:
+            try:
+                WebDriverWait(self.driver, 3).until(
+                    EC.presence_of_element_located((By.LINK_TEXT, "더보기"))
+                )
+                more_button = self.driver.find_element(by=By.LINK_TEXT, value='더보기')
+                more_button.click()
+            except Exception as e:
+                break
+
+    def _get_text(self, elem):
+        return elem.select_one(
+            "div.u_cbox_text_wrap span.u_cbox_contents").text.strip().replace(
+            '\n', '')
+
+    def _get_recomm(self, elem):
+        return int(elem.select_one('em.u_cbox_cnt_recomm').text.strip())
+
+    def _get_unrecomm(self, elem):
+        return int(elem.select_one('em.u_cbox_cnt_unrecomm').text.strip())
+
+    def _get_reply_num(self, elem):
+        return int(elem.select_one('span.u_cbox_reply_cnt').text.strip())
+
+    def _parse(self, url):
+        # '더보기' 버튼을 클릭하여 더 많은 댓글 로드
+        self.driver.get(url)
+        self._wait_more_btn()
+        # 페이지 소스 파싱
+        soup = BeautifulSoup(self.driver.page_source, "html.parser")
+        # 댓글 추출
+        comments = []
+        comment_elements = soup.select("ul.u_cbox_list li.u_cbox_comment")
+        for comment_element in comment_elements:
+
+            if comment_element.select_one("div.u_cbox_text_wrap span.u_cbox_contents"):  #삭제된 댓글 처리
+                comments.append({
+                    "내용": self._get_text(comment_element),
+                    "추천 수": self._get_recomm(comment_element),
+                    "비추천 수": self._get_recomm(comment_element),
+                    "대댓글 수": self._get_reply_num(comment_element)
+                })
+            else:
+                continue
+        self.driver.quit()
+        return comments
+
+
 NAVER_API_HEADERS = {
     'X-Naver-Client-Id': os.getenv('NAVER_API_CLIENT_ID'),
     'X-Naver-Client-Secret': os.getenv('NAVER_API_CLIENT_SECRET'),
@@ -259,7 +313,8 @@ def get_suggestion_entire_data(q: str):
     suggestion_trend = get_suggestion_trend(q)
 
     for i, data in enumerate(suggestion_trend):  # title, keywords, data
-        tmp = {'id': i, 'keyword': data['title'], 'trend': data['data'], 'score': get_suggestion_trend_score(data['data']),
+        tmp = {'id': i, 'keyword': data['title'], 'trend': data['data'],
+               'score': get_suggestion_trend_score(data['data']),
                'most_trend_day': get_most_trend_day(data['data'])}
         suggestion_entire_data.append(tmp)
 
