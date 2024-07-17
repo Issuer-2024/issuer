@@ -11,8 +11,12 @@ from fastapi.staticfiles import StaticFiles
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from starlette.templating import Jinja2Templates
 from webdriver_manager.chrome import ChromeDriverManager
+from bs4 import BeautifulSoup
 
 load_dotenv()
 
@@ -84,7 +88,7 @@ class NewsCommentsCrawler:
     def _get_reply_num(self, elem):
         return int(elem.select_one('span.u_cbox_reply_cnt').text.strip())
 
-    def _parse(self, url):
+    def parse(self, url):
         # '더보기' 버튼을 클릭하여 더 많은 댓글 로드
         self.driver.get(url)
         self._wait_more_btn()
@@ -324,6 +328,82 @@ def get_suggestion_entire_data(q: str):
 
     suggestion_entire_data.sort(key=lambda x: x['score'], reverse=True)
     return suggestion_entire_data
+
+
+def convert_news_url_to_comment_url(news_url):
+    # 뉴스 URL의 정규식 패턴
+    pattern = r"(https://n\.news\.naver\.com/mnews/article/)(\d+/\d+)(\?.*)"
+    replacement = r"\1comment/\2\3"
+
+    # 정규식을 사용하여 댓글 URL로 변환
+    comment_url = re.sub(pattern, replacement, news_url)
+
+    return comment_url
+
+
+def extract_first_two_parentheses_content(text):
+    # 정규 표현식으로 첫 번째와 두 번째 괄호 안의 내용 추출
+    pattern = r'\(([^)]+)\)'
+    matches = re.findall(pattern, text)
+
+    # 첫 번째와 두 번째 괄호 안의 내용만 반환
+    if len(matches) >= 2:
+        return matches[:2]
+    else:
+        return matches
+
+def get_comment_sentiment_data(q: str):
+
+    comment_sentiment_data = {"긍정": [], "중립": [], "부정": []}
+
+    suggestions = get_suggestions(q)
+    news_link = []
+    for suggestion in suggestions[:3]:
+        naver_news_response = get_naver_news(suggestion, display=3, sort='sim')
+        if naver_news_response.status_code != 200:
+            raise HTTPException(status_code=500, detail="NEWS API 호출 오류")
+
+        news_items = naver_news_response.json().get('items', [])
+        news_items = [news_item for news_item in news_items if
+                      news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
+
+        for news_item in news_items:
+            news_link.append(news_item['link'])
+    comments = []
+    news_comments_crawler = NewsCommentsCrawler()
+
+    for link in news_link[2:3]:
+        tmp = news_comments_crawler.parse(convert_news_url_to_comment_url(link))
+        comments += tmp
+
+    completion_executor = CompletionExecutor(
+        host='https://clovastudio.stream.ntruss.com',
+        api_key=os.getenv("CLOVA_CHAT_COMPLETION_CLIENT_KEY"),
+        api_key_primary_val=os.getenv("CLOVA_CHAT_COMPLETION_CLIENT_KEY_PRIMARY_VAR"),
+        request_id=os.getenv("CLOVA_CHAT_COMPLETION_REQUEST_ID")
+    )
+
+    for comment in comments[:10]:
+        preset_text = [{"role": "system",
+                        "content": "댓글의 감정을 분석하는 AI 어시스턴트 입니다.\n반드시 주어진 출력 형식에 맞게 출력해주세요.\n\n출력 형식: \"(target), (긍정, 중립, 부정)\" "},
+                       {"role": "user", "content": f"{comment['내용']}"}]
+
+        request_data = {
+            'messages': preset_text,
+            'topP': 0.8,
+            'topK': 3,
+            'maxTokens': 20,
+            'temperature': 0.5,
+            'repeatPenalty': 1.0,
+            'stopBefore': [],
+            'includeAiFilters': False,
+            'seed': 0
+        }
+        result = completion_executor.execute(request_data)
+        result = extract_first_two_parentheses_content(result)
+        if len(result) >= 2:
+            comment_sentiment_data[result[1]].append(result[0])
+    return comment_sentiment_data
 
 
 @app.get("/")
