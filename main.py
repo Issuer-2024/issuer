@@ -88,6 +88,9 @@ class NewsCommentsCrawler:
         driver = webdriver.Chrome(service=service, options=chrome_options)
         driver.get(url)
         # 페이지 소스 파싱
+        WebDriverWait(driver, 3).until(
+                            EC.presence_of_element_located((By.LINK_TEXT, "더보기"))
+                        )
         soup = BeautifulSoup(driver.page_source, "html.parser")
         # 댓글 추출
         comments = []
@@ -95,7 +98,7 @@ class NewsCommentsCrawler:
         for comment_element in comment_elements:
 
             if comment_element.select_one("div.u_cbox_text_wrap span.u_cbox_contents"):  #삭제된 댓글 처리
-                if self._get_recomm(comment_element) >= 200:
+                if self._get_recomm(comment_element) >= 30:
                     comments.append({
                         "내용": self._get_text(comment_element),
                         "추천 수": self._get_recomm(comment_element),
@@ -105,6 +108,7 @@ class NewsCommentsCrawler:
             else:
                 continue
         driver.quit()
+        print(comments)
         return comments
 
 
