@@ -11,8 +11,12 @@ from fastapi.staticfiles import StaticFiles
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from starlette.templating import Jinja2Templates
 from webdriver_manager.chrome import ChromeDriverManager
+from bs4 import BeautifulSoup
 
 load_dotenv()
 
@@ -22,7 +26,6 @@ chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--disable-dev-shm-usage')
 
 service = Service(ChromeDriverManager().install())
-driver = webdriver.Chrome(service=service, options=chrome_options)
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -54,6 +57,56 @@ class CompletionExecutor:
             response.raise_for_status()
 
 
+class NewsCommentsCrawler:
+
+    # def _wait_more_btn(self):
+    #     while True:
+    #         try:
+    #             WebDriverWait(self.driver, 3).until(
+    #                 EC.presence_of_element_located((By.LINK_TEXT, "더보기"))
+    #             )
+    #             more_button = self.driver.find_element(by=By.LINK_TEXT, value='더보기')
+    #             more_button.click()
+    #         except Exception as e:
+    #             break
+
+    def _get_text(self, elem):
+        return elem.select_one(
+            "div.u_cbox_text_wrap span.u_cbox_contents").text.strip().replace(
+            '\n', '')
+
+    def _get_recomm(self, elem):
+        return int(elem.select_one('em.u_cbox_cnt_recomm').text.strip())
+
+    def _get_unrecomm(self, elem):
+        return int(elem.select_one('em.u_cbox_cnt_unrecomm').text.strip())
+
+    def _get_reply_num(self, elem):
+        return int(elem.select_one('span.u_cbox_reply_cnt').text.strip())
+
+    def parse(self, url):
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+        driver.get(url)
+        # 페이지 소스 파싱
+        soup = BeautifulSoup(driver.page_source, "html.parser")
+        # 댓글 추출
+        comments = []
+        comment_elements = soup.select("ul.u_cbox_list li.u_cbox_comment")
+        for comment_element in comment_elements:
+
+            if comment_element.select_one("div.u_cbox_text_wrap span.u_cbox_contents"):  #삭제된 댓글 처리
+                if self._get_recomm(comment_element) >= 200:
+                    comments.append({
+                        "내용": self._get_text(comment_element),
+                        "추천 수": self._get_recomm(comment_element),
+                        "비추천 수": self._get_recomm(comment_element),
+                        "대댓글 수": self._get_reply_num(comment_element)
+                    })
+            else:
+                continue
+        driver.quit()
+        return comments
+
 
 NAVER_API_HEADERS = {
     'X-Naver-Client-Id': os.getenv('NAVER_API_CLIENT_ID'),
@@ -67,6 +120,7 @@ CLOVA_API_HEADERS = {
 }
 
 CLOVA_SUMMARY_API_ENDPOINT = "https://naveropenapi.apigw.ntruss.com/text-summary/v1/summarize"
+
 
 def clean_and_extract_korean_english(text):
     # HTML 태그와 특수 문자를 제거
@@ -125,8 +179,8 @@ def get_today_issue_summary(q: str):
             raise HTTPException(status_code=500, detail="NEWS API 호출 오류")
 
         news_items = naver_news_response.json().get('items', [])
-        news_items = [news_item for news_item in news_items if
-                      news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
+        # news_items = [news_item for news_item in news_items if
+        #               news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
 
         for news_item in news_items:
             news_title.append(clean_and_extract_korean_english(news_item['title']))
@@ -175,7 +229,7 @@ def get_trend_searh_data(start_date: str, end_date: str, time_unit: str, keyword
         response = requests.post(naver_trend_search_api_endpoint, headers=NAVER_API_HEADERS,
                                  data=json.dumps(request_body))
         response.raise_for_status()
-        return response.json()['results'][0]['data']
+        return response.json()['results']
     except requests.exceptions.HTTPError as http_err:
         print(f"HTTP error occurred: {http_err}")  # HTTP 에러 출력
         print(f"Response content: {response.content.decode()}")  # 응답 본문 출력
@@ -192,7 +246,7 @@ def get_trend_variation(q: str):
 
     keyword_groups = [{'groupName': q, 'keywords': [suggestion for suggestion in get_suggestions(q)]}]
 
-    trend_search_data = get_trend_searh_data(two_months_ago, today, 'date', keyword_groups)
+    trend_search_data = get_trend_searh_data(two_months_ago, today, 'date', keyword_groups)[0]['data']
     daily_variation = (trend_search_data[-1]['ratio'] / trend_search_data[-2]['ratio'] * 100) - 100
     two_weeks_ago_ratio = sum([entry['ratio'] for entry in trend_search_data[-14:-7]])
     one_weeks_ago_ratio = sum([entry['ratio'] for entry in trend_search_data[-7:]])
@@ -226,6 +280,129 @@ def get_trend_variation(q: str):
     return trend_variation
 
 
+def get_suggestion_trend(q: str):
+    today = datetime.today()
+    one_week_ago = (today - timedelta(days=7)).strftime('%Y-%m-%d')
+    today = today.strftime('%Y-%m-%d')
+    suggestions = get_suggestions(q)
+    keyword_groups = [{'groupName': suggestion, 'keywords': [suggestion]} for suggestion in suggestions[1:6]]
+    return get_trend_searh_data(one_week_ago, today, 'date', keyword_groups)
+
+
+def get_suggestion_trend_score(trend_data: list):
+    score = 0
+    for data in trend_data:
+        score += data['ratio']
+    return score
+
+
+def get_most_trend_day(trend_data: list):
+    # 'ratio' 필드가 있는 항목만 필터링
+    filtered_trend_data = list(filter(lambda x: 'ratio' in x, trend_data))
+
+    # 필터링된 데이터가 비어 있지 않으면, 최대 ratio 값을 가진 항목을 찾습니다.
+    if filtered_trend_data:
+        max_ratio_entry = max(filtered_trend_data, key=lambda x: x['ratio'])
+        return max_ratio_entry['period']
+    else:
+        return None  # 'ratio' 필드가 있는 항목이 없는 경우 None을 반환합니다.
+
+
+def get_suggestion_entire_data(q: str):
+    suggestion_entire_data = []
+    suggestion_trend = get_suggestion_trend(q)
+
+    for i, data in enumerate(suggestion_trend):  # title, keywords, data
+        tmp = {'id': i, 'keyword': data['title'], 'trend': data['data'],
+               'score': get_suggestion_trend_score(data['data']),
+               'most_trend_day': get_most_trend_day(data['data'])}
+        suggestion_entire_data.append(tmp)
+
+    total_score = sum(item['score'] for item in suggestion_entire_data)
+    for i in range(len(suggestion_entire_data)):
+        suggestion_entire_data[i]['trend_proportion'] = suggestion_entire_data[i]['score'] / total_score * 100
+
+    suggestion_entire_data.sort(key=lambda x: x['score'], reverse=True)
+    return suggestion_entire_data
+
+
+def convert_news_url_to_comment_url(news_url):
+    # 뉴스 URL의 정규식 패턴
+    pattern = r"(https://n\.news\.naver\.com/mnews/article/)(\d+/\d+)(\?.*)"
+    replacement = r"\1comment/\2\3"
+
+    # 정규식을 사용하여 댓글 URL로 변환
+    comment_url = re.sub(pattern, replacement, news_url)
+
+    return comment_url
+
+
+def extract_first_two_parentheses_content(text):
+    # 정규 표현식으로 첫 번째와 두 번째 괄호 안의 내용 추출
+    pattern = r'\(([^)]+)\)'
+    matches = re.findall(pattern, text)
+
+    # 첫 번째와 두 번째 괄호 안의 내용만 반환
+    if len(matches) >= 2:
+        return matches[:2]
+    else:
+        return matches
+
+def get_comment_sentiment_data(q: str):
+
+    comment_sentiment_data = {"긍정": [], "중립": [], "부정": []}
+
+    suggestions = get_suggestions(q)
+    news_link = []
+    for suggestion in suggestions[:1]:
+        naver_news_response = get_naver_news(suggestion, display=10, sort='sim')
+        if naver_news_response.status_code != 200:
+            raise HTTPException(status_code=500, detail="NEWS API 호출 오류")
+
+        news_items = naver_news_response.json().get('items', [])
+        news_items = [news_item for news_item in news_items if
+                      news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
+
+        for news_item in news_items:
+            news_link.append(news_item['link'])
+    comments = []
+    news_comments_crawler = NewsCommentsCrawler()
+
+    for link in news_link:
+        print(convert_news_url_to_comment_url(link))
+        tmp = news_comments_crawler.parse(convert_news_url_to_comment_url(link))
+        comments += tmp
+
+    completion_executor = CompletionExecutor(
+        host='https://clovastudio.stream.ntruss.com',
+        api_key=os.getenv("CLOVA_CHAT_COMPLETION_CLIENT_KEY"),
+        api_key_primary_val=os.getenv("CLOVA_CHAT_COMPLETION_CLIENT_KEY_PRIMARY_VAR"),
+        request_id=os.getenv("CLOVA_CHAT_COMPLETION_REQUEST_ID")
+    )
+
+    for comment in comments[:10]:
+        preset_text = [{"role": "system",
+                        "content": "댓글의 감정을 분석하는 AI 어시스턴트 입니다.\n반드시 주어진 출력 형식에 맞게 출력해주세요.\n\n출력 형식: \"(target), (긍정, 중립, 부정)\" "},
+                       {"role": "user", "content": f"{comment['내용']}"}]
+
+        request_data = {
+            'messages': preset_text,
+            'topP': 0.8,
+            'topK': 3,
+            'maxTokens': 20,
+            'temperature': 0.5,
+            'repeatPenalty': 1.0,
+            'stopBefore': [],
+            'includeAiFilters': False,
+            'seed': 0
+        }
+        result = completion_executor.execute(request_data)
+        result = extract_first_two_parentheses_content(result)
+        if len(result) >= 2:
+            comment_sentiment_data[result[1]].append(result[0])
+    return comment_sentiment_data
+
+
 @app.get("/")
 async def render_main(request: Request):
     return templates.TemplateResponse(
@@ -235,9 +412,11 @@ async def render_main(request: Request):
 
 @app.get("/report")
 def render_report(q: str, request: Request):
+    print(get_comment_sentiment_data(q))
     return templates.TemplateResponse(
         request=request, name="report.html", context={"issue_summary": get_today_issue_summary(q),
                                                       "trend_variation": get_trend_variation(q),
+                                                      "suggestion_trend_data": get_suggestion_entire_data(q)
                                                       }
     )
 
