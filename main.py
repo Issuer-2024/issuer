@@ -93,7 +93,7 @@ class NewsCommentsCrawler:
                         )
         soup = BeautifulSoup(driver.page_source, "html.parser")
 
-        if int(soup.select("span.u_cbox_info_txt")[0].text.strip()) <= 30:
+        if int(soup.select("span.u_cbox_info_txt")[0].text.replace(',', '').strip()) <= 30:
             driver.quit()
             node_url = os.getenv('WEB_DRIVER_HUB_URL') + '/session/' + driver.session_id  # 노드 URL 및 세션 ID 설정
             response = requests.delete(node_url)
@@ -370,7 +370,7 @@ def get_comment_sentiment_data(q: str):
     suggestions = get_suggestions(q)
     news_link = []
     for suggestion in suggestions[:1]:
-        naver_news_response = get_naver_news(suggestion, display=100, sort='sim')
+        naver_news_response = get_naver_news(suggestion, display=20, sort='sim')
         if naver_news_response.status_code != 200:
             raise HTTPException(status_code=500, detail="NEWS API 호출 오류")
 
