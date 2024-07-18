@@ -447,8 +447,8 @@ def get_timeline(q: str):
 
         preset_text = [{"role": "system", "content": "당신은 뉴스 기사를 요약하는 도우미입니다."},
                        {"role": "user",
-                        "content": f"다음 뉴스 제목을 최대 3개의 간결하고 명확한 순서형 목록으로 요약하여 주요 문제를 강조해 주세요. "
-                                   f"순서형 목록만을 보여주고"
+                        "content": f"다음 뉴스 제목을 요약하여 주요 문제를 강조해 주세요. 3개의 간결하고 명확한 순서형 목록으로 줄바꿈하여 제공해주세요."
+                                   f"순서형 목록만을 출력하며"
                                    f"문체는 정중체로 ~니다로 종결합니다.: "
                                    f"\"{news_title}\""}]
 
@@ -464,7 +464,7 @@ def get_timeline(q: str):
             'seed': 0
         }
 
-        result = completion_executor.execute(request_data)
+        result = completion_executor.execute(request_data).split('\n')
         timeline_data[date] = result
 
     return timeline_data
@@ -494,7 +494,9 @@ def render_opinion(q: str, request: Request):
 
 @app.get("/timeline")
 def render_timeline(q: str, request: Request):
-    print(get_timeline(q))
+    return templates.TemplateResponse(
+        request=request, name="timeline.html", context={"timeline": get_timeline(q)}
+    )
 
 
 
