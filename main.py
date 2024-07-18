@@ -493,7 +493,7 @@ def render_opinion(q: str, request: Request):
     )
 
 @app.get("/timeline")
-def render_timeline(q:str, request: Request):
+def render_timeline(q: str, request: Request):
     print(get_timeline(q))
 
 
