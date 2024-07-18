@@ -422,8 +422,10 @@ def get_timeline(q: str):
     timeline_data = {}
 
     articles_data = []
-    all_articles = get_naver_news(q, 100, 1, 'sim').json()['items']
+    all_articles = []
 
+    for i in range(1, 2):
+        all_articles += get_naver_news(q, 100, i, 'sim').json()['items']
     for article in all_articles:
         title = article['title']
         link = article['link']
