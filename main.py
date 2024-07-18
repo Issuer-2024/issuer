@@ -447,10 +447,10 @@ def get_timeline(q: str):
 
         preset_text = [{"role": "system", "content": "당신은 뉴스 기사를 요약하는 도우미입니다."},
                        {"role": "user",
-                        "content": f"다음 뉴스 제목을 요약하여 주요 문제를 강조해 주세요. 3개의 간결하고 명확한 순서형 목록으로 줄바꿈하여 제공해주세요."
-                                   f"순서형 목록만을 출력하며"
-                                   f"문체는 정중체로 ~니다로 종결합니다.: "
-                                   f"\"{news_title}\""}]
+                        "content": f"다음 뉴스 제목을 최소 1개, 최대 3개의 간결하고 명확한 순서형 목록으로 요약하여 주요 문제를 강조해 주세요. "
+                                               f"순서형 목록만을 보여주고"
+                                               f"문체는 정중체로 ~니다로 종결합니다.: "
+                                               f"\"{news_title}\""}]
 
         request_data = {
             'messages': preset_text,
