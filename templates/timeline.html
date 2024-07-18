@@ -14,7 +14,7 @@
             </div>
             <div class="space-y-4">
             {% for date, item in timeline.items() %}
-                <div class="flex items-start">
+                <div class="flex items-start gap-2">
                     <span class="text-gray-600 text-sm w-12 whitespace-nowrap">{{ date[5:] }}</span>
                     <p class="text-gray-800">
                     {% for s in item %}

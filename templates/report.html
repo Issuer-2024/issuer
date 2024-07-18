@@ -134,7 +134,18 @@
                 <p class="text-gray-500">데이터 센터</p>
                 <p class="text-gray-900 mt-2">확인하러 가기</p>
             </div>
-            <button class="flex items-center justify-center bg-gray-200 w-10 h-10 rounded-full" onclick="searchOpinion()">
+            <button class="flex items-center justify-center bg-gray-200 w-10 h-10 rounded-full" onclick="move('data')">
+                <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="bg-white rounded-lg shadow-lg p-6 flex items-center justify-between w-96 mb-6">
+            <div>
+                <p class="text-gray-500">타임라인</p>
+                <p class="text-gray-900 mt-2">확인하러 가기</p>
+            </div>
+            <button class="flex items-center justify-center bg-gray-200 w-10 h-10 rounded-full" onclick="move('timeline')">
                 <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
@@ -145,7 +156,7 @@
                 <p class="text-gray-500">실시간 사용자 여론</p>
                 <p class="text-gray-900 mt-2">찾아보러 가기</p>
             </div>
-            <button class="flex items-center justify-center bg-gray-200 w-10 h-10 rounded-full" onclick="searchOpinion()">
+            <button class="flex items-center justify-center bg-gray-200 w-10 h-10 rounded-full" onclick="move('opinion')">
                 <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
@@ -212,7 +223,7 @@
             document.getElementById('foldButton').classList.add('hidden');
         }
 
-        function searchOpinion() {
+        function move(target) {
             var currentUrl = window.location.href;
             var urlObject = new URL(currentUrl);
             var currentQueryParams = urlObject.searchParams.get('q'); // Get current 'q=' value
@@ -220,9 +231,9 @@
             // Construct new URL with existing 'q=' value if available
             var newUrl;
             if (currentQueryParams) {
-                newUrl = '/opinion?q=' + currentQueryParams;
+                newUrl = `/${target}?q=${currentQueryParams}`
             } else {
-                newUrl = '/opinion';
+                newUrl = `/error`
             }
 
             // Navigate to the new URL
