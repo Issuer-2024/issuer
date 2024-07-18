@@ -104,7 +104,7 @@ class NewsCommentsCrawler:
         title = soup.select("h2#title_area")[0].text.strip()
         comment_elements = soup.select("ul.u_cbox_list li.u_cbox_comment")
         trend_score = 0
-        for comment_element in comment_elements:
+        for comment_element in comment_elements[:10]:
 
             if comment_element.select_one("div.u_cbox_text_wrap span.u_cbox_contents"):  #삭제된 댓글 처리
                 trend_score += self._get_recomm(comment_element) + self._get_unrecomm(comment_element) + self._get_reply_num(comment_element)
@@ -188,8 +188,8 @@ def get_today_issue_summary(q: str):
 
     suggestions = get_suggestions(q)
 
-    for suggestion in suggestions[1:4]:
-        naver_news_response = get_naver_news(suggestion, display=3, sort='sim')
+    for suggestion in suggestions[:1]:
+        naver_news_response = get_naver_news(suggestion, display=10, sort='sim')
         if naver_news_response.status_code != 200:
             raise HTTPException(status_code=500, detail="NEWS API 호출 오류")
 
@@ -370,7 +370,7 @@ def get_comment_sentiment_data(q: str):
     suggestions = get_suggestions(q)
     news_link = []
     for suggestion in suggestions[:1]:
-        naver_news_response = get_naver_news(suggestion, display=20, sort='sim')
+        naver_news_response = get_naver_news(suggestion, display=10, sort='sim')
         if naver_news_response.status_code != 200:
             raise HTTPException(status_code=500, detail="NEWS API 호출 오류")
 
@@ -386,8 +386,6 @@ def get_comment_sentiment_data(q: str):
         tmp = news_comments_crawler.parse(convert_news_url_to_comment_url(link))
         if tmp:
             raw_data.append(tmp)
-        if len(raw_data) >= 10:
-            break
 
     completion_executor = CompletionExecutor(
         host='https://clovastudio.stream.ntruss.com',
