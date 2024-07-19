@@ -14,9 +14,6 @@ def get_news_title_list(q: str) -> list:
 
     for suggestion in suggestions[:1]:
         naver_news_response = RequestNews.get_naver_news(suggestion, display=10, sort='sim')
-        if naver_news_response.status_code != 200:
-            raise HTTPException(status_code=500, detail="NEWS API 호출 오류")
-
         news_items = naver_news_response.json().get('items', [])
         # news_items = [news_item for news_item in news_items if
         #               news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
