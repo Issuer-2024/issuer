@@ -1,9 +1,7 @@
-import json
 import os
 from datetime import datetime, timedelta
 
 import pandas as pd
-import requests
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
@@ -16,58 +14,13 @@ from app.util.string_util import StringUtil
 from app.request_external_api.request_news import RequestNews
 from app.request_external_api.request_suggestions import RequestSuggestions
 from app.request_external_api.request_trend import RequestTrend
+from app.report.toady_issue_summary import get_today_issue_summary
 load_dotenv()
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-
-
-
-
-def get_today_issue_summary(q: str):
-    news_title = []
-
-    suggestions = RequestSuggestions.get_suggestions(q)
-
-    for suggestion in suggestions[:1]:
-        naver_news_response = RequestNews.get_naver_news(suggestion, display=10, sort='sim')
-        if naver_news_response.status_code != 200:
-            raise HTTPException(status_code=500, detail="NEWS API 호출 오류")
-
-        news_items = naver_news_response.json().get('items', [])
-        # news_items = [news_item for news_item in news_items if
-        #               news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
-
-        for news_item in news_items:
-            news_title.append(StringUtil.clean_and_extract_korean_english(news_item['title']))
-
-    completion_executor = CompletionExecutor(
-        host='https://clovastudio.stream.ntruss.com',
-        api_key=os.getenv("CLOVA_CHAT_COMPLETION_CLIENT_KEY"),
-        api_key_primary_val=os.getenv("CLOVA_CHAT_COMPLETION_CLIENT_KEY_PRIMARY_VAR"),
-        request_id=os.getenv("CLOVA_CHAT_COMPLETION_REQUEST_ID")
-    )
-
-    preset_text = [{"role": "system", "content": "당신은 뉴스 기사를 요약하는 도우미입니다."},
-                   {"role": "user", "content": f"다음 뉴스 제목을 최소 3개, 최대 6개의 간결하고 명확한 순서형 목록으로 요약하여 주요 문제를 강조해 주세요. "
-                                               f"순서형 목록만을 보여주고"
-                                               f"문체는 정중체로 ~니다로 종결합니다.: "
-                                               f"\"{news_title}\""}]
-
-    request_data = {
-        'messages': preset_text,
-        'topP': 0.8,
-        'topK': 0,
-        'maxTokens': 256,
-        'temperature': 0.5,
-        'repeatPenalty': 5.0,
-        'stopBefore': [],
-        'includeAiFilters': False,
-        'seed': 0
-    }
-    return completion_executor.execute(request_data).split('\n')
 
 def get_trend_variation(q: str):
     today = datetime.today()
