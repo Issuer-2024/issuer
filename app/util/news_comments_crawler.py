@@ -68,13 +68,12 @@ class NewsCommentsCrawler:
         title = soup.select("h2#title_area")[0].text.strip()
         comment_elements = soup.select("ul.u_cbox_list li.u_cbox_comment")
         trend_score = 0
-        for comment_element in comment_elements[:10]:
+        for comment_element in comment_elements[:5]:
 
             if comment_element.select_one("div.u_cbox_text_wrap span.u_cbox_contents"):  #pi 댓글 처리
                 trend_score += self._get_recomm(comment_element) + self._get_unrecomm(
                     comment_element) + self._get_reply_num(comment_element)
-                if self._get_recomm(comment_element) >= 10:
-                    comments.append(self._get_text(comment_element))
+                comments.append(self._get_text(comment_element))
                     # comments.append({
                     #     "내용": self._get_text(comment_element),
                     #     #"공감 비율": self._get_recomm(comment_element) / (self._get_unrecomm(comment_element)+1),

@@ -12,8 +12,8 @@ def get_news_title_list(q: str) -> list:
 
     suggestions = RequestSuggestions.get_suggestions(q)
 
-    for suggestion in suggestions[:1]:
-        naver_news_response = RequestNews.get_naver_news(suggestion, display=10, sort='sim')
+    for suggestion in suggestions[:5]:
+        naver_news_response = RequestNews.get_naver_news(suggestion, display=3, sort='sim')
         news_items = naver_news_response.json().get('items', [])
         # news_items = [news_item for news_item in news_items if
         #               news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
