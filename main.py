@@ -13,27 +13,15 @@ from starlette.templating import Jinja2Templates
 
 from app.util.completion_executor import CompletionExecutor
 from app.util.news_comments_crawler import NewsCommentsCrawler
-
+from app.request_headers.headers import CLOVA_API_HEADERS
+from app.request_headers.headers import CLOVA_SUMMARY_API_ENDPOINT
+from app.request_headers.headers import NAVER_API_HEADERS
 load_dotenv()
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-
-
-NAVER_API_HEADERS = {
-    'X-Naver-Client-Id': os.getenv('NAVER_API_CLIENT_ID'),
-    'X-Naver-Client-Secret': os.getenv('NAVER_API_CLIENT_SECRET'),
-}
-
-CLOVA_API_HEADERS = {
-    "X-NCP-APIGW-API-KEY-ID": os.getenv('CLOVA_API_CLIENT_ID'),
-    "X-NCP-APIGW-API-KEY": os.getenv('CLOVA_API_CLIENT_SECRET'),
-    "Content-Type": "application/json"
-}
-
-CLOVA_SUMMARY_API_ENDPOINT = "https://naveropenapi.apigw.ntruss.com/text-summary/v1/summarize"
 
 
 def clean_and_extract_korean_english(text):
