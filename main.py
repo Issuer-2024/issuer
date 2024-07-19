@@ -16,21 +16,12 @@ from app.util.news_comments_crawler import NewsCommentsCrawler
 from app.request_headers.headers import CLOVA_API_HEADERS
 from app.request_headers.headers import CLOVA_SUMMARY_API_ENDPOINT
 from app.request_headers.headers import NAVER_API_HEADERS
+from app.util.string_util import StringUtil
 load_dotenv()
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
-
-
-
-def clean_and_extract_korean_english(text):
-    # HTML 태그와 특수 문자를 제거
-    clean_text = re.sub(r'(&quot;|<[^>]*>|\\)', '', text)
-    # 한글과 영어 문자만 추출하는 정규 표현식
-    korean_english_text = re.findall(r'[가-힣a-zA-Z0-9]+', clean_text)
-    # 추출한 문자열들을 공백으로 이어 붙여서 반환
-    return ' '.join(korean_english_text)
 
 
 def get_naver_news(query, display, start=1, sort='date'):
@@ -85,7 +76,7 @@ def get_today_issue_summary(q: str):
         #               news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
 
         for news_item in news_items:
-            news_title.append(clean_and_extract_korean_english(news_item['title']))
+            news_title.append(StringUtil.clean_and_extract_korean_english(news_item['title']))
 
     completion_executor = CompletionExecutor(
         host='https://clovastudio.stream.ntruss.com',
