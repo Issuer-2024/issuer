@@ -70,7 +70,7 @@ class NewsCommentsCrawler:
         trend_score = 0
         for comment_element in comment_elements[:10]:
 
-            if comment_element.select_one("div.u_cbox_text_wrap span.u_cbox_contents"):  #삭제된 댓글 처리
+            if comment_element.select_one("div.u_cbox_text_wrap span.u_cbox_contents"):  #pi 댓글 처리
                 trend_score += self._get_recomm(comment_element) + self._get_unrecomm(
                     comment_element) + self._get_reply_num(comment_element)
                 if self._get_recomm(comment_element) >= 10:

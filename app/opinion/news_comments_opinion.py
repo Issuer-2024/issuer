@@ -3,8 +3,10 @@ from fastapi import HTTPException
 from app.request_external_api import RequestSuggestions, RequestNews
 from app.util import NewsCommentsCrawler, StringUtil, CompletionExecutor
 
+import os
 
-def get_news_comments_opinion_data(q: str):
+
+def get_news_comments_opinion(q: str):
     comment_sentiment_data = []
 
     suggestions = RequestSuggestions.get_suggestions(q)

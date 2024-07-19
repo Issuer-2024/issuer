@@ -32,16 +32,13 @@ def get_keyword_trend_variation(q: str) -> dict:
     one_weeks_ago_str = one_weeks_ago.strftime('%Y.%m.%d')
     one_months_ago_str = one_months_ago.strftime('%Y.%m.%d')
 
-    trend_variation = {"date":
-                           {'ratio': daily_variation,
-                            'duration': f"{today_str} ~ {yesterday_str}"},
+    trend_variation = {"date": {'ratio': daily_variation,
+                                'duration': f"{today_str} ~ {yesterday_str}"},
                        "week": {
                            'ratio': weekly_variation,
-                           'duration': f"{today_str} ~ {one_weeks_ago_str}",
-                       },
+                           'duration': f"{today_str} ~ {one_weeks_ago_str}"},
                        "month": {
                            'ratio': monthly_variation,
-                           'duration': f"{today_str} ~ {one_months_ago_str}"
-                       }}
+                           'duration': f"{today_str} ~ {one_months_ago_str}"}}
 
     return trend_variation

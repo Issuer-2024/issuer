@@ -11,15 +11,9 @@ class RequestNews:
 
     @staticmethod
     def get_naver_news(query, display, start=1, sort='date'):
-        naver_news_api_url = f'https://openapi.naver.com/v1/search/news.json?query={query}&display={display}&start={start}&sort={sort}'
+        naver_news_api_url = (f'https://openapi.naver.com/v1/search/news.json?'
+                              f'query={query}&display={display}&start={start}&sort={sort}')
         return requests.get(naver_news_api_url, headers=NAVER_API_HEADERS)
-
-
-
-
-
-
-
 
 # def get_clova_summary_result(content, tone=0, summary_count=1):
 #     # tone - 0: 원문 어투, 1: 해요체 2: 정중체, 3: 명사형 종결체
@@ -45,7 +39,7 @@ class RequestNews:
 #         return None
 #     except Exception as err:
 #         print(f"Other error occurred: {err}")  # 기타 에러 출력
-#CLOVA_API_HEADERS = {
+# CLOVA_API_HEADERS = {
 #     "X-NCP-APIGW-API-KEY-ID": os.getenv('CLOVA_API_CLIENT_ID'),
 #     "X-NCP-APIGW-API-KEY": os.getenv('CLOVA_API_CLIENT_SECRET'),
 #     "Content-Type": "application/json"

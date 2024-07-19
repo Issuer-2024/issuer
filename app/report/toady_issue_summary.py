@@ -1,10 +1,11 @@
 from fastapi import HTTPException
 
-from app.request_external_api import RequestNews
+from app.request_external_api.request_news import RequestNews
 from app.request_external_api.request_suggestions import RequestSuggestions
 from app.util import StringUtil, CompletionExecutor
 
 import os
+
 
 def get_news_title_list(q: str) -> list:
     news_title = []
@@ -28,7 +29,6 @@ def get_news_title_list(q: str) -> list:
 
 def get_today_issue_summary(q: str):
     news_title_list = get_news_title_list(q)
-
 
     completion_executor = CompletionExecutor(
         host='https://clovastudio.stream.ntruss.com',

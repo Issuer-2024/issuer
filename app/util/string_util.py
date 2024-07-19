@@ -20,9 +20,9 @@ class StringUtil:
 
     @staticmethod
     def convert_news_url_to_comment_url(news_url):
-        pattern = r"(https://n\.news\.naver\.com/mnews/article/)(\d+/\d+)(\?.*)" # 뉴스 URL의 정규식 패턴
+        pattern = r"(https://n\.news\.naver\.com/mnews/article/)(\d+/\d+)(\?.*)"  # 뉴스 URL의 정규식 패턴
         replacement = r"\1comment/\2\3"
 
-        comment_url = re.sub(pattern, replacement, news_url) # 정규식을 사용하여 댓글 URL로 변환
+        comment_url = re.sub(pattern, replacement, news_url)  # 정규식을 사용하여 댓글 URL로 변환
 
         return comment_url

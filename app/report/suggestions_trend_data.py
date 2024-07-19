@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from app.request_external_api import RequestTrend, RequestSuggestions
 
 
-def get_suggestion_trend(q: str): # 키워드의 제안 검색어의 일주일 트랜드 데이터를 가져옵니다.
+def get_suggestion_trend(q: str):  # 키워드의 제안 검색어의 일주일 트랜드 데이터를 가져옵니다.
     today = datetime.today()
     one_week_ago = (today - timedelta(days=7)).strftime('%Y-%m-%d')
     today = today.strftime('%Y-%m-%d')
@@ -12,14 +12,14 @@ def get_suggestion_trend(q: str): # 키워드의 제안 검색어의 일주일 �
     return RequestTrend.get_naver_trend_search_data(one_week_ago, today, 'date', keyword_groups)
 
 
-def get_suggestion_trend_score(trend_data: list): # 제안 검색어의 일자 별 검색 비율의 총합을 더한다.
+def get_suggestion_trend_score(trend_data: list):  # 제안 검색어의 일자 별 검색 비율의 총합을 더한다.
     score = 0
     for data in trend_data:
         score += data['ratio']
     return score
 
 
-def get_most_trend_day(trend_data: list): # 가장 인기 있었던 날의 일자를 반환한다.
+def get_most_trend_day(trend_data: list):  # 가장 인기 있었던 날의 일자를 반환한다.
     # 'ratio' 필드가 있는 항목만 필터링
     filtered_trend_data = list(filter(lambda x: 'ratio' in x, trend_data))
 
