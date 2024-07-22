@@ -1,6 +1,10 @@
 from datetime import datetime, timedelta
 import pandas as pd
 import os
+
+import requests
+from bs4 import BeautifulSoup
+
 from app.request_external_api import RequestNews
 from app.util import CompletionExecutor
 
@@ -12,6 +16,25 @@ def get_date_to_collect(duration: int):
         date_str = date.strftime('%Y.%m.%d')
         date_list.append(date_str)
     return date_list
+
+def get_news_list_by_date(day: str):
+    news_list = []
+    url = f'https://search.naver.com/search.naver?where=news&query=쯔양&sm=tab_opt&sort=0&photo=0&field=0&pd=3&ds={day}&de={day}'
+    # 웹 페이지의 HTML 가져오기
+    response = requests.get(url)
+    html_content = response.text
+
+    # BeautifulSoup 객체 생성
+    soup = BeautifulSoup(html_content, 'html.parser')
+
+    # 뉴스 링크 요소 찾기
+    news_links = soup.find_all('a', {'class': 'info'}, href=True)
+
+    # 링크 URL 가져오기
+    for link in news_links:
+        news_list.append(link['href'])
+
+    return news_list
 
 
 def get_timeline(q: str):
