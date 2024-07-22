@@ -4,6 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
+from app.main_search import get_keyword_suggestion
 from app.opinion import get_news_comments_opinion
 from app.report import get_keyword_trend_variation, get_suggestions_trend_data
 from app.report.toady_issue_summary import get_today_issue_summary
@@ -19,7 +20,9 @@ templates = Jinja2Templates(directory="templates")
 @app.get("/")
 async def render_main(request: Request):
     return templates.TemplateResponse(
-        request=request, name="index.html"
+        request=request, name="index.html", context={
+            "keyword_suggestions": get_keyword_suggestion()
+        }
     )
 
 
