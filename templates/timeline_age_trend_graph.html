@@ -1,0 +1,53 @@
+<div>
+    <canvas id="{{ chart_id }}" width="400" height="200"></canvas>
+</div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const chartId = "{{ chart_id }}";
+            var ctx = document.getElementById(chartId).getContext('2d');
+            var myChart = new Chart(ctx, {
+                type: 'bar', // 막대 그래프
+                data: {
+                    labels: ['10', '20', '30', '40', '50', '60'], // X축 레이블
+                    datasets: [{
+                        label: '', // 데이터셋 이름 제거
+                        data: {{ trend }},
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ], // 각 바의 배경색
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ], // 각 바의 경계선 색
+                    borderWidth: 1 // 경계선 두께
+            }
+        ]
+        },
+            options: {
+                plugins: {
+                    legend: {
+                        display: false // 범례 표시 제거
+                    }
+                }
+            ,
+                scales: {
+                    y: {
+                        beginAtZero: true // Y축의 시작점을 0으로 설정
+                    }
+                }
+            }
+        })
+            ;
+        })
+    </script>

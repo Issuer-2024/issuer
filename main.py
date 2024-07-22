@@ -9,6 +9,7 @@ from app.opinion import get_news_comments_opinion
 from app.report import get_keyword_trend_variation, get_suggestions_trend_data
 from app.report.toady_issue_summary import get_today_issue_summary
 from app.timeline.get_timeline import get_timeline
+from app.timeline.get_timeline import get_timeline_v2
 
 load_dotenv()
 
@@ -46,7 +47,7 @@ def render_opinion(q: str, request: Request):
 @app.get("/timeline")
 def render_timeline(q: str, request: Request):
     return templates.TemplateResponse(
-        request=request, name="timeline.html", context={"timeline": get_timeline(q)}
+        request=request, name="timeline.html", context={"timeline": get_timeline_v2(q)}
     )
 
 

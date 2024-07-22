@@ -1,0 +1,46 @@
+<div>
+    <canvas id="{{ chart_id }}_mf" width="400" height="200"></canvas>
+</div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const chartId = "{{ chart_id }}_mf";
+            var ctx = document.getElementById(chartId).getContext('2d');
+            var myChart = new Chart(ctx, {
+                type: 'bar', // 막대 그래프
+                data: {
+                    labels: ['male', 'female'], // X축 레이블
+                    datasets: [{
+                        label: '', // 데이터셋 이름 제거
+                        data: {{ trend }},
+                 // 데이터 값
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.2)', // 남성 데이터의 배경색
+                    'rgba(255, 99, 132, 0.2)'  // 여성 데이터의 배경색
+                ],
+                borderColor: [
+                    'rgba(54, 162, 235, 1)', // 남성 데이터의 경계선 색
+                    'rgba(255, 99, 132, 1)'  // 여성 데이터의 경계선 색
+                ],
+                borderWidth: 1 // 경계선 두께
+            }
+        ]
+        },
+            options: {
+                plugins: {
+                    legend: {
+                        display: false // 범례 표시 제거
+                    }
+                }
+            ,
+                scales: {
+                    y: {
+                        beginAtZero: true // Y축의 시작점을 0으로 설정
+                    }
+                }
+            }
+        })
+            ;
+        })
+    </script>
+</body>
+</html>
