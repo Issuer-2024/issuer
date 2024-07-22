@@ -34,7 +34,6 @@ def get_keyword_suggestion():
             'seed': 0
         }
         result = completion_executor.execute(request_data)
-        print(result)
         try:
             tmp = ast.literal_eval(result)
             data += tmp
