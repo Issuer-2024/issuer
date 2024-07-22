@@ -1,8 +1,17 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 import os
 from app.request_external_api import RequestNews
 from app.util import CompletionExecutor
+
+
+def get_date_to_collect(duration: int):
+    date_list = []
+    for i in range(duration + 1):
+        date = datetime.now() - timedelta(days=i)
+        date_str = date.strftime('%Y.%m.%d')
+        date_list.append(date_str)
+    return date_list
 
 
 def get_timeline(q: str):
