@@ -137,6 +137,8 @@ def get_timeline_v2(q: str):
         for i, ratio in item.items():
             result[date]['trend'][i] = ratio
 
+    return result
+
 
 def get_timeline(q: str):
     timeline_data = {}
