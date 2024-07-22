@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flexbox Timeline</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+  <style>
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+    .timeline::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: #bdbdbd;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .timeline-item {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      width: 100%;
+      margin: 40px 0;
+    }
+    .timeline-item .card {
+      width: 100%;
+      max-width: 500px;
+      margin: 0 20px;
+    }
+    .dot {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      background: #fff;
+      border: 3px solid #bdbdbd;
+      border-radius: 50%;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+
+  <section id="timeline" class="py-20">
+    <h1 class="text-3xl font-light text-center mb-8">A Flexbox Timeline</h1>
+    <p class="text-center mb-12 max-w-2xl mx-auto">All cards must be the same height and width for space calculations on large screens.</p>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="dot"></div>
+        <div class="card bg-white shadow-md rounded-lg p-6 relative z-10">
+          <div class="bg-blue-500 text-white p-4 rounded-t-lg">
+            <div class="flex items-center">
+              <div class="text-2xl font-bold">01</div>
+              <div class="ml-3">
+                <div class="uppercase text-sm">Subtitle</div>
+                <div class="text-xl font-semibold">Technology</div>
+              </div>
+            </div>
+          </div>
+          <div class="p-4">
+            <p class="text-gray-700 mb-4">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Soluta reiciendis deserunt doloribus consequatur, laudantium odio dolorum laboriosam.</p>
+            <img src="http://placehold.it/1000x500" alt="Graphic" class="w-full">
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="dot"></div>
+        <div class="card bg-white shadow-md rounded-lg p-6 relative z-10">
+          <div class="bg-teal-400 text-white p-4 rounded-t-lg">
+            <div class="flex items-center">
+              <div class="text-2xl font-bold">02</div>
+              <div class="ml-3">
+                <div class="uppercase text-sm">Subtitle</div>
+                <div class="text-xl font-semibold">Confidence</div>
+              </div>
+            </div>
+          </div>
+          <div class="p-4">
+            <p class="text-gray-700 mb-4">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Soluta reiciendis deserunt doloribus consequatur, laudantium odio dolorum laboriosam.</p>
+            <img src="http://placehold.it/1000x500" alt="Graphic" class="w-full">
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="dot"></div>
+        <div class="card bg-white shadow-md rounded-lg p-6 relative z-10">
+          <div class="bg-purple-500 text-white p-4 rounded-t-lg">
+            <div class="flex items-center">
+              <div class="text-2xl font-bold">03</div>
+              <div class="ml-3">
+                <div class="uppercase text-sm">Subtitle</div>
+                <div class="text-xl font-semibold">Adaptation</div>
+              </div>
+            </div>
+          </div>
+          <div class="p-4">
+            <p class="text-gray-700 mb-4">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Soluta reiciendis deserunt doloribus consequatur, laudantium odio dolorum laboriosam.</p>
+            <img src="http://placehold.it/1000x500" alt="Graphic" class="w-full">
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="dot"></div>
+        <div class="card bg-white shadow-md rounded-lg p-6 relative z-10">
+          <div class="bg-indigo-500 text-white p-4 rounded-t-lg">
+            <div class="flex items-center">
+              <div class="text-2xl font-bold">04</div>
+              <div class="ml-3">
+                <div class="uppercase text-sm">Subtitle</div>
+                <div class="text-xl font-semibold">Consistency</div>
+              </div>
+            </div>
+          </div>
+          <div class="p-4">
+            <p class="text-gray-700 mb-4">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Soluta reiciendis deserunt doloribus consequatur, laudantium odio dolorum laboriosam.</p>
+            <img src="http://placehold.it/1000x500" alt="Graphic" class="w-full">
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="dot"></div>
+        <div class="card bg-white shadow-md rounded-lg p-6 relative z-10">
+          <div class="bg-blue-500 text-white p-4 rounded-t-lg">
+            <div class="flex items-center">
+              <div class="text-2xl font-bold">05</div>
+              <div class="ml-3">
+                <div class="uppercase text-sm">Subtitle</div>
+                <div class="text-xl font-semibold">Conversion</div>
+              </div>
+            </div>
+          </div>
+          <div class="p-4">
+            <p class="text-gray-700 mb-4">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Soluta reiciendis deserunt doloribus consequatur, laudantium odio dolorum laboriosam.</p>
+            <img src="http://placehold.it/1000x500" alt="Graphic" class="w-full">
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</body>
+</html>
