@@ -1,6 +1,14 @@
+import os
+
+import requests
 from bs4 import BeautifulSoup
 from selenium.webdriver.chrome.options import Options
+from selenium import webdriver
 import traceback
+from dotenv import load_dotenv
+
+load_dotenv()
+
 chrome_options = Options()
 chrome_options.add_argument('--headless')
 chrome_options.add_argument('--no-sandbox')
@@ -45,14 +53,14 @@ class NewsIssueLoader:
                             .replace('조회수', ''))
         return news_view
 
-    def _parse(self, html):
+    def parse(self, html):
         try:
             soup = BeautifulSoup(html, 'html.parser')
             news_items = []
 
             ranking_box = soup.select('div.press_ranking_home > div.press_ranking_box')
 
-            for sub_ranking in ranking_box:
+            for sub_ranking in ranking_box[:1]:
                 items = self._get_news_items(sub_ranking)
                 for item in items:
                     news_items.append({
@@ -66,3 +74,23 @@ class NewsIssueLoader:
         except Exception as e:
             traceback.print_exc()
             return []
+
+    def crawl_issues(self):
+        all_issues = []
+        for platform, url in self.target_platforms.items():
+            driver = webdriver.Remote(
+                command_executor=os.getenv('WEB_DRIVER_HUB_URL'),
+                options=chrome_options
+            )
+            driver.get(url)
+            issue_items = self.parse(driver.page_source)
+            for i in range(len(issue_items)):
+                issue_items[i]['플랫폼'] = platform
+                issue_items[i]['상위 플랫폼'] = self.main_platform
+                issue_items[i]['하위 플랫폼'] = platform
+            all_issues += issue_items
+            driver.quit()
+            node_url = "http://localhost:4444" + '/session/' + driver.session_id  # 노드 URL 및 세션 ID 설정
+            response = requests.delete(node_url)
+
+        return all_issues
