@@ -18,7 +18,7 @@ def get_keyword_suggestion():
     data = []
     for item in issue_data[:3]:
         preset_text = [{"role": "system",
-                        "content": "댓글을 분석하는 AI 어시스턴트 입니다."
+                        "content": "키워드를 추출하는 AI 어시스턴트 입니다."
                                    "### 지시사항\n- 문서에서 핵심 키워드 최대 2개를 추출합니다.\n- 키워드는 핵심 주제와 상응하는 우선순위로 꼭 json 형식으로 답변합니다.\n- 각각의 핵심 키워드는 2단어 이하로 조합해서 추출합니다.\n## 응답형식:['키워드1', '키워드2']"},
                        {"role": "user", "content": f"{item['제목']}"}]
 
