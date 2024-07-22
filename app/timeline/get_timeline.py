@@ -63,6 +63,32 @@ def get_news_title(url):
         return None
 
 
+def get_trend_data(keyword: str):
+    date_to_collect = get_date_to_collect(7)[1:]
+    trend_data_result = {date: {"10": 0, "20": 0, "30": 0, "40": 0,
+                                "50": 0, "60": 0, "male": 0, "female": 0} for date in date_to_collect}
+    today = datetime.today()
+    one_week_ago = (today - timedelta(days=7)).strftime('%Y-%m-%d')
+    today = today.strftime('%Y-%m-%d')
+    age_group = {"10": ["1", "2"], "20": ["3", "4"], "30": ["5", "6"], "40": ["7", "8"], "50": ["9", "10"],
+                 "60": ["11"]}
+    sex_group = {"male": "m", "female": "f"}
+    keyword_groups = [
+        {'groupName': keyword, 'keywords': [keyword]}]
+    for k, v in age_group.items():
+        trend_data_list = get_naver_trend_search_data(one_week_ago, today, "date", keyword_groups, v, "")
+        for trend_data in trend_data_list:
+            for item in trend_data['data']:
+                trend_data_result[item['period'].replace('-', '.')][k] = item['ratio']
+    for k, v in sex_group.items():
+        trend_data_list = get_naver_trend_search_data(one_week_ago, today, "date", keyword_groups, [], v)
+        for trend_data in trend_data_list:
+            for item in trend_data['data']:
+                trend_data_result[item['period'].replace('-', '.')][k] = item['ratio']
+    print(trend_data_result)
+    return trend_data_result
+
+
 def get_timeline(q: str):
     timeline_data = {}
 
