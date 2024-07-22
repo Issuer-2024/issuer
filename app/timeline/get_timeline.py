@@ -17,9 +17,9 @@ def get_date_to_collect(duration: int):
         date_list.append(date_str)
     return date_list
 
-def get_news_list_by_date(day: str):
+def get_news_list_by_date(q:str, day: str):
     news_list = []
-    url = f'https://search.naver.com/search.naver?where=news&query=쯔양&sm=tab_opt&sort=0&photo=0&field=0&pd=3&ds={day}&de={day}'
+    url = f'https://search.naver.com/search.naver?where=news&query={q}&sm=tab_opt&sort=0&photo=0&field=0&pd=3&ds={day}&de={day}'
     # 웹 페이지의 HTML 가져오기
     response = requests.get(url)
     html_content = response.text
@@ -35,6 +35,11 @@ def get_news_list_by_date(day: str):
         news_list.append(link['href'])
 
     return news_list
+
+def filter_naver_news(url_list: list):
+    # 네이버 뉴스 URL만 필터링
+    naver_news_urls = [url for url in url_list if 'https://n.news.naver.com' in url]
+    return naver_news_urls
 
 
 def get_timeline(q: str):
