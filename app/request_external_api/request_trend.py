@@ -10,8 +10,8 @@ NAVER_API_HEADERS = {
 
 class RequestTrend:
     @staticmethod
-    def get_naver_trend_search_data(start_date: str, end_date: str, time_unit: str, keyword_groups: list, ages: list,
-                                    gender: str):
+    def get_naver_trend_search_data(start_date: str, end_date: str, time_unit: str, keyword_groups: list, ages: list = [],
+                                    gender: str = ""):
         # 구간단위 - date, week, month
         # group data => groupName, keywords:list
         # 날짜 형식 yyyy-mm-dd

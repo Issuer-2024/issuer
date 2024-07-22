@@ -131,13 +131,20 @@ def get_timeline_v2(q: str):
             'seed': 0
         }
         issue_summary = completion_executor.execute(request_data)
-        result[date]['issue_summary'] = issue_summary
-    trend_data = get_trend_data("쯔양")
+        result[date]['issue_summary'] = issue_summary.split('\n')
+    trend_data = get_trend_data(q)
     for date, item in trend_data.items():
         for i, ratio in item.items():
             result[date]['trend'][i] = ratio
 
-    return result
+    timeline = []
+    for k, v in result.items():
+        v['date'] = k
+        v['age_trend'] = list(v['trend'].values())[:-2]
+        v['mf_trend'] = list(v['trend'].values())[-2:]
+        timeline.append(v)
+    timeline.sort(key=lambda x: x['date'])
+    return timeline
 
 
 def get_timeline(q: str):
