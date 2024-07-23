@@ -11,9 +11,9 @@ def get_keyword_trend_variation(q: str) -> dict:
 
     keyword_groups = [
         {'groupName': q, 'keywords': [suggestion for suggestion in RequestSuggestions.get_suggestions(q)]}]
+    if not keyword_groups[0]['keywords']: keyword_groups[0]['keywords'].append(q)
 
-    trend_search_data = RequestTrend.get_naver_trend_search_data(two_months_ago, today, 'date', keyword_groups)[0][
-        'data']
+    trend_search_data = RequestTrend.get_naver_trend_search_data(two_months_ago, today, 'date', keyword_groups)[0]['data']
     daily_variation = (trend_search_data[-1]['ratio'] / (trend_search_data[-2]['ratio']+1) * 100) - 100
     two_weeks_ago_ratio = sum([entry['ratio'] for entry in trend_search_data[-14:-7]])
     one_weeks_ago_ratio = sum([entry['ratio'] for entry in trend_search_data[-7:]])

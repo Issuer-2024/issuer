@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from selenium.webdriver.chrome.options import Options
 import traceback
 from dotenv import load_dotenv
+
 load_dotenv()
 
 chrome_options = Options()
@@ -14,7 +15,6 @@ target_news_platform_list = {
     "뉴시스": "https://media.naver.com/press/003/ranking",
     "연합뉴스": "https://media.naver.com/press/001/ranking",
     "한국경제": "https://media.naver.com/press/215/ranking",
-    "머니투데이": "https://media.naver.com/press/008/ranking",
     "뉴스1": "https://media.naver.com/press/421/ranking",
     "이데일리": "https://media.naver.com/press/018/ranking",
     "헤럴드경제": "https://media.naver.com/press/016/ranking",
@@ -56,7 +56,7 @@ class NewsIssueLoader:
 
             ranking_box = soup.select('div.press_ranking_home > div.press_ranking_box')
 
-            for sub_ranking in ranking_box[:1]:
+            for sub_ranking in ranking_box:
                 items = self._get_news_items(sub_ranking)
                 for item in items:
                     news_items.append({
