@@ -1,12 +1,8 @@
-import os
-
 import requests
 from bs4 import BeautifulSoup
 from selenium.webdriver.chrome.options import Options
-from selenium import webdriver
 import traceback
 from dotenv import load_dotenv
-import os
 load_dotenv()
 
 chrome_options = Options()
