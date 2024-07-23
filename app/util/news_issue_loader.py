@@ -77,20 +77,11 @@ class NewsIssueLoader:
 
     def crawl_issues(self):
         all_issues = []
-        driver = webdriver.Remote(
-            command_executor=os.getenv('WEB_DRIVER_HUB_URL'),
-            options=chrome_options
-        )
         for platform, url in self.target_platforms.items():
-            driver.get(url)
-            issue_items = self.parse(driver.page_source)
+            issue_items = self.parse(requests.get(url).content)
             for i in range(len(issue_items)):
                 issue_items[i]['플랫폼'] = platform
                 issue_items[i]['상위 플랫폼'] = self.main_platform
                 issue_items[i]['하위 플랫폼'] = platform
             all_issues += issue_items
-        driver.quit()
-        node_url = "http://localhost:4444" + '/session/' + driver.session_id  # 노드 URL 및 세션 ID 설정
-        response = requests.delete(node_url)
-
         return all_issues
