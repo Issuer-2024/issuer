@@ -43,7 +43,7 @@ def get_suggestions_trend_data(q: str):
 
     total_score = sum(item['score'] for item in suggestion_entire_data)
     for i in range(len(suggestion_entire_data)):
-        suggestion_entire_data[i]['trend_proportion'] = suggestion_entire_data[i]['score'] / total_score * 100
+        suggestion_entire_data[i]['trend_proportion'] = suggestion_entire_data[i]['score'] / (total_score+1) * 100
 
     suggestion_entire_data.sort(key=lambda x: x['score'], reverse=True)
     return suggestion_entire_data

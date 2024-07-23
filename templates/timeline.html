@@ -56,9 +56,7 @@
 <body class="bg-gray-100">
 
   <section id="timeline" class="py-20">
-    <h1 class="text-3xl font-light text-center mb-8">A Flexbox Timeline</h1>
-    <p class="text-center mb-12 max-w-2xl mx-auto">All cards must be the same height and width for space calculations on large screens.</p>
-
+    <h1 class="text-3xl font-light text-center mb-8">Timeline</h1>
     <div class="timeline">
     {% for item in timeline %}
       <div class="timeline-item">
@@ -84,9 +82,15 @@
             </div>
           </div>
           <div class="p-4">
+            <h3>사건 요약</h3>
           {% for s in item.issue_summary %}
             <p class="text-gray-700 mb-4">{{ s }}</p>
           {% endfor %}
+          </div>
+          <hr>
+          <div class="p-4">
+            <h3>사용자 여론</h3>
+            <p class="text-gray-700 mb-4">{{ item.keyword_sentiment }}</p>
           </div>
         </div>
       </div>

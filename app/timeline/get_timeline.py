@@ -5,7 +5,7 @@ import os
 import requests
 from bs4 import BeautifulSoup
 
-from app.request_external_api import RequestNews, RequestTrend
+from app.request_external_api import RequestNews, RequestTrend, RequestNewsComments
 from app.util import CompletionExecutor
 
 
@@ -103,7 +103,7 @@ def get_timeline_v2(q: str):
         news_list = filter_naver_news(news_list)
 
         news_title[date] = [get_news_title(url) for url in news_list[:2]]
-        # news_comments[date] = [get_news_comments(url) for url in news_list[:3]]
+        news_comments[date] = [RequestNewsComments.get_news_comments(url) for url in news_list[:3]]
 
     completion_executor = CompletionExecutor(
         host='https://clovastudio.stream.ntruss.com',
@@ -113,11 +113,16 @@ def get_timeline_v2(q: str):
     )
 
     for date, item in news_title.items():
-        preset_text = [{"role": "system", "content": "당신은 뉴스 기사를 요약하는 도우미입니다."},
-                       {"role": "user", "content": f"다음 뉴스 제목을 최소 3개, 최대 6개의 간결하고 명확한 순서형 목록으로 요약하여 주요 문제를 강조해 주세요. "
-                                                   f"순서형 목록만을 보여주고"
-                                                   f"문체는 정중체로 ~니다로 종결합니다.: "
-                                                   f"\"{item}\""}]
+        preset_text = [{"role": "system", "content": "당신은 뉴스 기사를 요약하는 도우미입니다."
+                                                     "### 지시사항\n"
+                                                     "- 문서에서 핵심 내용을 추출합니다.\n"
+                                                     "- 핵심 내용은 5문장 이하의 순서형 목록으로 추출합니다.\n"
+                                                     "- 문체는 정중체로 ~니다로 종결합니다.\n"
+                                                     "- ## 응답형식:\n"
+                                                     "1. 철수는 영희에게 사과를 받았습니다.\n"
+                                                     "2. 철수는 영희에게 감사함을 표합니다.\n"
+                                                     "3. 영희는 철수에게 인사를 하고 돌아갑니다."},
+                       {"role": "user", "content": f"{item}"}]
 
         request_data = {
             'messages': preset_text,
@@ -132,6 +137,27 @@ def get_timeline_v2(q: str):
         }
         issue_summary = completion_executor.execute(request_data)
         result[date]['issue_summary'] = issue_summary.split('\n')
+
+    for date, item in news_comments.items():
+        preset_text = [{"role": "system", "content": "당신은 핵심 키워드와 해당 키워드에 대한 감정을 추출하는 도우미입니다."
+                                                     "### 지시사항\n- 문서 에서 핵심 키워드 최대 2개를 추출합니다.\n- 키워드는 핵심 주제와 상응하는 우선순위로 꼭 json 형식으로 답변합니다.\n- 각각의 핵심 키워드는 2단어 이하로 조합해서 추출합니다.\n- 감정은 긍정, 부정 중 하나이며 해당 키워드에 대한 감정을 추출합니다.\n- ## 응답 형식:{\"사과\": \"부정\", \"바나나\": \"긍정\"}\n"
+                        },
+                       {"role": "user", "content": f"{item}"}]
+
+        request_data = {
+            'messages': preset_text,
+            'topP': 0.8,
+            'topK': 0,
+            'maxTokens': 256,
+            'temperature': 0.5,
+            'repeatPenalty': 1.0,
+            'stopBefore': [],
+            'includeAiFilters': False,
+            'seed': 0
+        }
+        keyword_sentiment = completion_executor.execute(request_data)
+        result[date]['keyword_sentiment'] = keyword_sentiment
+
     trend_data = get_trend_data(q)
     for date, item in trend_data.items():
         for i, ratio in item.items():
