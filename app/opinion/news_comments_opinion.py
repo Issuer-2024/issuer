@@ -1,7 +1,10 @@
+from datetime import datetime
+
 import requests
 from bs4 import BeautifulSoup
 
 from app.request_external_api import RequestSuggestions, RequestNews, RequestNewsComments
+from app.timeline import get_news_list_by_date
 from app.util import StringUtil, CompletionExecutor
 
 import os
@@ -26,17 +29,12 @@ def get_news_title(url):
 
 def get_news_comments_opinion(q: str):
     comment_sentiment_data = []
-
-    news_link = []
+    date = datetime.now().strftime('%Y-%m-%d')
+    news_link = get_news_list_by_date(q, date)
+    news_link = [url for url in news_link if 'https://n.news.naver.com' in url][:5]
     news_title = []
-    naver_news_response = RequestNews.get_naver_news(q, display=10, sort='sim')
-
-    news_items = naver_news_response.json().get('items', [])
-    news_items = [news_item for news_item in news_items if
-                  news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
-    for news_item in news_items[:5]:
-        news_link.append(news_item['link'])
-        news_title.append(get_news_title(news_item['link']))
+    for url in news_link:
+        news_title.append(get_news_title(url))
     raw_data = []
 
     for url in news_link:
