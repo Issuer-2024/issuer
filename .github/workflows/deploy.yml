@@ -65,7 +65,7 @@ jobs:
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/issuer-app:latest
             docker stop issuer-app || true
             docker rm issuer-app || true
-            docker run -d --name issuer-app -p 80:80 \
+            docker run -d --name issuer-app -p 8000:8000 \
               -e NAVER_API_CLIENT_ID=${{ secrets.NAVER_API_CLIENT_ID }} \
               -e NAVER_API_CLIENT_SECRET=${{ secrets.NAVER_API_CLIENT_SECRET }} \
               -e CLOVA_API_CLIENT_ID=${{ secrets.CLOVA_API_CLIENT_ID }} \
