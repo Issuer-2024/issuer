@@ -1,25 +1,25 @@
+from datetime import datetime
+
 from fastapi import HTTPException
 
+from app.opinion.news_comments_opinion import get_news_title
+from app.request_external_api import get_news_summary
 from app.request_external_api.request_news import RequestNews
 from app.request_external_api.request_suggestions import RequestSuggestions
+from app.timeline import get_news_list_by_date
 from app.util import StringUtil, CompletionExecutor
 
 import os
 
 
 def get_news_title_list(q: str) -> list:
+
+    date = datetime.now().strftime('%Y-%m-%d')
+    news_link = get_news_list_by_date(q, date)
+    news_link = [url for url in news_link if 'https://n.news.naver.com' in url]
     news_title = []
-
-    suggestions = RequestSuggestions.get_suggestions(q)
-
-    for suggestion in suggestions[:5]:
-        naver_news_response = RequestNews.get_naver_news(suggestion, display=3, sort='sim')
-        news_items = naver_news_response.json().get('items', [])
-        # news_items = [news_item for news_item in news_items if
-        #               news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
-
-        for news_item in news_items:
-            news_title.append(StringUtil.clean_and_extract_korean_english(news_item['title']))
+    for url in news_link:
+        news_title.append(get_news_summary(url)['title'])
 
     return news_title
 

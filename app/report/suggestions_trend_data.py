@@ -8,7 +8,11 @@ def get_suggestion_trend(q: str):  # 키워드의 제안 검색어의 일주일 
     one_week_ago = (today - timedelta(days=7)).strftime('%Y-%m-%d')
     today = today.strftime('%Y-%m-%d')
     suggestions = RequestSuggestions.get_suggestions(q)
-    keyword_groups = [{'groupName': suggestion, 'keywords': [suggestion]} for suggestion in suggestions[1:6]]
+    keyword_groups = []
+    if len(suggestions) <= 1:
+        keyword_groups = [{'groupName': q, 'keywords': [q]}]
+    else:
+        keyword_groups = [{'groupName': suggestion, 'keywords': [suggestion]} for suggestion in suggestions[1:6]]
     return RequestTrend.get_naver_trend_search_data(one_week_ago, today, 'date', keyword_groups)
 
 
