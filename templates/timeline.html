@@ -72,13 +72,13 @@
             </div>
           </div>
           <div class="flex flex-wrap items-center justify-center">
-            <div class="chart-area flex-1">
+            <div class="chart-area">
               <h3>연령별 검색량</h3>
             {% with trend=item.age_trend, chart_id=item.date %}
                 {% include "timeline_age_trend_graph.html" %}
             {% endwith %}
             </div>
-            <div class="chart-area flex-1">
+            <div class="chart-area">
               <h3>성별 검색량</h3>
               {% with trend=item.mf_trend, chart_id=item.date %}
                 {% include "timeline_mf_trend_graph.html" %}
