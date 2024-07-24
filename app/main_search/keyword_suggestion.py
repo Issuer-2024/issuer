@@ -35,9 +35,7 @@ def get_keyword_suggestion():
         'includeAiFilters': False,
         'seed': 0
     }
-    print(document)
     result = completion_executor.execute(request_data)
-    print(result)
     try:
         data = ast.literal_eval(result)
     except Exception as e:

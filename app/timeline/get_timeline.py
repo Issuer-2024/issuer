@@ -1,13 +1,14 @@
+import ast
+import re
 from datetime import datetime, timedelta
-import pandas as pd
 import os
 
+import dotenv
 import requests
 from bs4 import BeautifulSoup
-
-from app.request_external_api import RequestNews, RequestTrend, RequestNewsComments
+from app.request_external_api import RequestTrend, RequestNewsComments, get_news_summary
 from app.util import CompletionExecutor
-
+dotenv.load_dotenv()
 
 def get_date_to_collect(duration: int):
     date_list = []
@@ -44,25 +45,6 @@ def filter_naver_news(url_list: list):
     return naver_news_urls
 
 
-def get_news_title(url):
-    # 웹 페이지의 HTML 가져오기
-    response = requests.get(url)
-    html_content = response.text
-
-    # BeautifulSoup 객체 생성
-    soup = BeautifulSoup(html_content, 'html.parser')
-
-    # 뉴스 제목 요소 찾기
-    title_element = soup.find('h2', {'class': 'media_end_head_headline'})
-
-    # 제목 가져오기
-    if title_element:
-        title = title_element.get_text()
-        return title
-    else:
-        return None
-
-
 def get_trend_data(keyword: str):
     date_to_collect = get_date_to_collect(7)[1:]
     trend_data_result = {date: {"10": 0, "20": 0, "30": 0, "40": 0,
@@ -92,71 +74,65 @@ def get_timeline_v2(q: str):
     date_to_collect = get_date_to_collect(7)[1:]
     result = {date: {"issue_summary": "",
                      "trend": {"10": 0, "20": 0, "30": 0, "40": 0, "50": 0, "60": 0, "male": 0, "female": 0},
-                     "keyword_sentiment": {"postive": [], "negative": []},
+                     "issue_comments": [],
                      "reaction_summary": ""
                      } for date in date_to_collect}
 
-    news_title = {date: [] for date in date_to_collect}
+    news_summary = {date: [] for date in date_to_collect}
     news_comments = {date: [] for date in date_to_collect}
     for date in date_to_collect:
         news_list = get_news_list_by_date(q, date)
         news_list = filter_naver_news(news_list)
 
-        news_title[date] = [get_news_title(url) for url in news_list[:2]]
-        news_comments[date] = [RequestNewsComments.get_news_comments(url) for url in news_list[:3]]
-
-    completion_executor = CompletionExecutor(
-        host='https://clovastudio.stream.ntruss.com',
-        api_key="NTA0MjU2MWZlZTcxNDJiY9qg8Bwi+oD6PVp1ecnZXbiDvzB4y8m2qLv8/xabLAQg",
-        api_key_primary_val="Ad6P4V4p9ncI5qpSnrGDuboJS7rSjaMAaqL9Sxcl",
-        request_id='2ab6ff99-5837-465e-b961-7d301eb674e6',
-    )
-
-    for date, item in news_title.items():
-        preset_text = [{"role": "system", "content": "당신은 뉴스 기사를 요약하는 도우미입니다."
-                                                     "### 지시사항\n"
-                                                     "- 문서에서 핵심 내용을 추출합니다.\n"
-                                                     "- 핵심 내용은 5문장 이하의 순서형 목록으로 추출합니다.\n"
-                                                     "- 문체는 정중체로 ~니다로 종결합니다.\n"
-                                                     "- ## 응답형식:\n"
-                                                     "1. 철수는 영희에게 사과를 받았습니다.\n"
-                                                     "2. 철수는 영희에게 감사함을 표합니다.\n"
-                                                     "3. 영희는 철수에게 인사를 하고 돌아갑니다."},
-                       {"role": "user", "content": f"{item}"}]
-
-        request_data = {
-            'messages': preset_text,
-            'topP': 0.8,
-            'topK': 0,
-            'maxTokens': 256,
-            'temperature': 0.5,
-            'repeatPenalty': 1.0,
-            'stopBefore': [],
-            'includeAiFilters': False,
-            'seed': 0
-        }
-        issue_summary = completion_executor.execute(request_data)
-        result[date]['issue_summary'] = issue_summary.split('\n')
+        news_summary[date] = [get_news_summary(url) for url in news_list[:3]]
+        for url in news_list[:3]:
+            comments_data = RequestNewsComments.get_news_comments(url)
+            for comment_data in comments_data:
+                comment_data['trend_score'] = comment_data['sympathy_count'] + comment_data['antipathy_count'] + comment_data['reply_count']
+            news_comments[date] += comments_data
 
     for date, item in news_comments.items():
-        preset_text = [{"role": "system", "content": "당신은 핵심 키워드와 해당 키워드에 대한 감정을 추출하는 도우미입니다."
-                                                     "### 지시사항\n- 문서 에서 핵심 키워드 최대 2개를 추출합니다.\n- 키워드는 핵심 주제와 상응하는 우선순위로 꼭 json 형식으로 답변합니다.\n- 각각의 핵심 키워드는 2단어 이하로 조합해서 추출합니다.\n- 감정은 긍정, 부정 중 하나이며 해당 키워드에 대한 감정을 추출합니다.\n- ## 응답 형식:{\"사과\": \"부정\", \"바나나\": \"긍정\"}\n"
-                        },
-                       {"role": "user", "content": f"{item}"}]
+        result[date]['issue_comments'] = sorted(item, key=lambda x: x['trend_score'], reverse=True)[:10]
 
-        request_data = {
-            'messages': preset_text,
-            'topP': 0.8,
-            'topK': 0,
-            'maxTokens': 256,
-            'temperature': 0.5,
-            'repeatPenalty': 1.0,
-            'stopBefore': [],
-            'includeAiFilters': False,
-            'seed': 0
-        }
-        keyword_sentiment = completion_executor.execute(request_data)
-        result[date]['keyword_sentiment'] = keyword_sentiment
+    for date, item in news_summary.items():
+        result[date]['issue_summary'] = item[0]['summary']
+
+    # completion_executor = CompletionExecutor(
+    #     host='https://clovastudio.stream.ntruss.com',
+    #     api_key=os.getenv("CLOVA_CHAT_COMPLETION_CLIENT_KEY"),
+    #     api_key_primary_val=os.getenv("CLOVA_CHAT_COMPLETION_CLIENT_KEY_PRIMARY_VAR"),
+    #     request_id=os.getenv("CLOVA_CHAT_COMPLETION_REQUEST_ID")
+    # )
+
+    # preset_text = [{"role": "system", "content": "당신은 뉴스를 요약하는 도우미입니다."
+    #                                              "### 지시사항\n"
+    #                                              "- 각 제목을 조합 하여 5줄 이하의 명확한 문장을 구어체로 반환합니다..\n"
+    #                                              "- 응답은 반드시 json 내용만 반환 합니다."
+    #                                              "- ## 응답 형식:\n"
+    #                                              "\"{ '2024.07.11': \"요약 내용2\", '2024.07.12': \"요약 내용2\"}\""},
+    #                {"role": "user", "content": f"{news}"}]
+    #
+    # request_data = {
+    #     'messages': preset_text,
+    #     'topP': 0.8,
+    #     'topK': 0,
+    #     'maxTokens': 2048,
+    #     'temperature': 0.5,
+    #     'repeatPenalty': 1.0,
+    #     'stopBefore': [],
+    #     'includeAiFilters': False,
+    #     'seed': 0
+    # }
+    # issue_summary = completion_executor.execute(request_data)
+    # print(issue_summary)
+    # pattern = r'\{.*?\}'
+    #
+    # # JSON 부분 추출
+    # match = re.search(pattern, issue_summary, re.DOTALL)
+    # json_str = match.group(0) if match else None
+    #
+    # for k, v in ast.literal_eval(json_str).items():
+    #     result[k]['issue_summary'] = v
 
     trend_data = get_trend_data(q)
     for date, item in trend_data.items():
@@ -174,54 +150,55 @@ def get_timeline_v2(q: str):
 
 
 def get_timeline(q: str):
-    timeline_data = {}
-
-    articles_data = []
-    all_articles = []
-
-    for i in range(1, 2):
-        all_articles += RequestNews.get_naver_news(q, 100, i, 'sim').json()['items']
-    for article in all_articles:
-        title = article['title']
-        link = article['link']
-        pub_date = article['pubDate']
-        formatted_date = datetime.strptime(pub_date, '%a, %d %b %Y %H:%M:%S +0900').strftime('%Y-%m-%d')
-        articles_data.append([title, link, formatted_date])
-
-    completion_executor = CompletionExecutor(
-        host='https://clovastudio.stream.ntruss.com',
-        api_key=os.getenv("CLOVA_CHAT_COMPLETION_CLIENT_KEY"),
-        api_key_primary_val=os.getenv("CLOVA_CHAT_COMPLETION_CLIENT_KEY_PRIMARY_VAR"),
-        request_id=os.getenv("CLOVA_CHAT_COMPLETION_REQUEST_ID")
-    )
-
-    df = pd.DataFrame(articles_data, columns=['Title', 'Link', 'Date'])
-    grouped_df = df.groupby('Date')
-    for date, group in grouped_df:
-        news_title = []
-        for index, row in group.head(5).iterrows():
-            news_title.append(row['Title'])
-
-        preset_text = [{"role": "system", "content": "당신은 뉴스 기사를 요약하는 도우미입니다."},
-                       {"role": "user",
-                        "content": f"다음 뉴스 제목을 최소 1개, 최대 3개의 간결하고 명확한 순서형 목록으로 요약하여 주요 문제를 강조해 주세요. "
-                                   f"순서형 목록만을 보여주고"
-                                   f"문체는 정중체로 ~니다로 종결합니다.: "
-                                   f"\"{news_title}\""}]
-
-        request_data = {
-            'messages': preset_text,
-            'topP': 0.8,
-            'topK': 0,
-            'maxTokens': 256,
-            'temperature': 0.5,
-            'repeatPenalty': 5.0,
-            'stopBefore': [],
-            'includeAiFilters': False,
-            'seed': 0
-        }
-
-        result = completion_executor.execute(request_data).split('\n')
-        timeline_data[date] = result
-
-    return timeline_data
+    pass
+#     timeline_data = {}
+#
+#     articles_data = []
+#     all_articles = []
+#
+#     for i in range(1, 2):
+#         all_articles += RequestNews.get_naver_news(q, 100, i, 'sim').json()['items']
+#     for article in all_articles:
+#         title = article['title']
+#         link = article['link']
+#         pub_date = article['pubDate']
+#         formatted_date = datetime.strptime(pub_date, '%a, %d %b %Y %H:%M:%S +0900').strftime('%Y-%m-%d')
+#         articles_data.append([title, link, formatted_date])
+#
+#     completion_executor = CompletionExecutor(
+#         host='https://clovastudio.stream.ntruss.com',
+#         api_key=os.getenv("CLOVA_CHAT_COMPLETION_CLIENT_KEY"),
+#         api_key_primary_val=os.getenv("CLOVA_CHAT_COMPLETION_CLIENT_KEY_PRIMARY_VAR"),
+#         request_id=os.getenv("CLOVA_CHAT_COMPLETION_REQUEST_ID")
+#     )
+#
+#     df = pd.DataFrame(articles_data, columns=['Title', 'Link', 'Date'])
+#     grouped_df = df.groupby('Date')
+#     for date, group in grouped_df:
+#         news_title = []
+#         for index, row in group.head(5).iterrows():
+#             news_title.append(row['Title'])
+#
+#         preset_text = [{"role": "system", "content": "당신은 뉴스 기사를 요약하는 도우미입니다."},
+#                        {"role": "user",
+#                         "content": f"다음 뉴스 제목을 최소 1개, 최대 3개의 간결하고 명확한 순서형 목록으로 요약하여 주요 문제를 강조해 주세요. "
+#                                    f"순서형 목록만을 보여주고"
+#                                    f"문체는 정중체로 ~니다로 종결합니다.: "
+#                                    f"\"{news_title}\""}]
+#
+#         request_data = {
+#             'messages': preset_text,
+#             'topP': 0.8,
+#             'topK': 0,
+#             'maxTokens': 256,
+#             'temperature': 0.5,
+#             'repeatPenalty': 5.0,
+#             'stopBefore': [],
+#             'includeAiFilters': False,
+#             'seed': 0
+#         }
+#
+#         result = completion_executor.execute(request_data).split('\n')
+#         timeline_data[date] = result
+#
+#     return timeline_data
