@@ -95,6 +95,9 @@ def get_timeline_v2(q: str):
         result[date]['issue_comments'] = sorted(item, key=lambda x: x['trend_score'], reverse=True)[:10]
 
     for date, item in news_summary.items():
+        if len(item) == 0:
+            result[date]['issue_summary'] = ["해당 날짜의 이슈가 없습니다."]
+            continue
         result[date]['issue_summary'] = item[0]['summary']
 
     # completion_executor = CompletionExecutor(

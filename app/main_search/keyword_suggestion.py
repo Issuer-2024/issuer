@@ -9,8 +9,6 @@ def get_keyword_suggestion():
     news_issue_loader = NewsIssueLoader()
     issue_data = news_issue_loader.crawl_issues()
     issue_data.sort(key=lambda x: x['조회수'], reverse=True)
-    print(issue_data)
-
     document = [item['제목'] for item in issue_data[:10]]
 
     completion_executor = CompletionExecutor(
