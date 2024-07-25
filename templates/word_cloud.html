@@ -4,20 +4,11 @@
     <script>
         var wcID = "#word-cloud-{{ id }}";
         // 데이터 준비
-        var keywords = {{ comments }};
-
-        // 데이터 형식 변환
-        var data = keywords.map(function(item) {
-            return {text: item.contents, size: item.trend_score / 10};  // trend_score에 따라 크기 조정
-        });
-
-        /// List of words
-        var myWords = keywords.map(k => k.contents.slice(0, 15))
-            //["Hello", "Everybody", "How", "Are", "You", "Today", "It", "Is", "A", "Lovely", "Day", "I", "Love", "Coding", "In", "My", "Van", "Mate"]
+        var myWords = {{ comments_keywords }};
 
         // set the dimensions and margins of the graph
         var margin = {top: 10, right: 10, bottom: 10, left: 10},
-            width = 450 - margin.left - margin.right,
+            width = 600 - margin.left - margin.right,
             height = 450 - margin.top - margin.bottom;
 
         // append the svg object to the body of the page
@@ -33,7 +24,7 @@
           .size([width, height])
           .words(myWords.map(function(d) { return {text: d}; }))
           .padding(10)
-          .fontSize(30)
+          .fontSize(60)
           .on("end", draw);
         layout.start();
 
@@ -49,10 +40,10 @@
                 .style("font-size", function(d) { return d.size + "px"; })
                 .attr("text-anchor", "middle")
                 .attr("transform", function(d) {
-                  return "translate(" + [d.x, d.y] + ")";
+                  return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
                 })
                 .text(function(d) { return d.text; });
         }
-        </script>
+</script>
 </body>
 </html>

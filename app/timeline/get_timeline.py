@@ -75,6 +75,7 @@ def get_timeline_v2(q: str):
     result = {date: {"issue_summary": "",
                      "trend": {"10": 0, "20": 0, "30": 0, "40": 0, "50": 0, "60": 0, "male": 0, "female": 0},
                      "issue_comments": [],
+                     "comments_keywords": [],
                      "reaction_summary": ""
                      } for date in date_to_collect}
 
@@ -100,42 +101,40 @@ def get_timeline_v2(q: str):
             continue
         result[date]['issue_summary'] = item[0]['summary']
 
-    # completion_executor = CompletionExecutor(
-    #     host='https://clovastudio.stream.ntruss.com',
-    #     api_key=os.getenv("CLOVA_CHAT_COMPLETION_CLIENT_KEY"),
-    #     api_key_primary_val=os.getenv("CLOVA_CHAT_COMPLETION_CLIENT_KEY_PRIMARY_VAR"),
-    #     request_id=os.getenv("CLOVA_CHAT_COMPLETION_REQUEST_ID")
-    # )
+    completion_executor = CompletionExecutor(
+        host='https://clovastudio.stream.ntruss.com',
+        api_key=os.getenv("CLOVA_CHAT_COMPLETION_CLIENT_KEY"),
+        api_key_primary_val=os.getenv("CLOVA_CHAT_COMPLETION_CLIENT_KEY_PRIMARY_VAR"),
+        request_id=os.getenv("CLOVA_CHAT_COMPLETION_REQUEST_ID")
+    )
 
-    # preset_text = [{"role": "system", "content": "당신은 뉴스를 요약하는 도우미입니다."
-    #                                              "### 지시사항\n"
-    #                                              "- 각 제목을 조합 하여 5줄 이하의 명확한 문장을 구어체로 반환합니다..\n"
-    #                                              "- 응답은 반드시 json 내용만 반환 합니다."
-    #                                              "- ## 응답 형식:\n"
-    #                                              "\"{ '2024.07.11': \"요약 내용2\", '2024.07.12': \"요약 내용2\"}\""},
-    #                {"role": "user", "content": f"{news}"}]
-    #
-    # request_data = {
-    #     'messages': preset_text,
-    #     'topP': 0.8,
-    #     'topK': 0,
-    #     'maxTokens': 2048,
-    #     'temperature': 0.5,
-    #     'repeatPenalty': 1.0,
-    #     'stopBefore': [],
-    #     'includeAiFilters': False,
-    #     'seed': 0
-    # }
-    # issue_summary = completion_executor.execute(request_data)
-    # print(issue_summary)
-    # pattern = r'\{.*?\}'
-    #
-    # # JSON 부분 추출
-    # match = re.search(pattern, issue_summary, re.DOTALL)
-    # json_str = match.group(0) if match else None
-    #
-    # for k, v in ast.literal_eval(json_str).items():
-    #     result[k]['issue_summary'] = v
+    for date, item in news_comments.items():
+        document = [i['contents'] for i in item]
+        preset_text = [{"role": "system",
+                        "content": "키워드를 추출하는 AI 어시스턴트 입니다."
+                                   "### 지시사항\n- 문서에서 키워드를 추출합니다.\n"
+                                   "- 각각의 키워드는 1단어로 추출합니다.\n"
+                                   "- json 형식으로 답변합니다.\n"
+                                   "- 핵심 단어는 인물 이름을 우선 순위로 추출합니다."
+                                   "\n## 응답형식:['키워드1', '키워드2']"},
+                       {"role": "user", "content": f"{document}"}]
+
+        request_data = {
+            'messages': preset_text,
+            'topP': 0.8,
+            'topK': 0,
+            'maxTokens': 2048,
+            'temperature': 0.5,
+            'repeatPenalty': 1.0,
+            'stopBefore': [],
+            'includeAiFilters': False,
+            'seed': 0
+        }
+        keywords = completion_executor.execute(request_data)
+        try:
+            result[date]['comments_keywords'] = ast.literal_eval(keywords)
+        except Exception as e:
+            continue
 
     trend_data = get_trend_data(q)
     for date, item in trend_data.items():
