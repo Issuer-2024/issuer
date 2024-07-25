@@ -1,3 +1,4 @@
+from app.request_external_api import get_news_rank
 from app.util import CompletionExecutor, NewsIssueLoader
 from dotenv import load_dotenv
 import ast
@@ -6,10 +7,11 @@ load_dotenv()
 
 
 def get_keyword_suggestion():
-    news_issue_loader = NewsIssueLoader()
-    issue_data = news_issue_loader.crawl_issues()
-    issue_data.sort(key=lambda x: x['조회수'], reverse=True)
-    document = [item['제목'] for item in issue_data[:10]]
+    # news_issue_loader = NewsIssueLoader()
+    # issue_data = news_issue_loader.crawl_issues()
+    # issue_data.sort(key=lambda x: x['조회수'], reverse=True)
+    # document = [item['제목'] for item in issue_data[:10]]
+    document = get_news_rank()
 
     completion_executor = CompletionExecutor(
         host='https://clovastudio.stream.ntruss.com',
@@ -19,7 +21,11 @@ def get_keyword_suggestion():
     )
     preset_text = [{"role": "system",
                     "content": "키워드를 추출하는 AI 어시스턴트 입니다."
-                               "### 지시사항\n- 문서에서 핵심 키워드 최대 5개를 추출합니다.\n- 키워드란 언어의 최소 기본 단위 1개입니다.\n- 핵심 주제와 상응하는 우선순위로 꼭 json 형식으로 답변합니다.\n## 응답형식:['키워드1', '키워드2']"},
+                               "### 지시사항\n- 문서에서 키워드를 추출합니다.\n"
+                               "- 각각의 키워드는 1단어로 추출합니다.\n"
+                               "- json 형식으로 답변합니다.\n"
+                               "- 핵심 단어는 인물 이름을 우선 순위로 추출합니다."
+                               "\n## 응답형식:['키워드1', '키워드2']"},
                    {"role": "user", "content": f"{document}"}]
 
     request_data = {

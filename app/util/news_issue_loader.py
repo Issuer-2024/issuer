@@ -81,3 +81,5 @@ class NewsIssueLoader:
                 issue_items[i]['하위 플랫폼'] = platform
             all_issues += issue_items
         return all_issues
+
+
