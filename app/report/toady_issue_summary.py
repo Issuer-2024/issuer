@@ -1,15 +1,9 @@
+import os
 from datetime import datetime
 
-from fastapi import HTTPException
-
-from app.opinion.news_comments_opinion import get_news_title
 from app.request_external_api import get_news_summary
-from app.request_external_api.request_news import RequestNews
-from app.request_external_api.request_suggestions import RequestSuggestions
 from app.timeline import get_news_list_by_date
-from app.util import StringUtil, CompletionExecutor
-
-import os
+from app.util import CompletionExecutor
 
 
 def get_news_title_list(q: str) -> list:
