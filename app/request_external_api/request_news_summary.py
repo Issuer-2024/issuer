@@ -23,7 +23,7 @@ def get_news_summary(url):
         url = f"https://tts.news.naver.com/article/{media_id}/{article_id}/summary"
         raw = requests.get(url).text
         json_data = json.loads(raw)
-        news_summary = {'title': json_data['title'], 'summary': json_data['summary'].split('<br/>')}
+        news_summary = {'title': json_data['title'], 'summary': json_data['summary']}
         return news_summary
     except Exception as e:
         return None

@@ -12,7 +12,7 @@ headers = {
 }
 
 
-def get_clova_summary(title, content):
+def get_clova_summary(title="", content=""):
     language = "ko"  # Language of document (ko, ja )
     model = "news"  # Model used for summaries (general, news)
     tone = "2"  # Converts the tone of the summarized result. (0, 1, 2, 3)

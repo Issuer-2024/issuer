@@ -6,7 +6,7 @@ import os
 import dotenv
 import requests
 from bs4 import BeautifulSoup
-from app.request_external_api import RequestTrend, RequestNewsComments, get_news_summary
+from app.request_external_api import RequestTrend, RequestNewsComments, get_news_summary, get_clova_summary
 from app.util import CompletionExecutor
 dotenv.load_dotenv()
 
@@ -72,7 +72,7 @@ def get_trend_data(keyword: str):
 
 def get_timeline_v2(q: str):
     date_to_collect = get_date_to_collect(7)[1:]
-    result = {date: {"issue_summary": "",
+    result = {date: {"issue_summary": [],
                      "trend": {"10": 0, "20": 0, "30": 0, "40": 0, "50": 0, "60": 0, "male": 0, "female": 0},
                      "issue_comments": [],
                      "comments_keywords": [],
@@ -95,12 +95,13 @@ def get_timeline_v2(q: str):
 
     for date, item in news_comments.items():
         result[date]['issue_comments'] = sorted(item, key=lambda x: x['trend_score'], reverse=True)[:10]
-
     for date, item in news_summary.items():
         if len(item) == 0:
             result[date]['issue_summary'] = ["해당 날짜의 이슈가 없습니다."]
             continue
-        result[date]['issue_summary'] = item[0]['summary']
+        tmp = '\n'.join([i['summary'] for i in item])
+        result[date]['issue_summary'] = get_clova_summary(content=tmp)
+
 
     # completion_executor = CompletionExecutor(
     #     host='https://clovastudio.stream.ntruss.com',
@@ -136,6 +137,10 @@ def get_timeline_v2(q: str):
     #         result[date]['comments_keywords'] = ast.literal_eval(keywords)
     #     except Exception as e:
     #         continue
+
+    for k, v in result.items():
+        result[k]['issue_summary'] = result[k]['issue_summary'].split('<br/>')
+
 
     trend_data = get_trend_data(q)
     for date, item in trend_data.items():
