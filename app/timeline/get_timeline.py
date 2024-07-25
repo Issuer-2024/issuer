@@ -6,7 +6,8 @@ import os
 import dotenv
 import requests
 from bs4 import BeautifulSoup
-from app.request_external_api import RequestTrend, RequestNewsComments, get_news_summary, get_clova_summary
+from app.request_external_api import RequestTrend, RequestNewsComments, get_news_summary, get_clova_summary, \
+    get_clova_sentiment
 from app.util import CompletionExecutor
 dotenv.load_dotenv()
 
@@ -76,7 +77,8 @@ def get_timeline_v2(q: str):
                      "trend": {"10": 0, "20": 0, "30": 0, "40": 0, "50": 0, "60": 0, "male": 0, "female": 0},
                      "issue_comments": [],
                      "comments_keywords": [],
-                     "comments_sentiments": {'positive': [], 'neural': [], 'negative': []},
+                     "comments_sentiments_sentences": {'positive': [], 'neutral': [], 'negative': []},
+                     "comments_sentiments_score": {'postive': 0, 'neutral': 0, 'negative': 0},
                      "reaction_summary": ""
                      } for date in date_to_collect}
 
@@ -94,7 +96,15 @@ def get_timeline_v2(q: str):
             news_comments[date] += comments_data
 
     for date, item in news_comments.items():
-        result[date]['issue_comments'] = sorted(item, key=lambda x: x['trend_score'], reverse=True)[:10]
+        tmp = sorted(item, key=lambda x: x['trend_score'], reverse=True)[:10]
+        sentiment_data = get_clova_sentiment(''.join([i['contents'] for i in tmp]))
+        if not sentiment_data:
+            continue
+        for s in sentiment_data['sentences']:
+            result[date]['comments_sentiments_sentences'][s['sentiment']].append(s['content'])
+        for k, v in sentiment_data['document']['confidence'].items():
+            result[date]['comments_sentiments_score'][k] = v
+
     for date, item in news_summary.items():
         if len(item) == 0:
             result[date]['issue_summary'] = ["해당 날짜의 이슈가 없습니다."]

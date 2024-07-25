@@ -94,7 +94,7 @@
           <hr>
           <div class="p-4">
             <div class="text-2xl">사용자 반응</div>
-            {% with comments_keywords=item.comments_keywords | safe, id=loop.index %}
+            {% with comments_keywords=item.comments_sentiments_sentences.negative | safe, id=loop.index %}
                 {% include "word_cloud.html" %}
             {% endwith %}
           </div>
