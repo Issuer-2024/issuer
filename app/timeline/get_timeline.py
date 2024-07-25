@@ -1,4 +1,5 @@
 import ast
+import pprint
 import re
 from datetime import datetime, timedelta
 import os
@@ -78,7 +79,7 @@ def get_timeline_v2(q: str):
                      "issue_comments": [],
                      "comments_keywords": [],
                      "comments_sentiments_sentences": {'positive': [], 'neutral': [], 'negative': []},
-                     "comments_sentiments_score": {'postive': 0, 'neutral': 0, 'negative': 0},
+                     "comments_sentiments_score": {'positive': 0.00, 'neutral': 0.00, 'negative': 0.00},
                      "reaction_summary": ""
                      } for date in date_to_collect}
 
@@ -111,7 +112,8 @@ def get_timeline_v2(q: str):
             continue
         tmp = '\n'.join([i['summary'] for i in item])
         result[date]['issue_summary'] = get_clova_summary(content=tmp)
-
+        result[date]['issue_summary'] = result[date]['issue_summary'].split('<br/>')
+        result[date]['issue_summary'] = [s for s in result[date]['issue_summary'] if s]
 
     # completion_executor = CompletionExecutor(
     #     host='https://clovastudio.stream.ntruss.com',
@@ -148,9 +150,6 @@ def get_timeline_v2(q: str):
     #     except Exception as e:
     #         continue
 
-    for k, v in result.items():
-        result[k]['issue_summary'] = result[k]['issue_summary'].split('<br/>')
-
 
     trend_data = get_trend_data(q)
     for date, item in trend_data.items():
@@ -164,6 +163,7 @@ def get_timeline_v2(q: str):
         v['mf_trend'] = list(v['trend'].values())[-2:]
         timeline.append(v)
     timeline.sort(key=lambda x: x['date'])
+    pprint.pprint(timeline)
     return timeline
 
 

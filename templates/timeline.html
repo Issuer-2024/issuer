@@ -35,7 +35,7 @@
     .timeline-item .card {
       margin: 0 20px;
       width: 80%;
-      max-width: 800px;
+      max-width: 968px;
     }
     .dot {
       position: absolute;
@@ -55,6 +55,20 @@
       border-radius: 8px;
       background-color: #f9fafb;
     }
+    .comment {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+      cursor: pointer;
+    }
+    .comment:hover {
+      white-space: normal;
+      background-color: #f1f5f9;
+      border-radius: 4px;
+      padding: 2px 4px;
+      z-index: 20;
+    }
   </style>
 </head>
 <body class="bg-gray-100">
@@ -71,7 +85,7 @@
               <div class="text-2xl font-bold">{{ item.date }}</div>
             </div>
           </div>
-          <div class="flex flex-wrap items-center justify-center">
+          <div class="flex items-center justify-center">
             <div class="chart-area">
               <h3>연령별 검색량</h3>
             {% with trend=item.age_trend, chart_id=item.date %}
@@ -85,18 +99,45 @@
               {% endwith %}
             </div>
           </div>
-          <div class="p-4">
+          <div class="flex flex-col gap-4 p-4">
             <div class="text-2xl">주요 이슈</div>
             {% for s in item.issue_summary %}
               <p class="text-gray-700 mb-4">{{ s }}</p>
             {% endfor %}
           </div>
           <hr>
-          <div class="p-4">
+          <div class="flex flex-col gap-4 p-4">
             <div class="text-2xl">사용자 반응</div>
-            {% with comments_keywords=item.comments_sentiments_sentences.negative | safe, id=loop.index %}
-                {% include "word_cloud.html" %}
-            {% endwith %}
+            <div class="flex space-x-4">
+              <div>😊: {{ item.comments_sentiments_score.positive | round(2) }}</div>
+              <div>😐: {{ item.comments_sentiments_score.neutral | round(2) }}</div>
+              <div>👿: {{ item.comments_sentiments_score.negative | round(2) }}</div>
+            </div>
+            <div class="flex space-x-4">
+              <div class="flex flex-col flex-1">
+              {% for sentence in item.comments_sentiments_sentences.positive %}
+                <div class="comment">😊: {{ sentence }}</div>
+              {% endfor %}
+              {% if not item.comments_sentiments_sentences.positive %}
+                <div class="comment">긍정 댓글이 없습니다.😭</div>
+              {% endif %}
+              </div>
+              <div class="flex flex-col flex-1">
+              {% for sentence in item.comments_sentiments_sentences.neutral %}
+              <div class="comment">😐: {{ sentence }}</div>
+              {% endfor %}
+              {% if not item.comments_sentiments_sentences.neutral %}
+                <div class="comment">중립 댓글이 없습니다.😐</div>
+              {% endif %}
+              </div>
+              <div class="flex flex-col flex-1">
+              {% for sentence in item.comments_sentiments_sentences.negative %}
+              <div class="comment">👿: {{ sentence }}</div>
+              {% endfor %}{% if not item.comments_sentiments_sentences.negative %}
+                <div class="comment">부정 댓글이 없습니다.😈</div>
+              {% endif %}
+              </div>
+            </div>
           </div>
         </div>
       </div>
