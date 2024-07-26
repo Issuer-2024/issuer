@@ -109,8 +109,9 @@ def get_timeline_v2(q: str):
             continue
         tmp = '\n'.join([i['summary'] for i in item])
         result[date]['issue_summary'] = get_clova_summary(content=tmp)
-        result[date]['issue_summary'] = result[date]['issue_summary'].split('<br/>')
-        result[date]['issue_summary'] = [s for s in result[date]['issue_summary'] if s]
+        if result[date]['issue_summary']:
+            result[date]['issue_summary'] = result[date]['issue_summary'].split('<br/>')
+            result[date]['issue_summary'] = [s for s in result[date]['issue_summary'] if s]
 
     # completion_executor = CompletionExecutor(
     #     host='https://clovastudio.stream.ntruss.com',
