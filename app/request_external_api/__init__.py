@@ -6,3 +6,4 @@ from app.request_external_api.request_news_summary import get_news_summary
 from app.request_external_api.request_news_rank import get_news_rank
 from app.request_external_api.request_clova_summary import get_clova_summary
 from app.request_external_api.request_clova_sentiment import get_clova_sentiment
+from app.request_external_api.request_google_trend_daily_rank import get_google_trend_daily_rank
