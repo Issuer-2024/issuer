@@ -1,15 +1,12 @@
-import ast
-import pprint
-import re
 from datetime import datetime, timedelta
-import os
 
 import dotenv
 import requests
 from bs4 import BeautifulSoup
+
 from app.request_external_api import RequestTrend, RequestNewsComments, get_news_summary, get_clova_summary, \
     get_clova_sentiment
-from app.util import CompletionExecutor
+
 dotenv.load_dotenv()
 
 def get_date_to_collect(duration: int):
@@ -163,7 +160,6 @@ def get_timeline_v2(q: str):
         v['mf_trend'] = list(v['trend'].values())[-2:]
         timeline.append(v)
     timeline.sort(key=lambda x: x['date'])
-    pprint.pprint(timeline)
     return timeline
 
 
