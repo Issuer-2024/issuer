@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Issuer</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-white text-gray-900 flex items-center justify-center min-h-screen">
+    <div class="max-w-5xl mx-auto w-11/12 md:w-8/12 lg:w-7/12">
+        <div class="text-center mb-16">
+            <h1 class="text-3xl font-bold">요즘 궁금한 키워드에 대해 검색해보세요 🤔</h1>
+        </div>
+        <div class="flex justify-center items-center bg-green-50 p-4 rounded-full shadow-md mb-8">
+            <input id="searchInput" type="text" class="bg-transparent text-gray-700 placeholder-gray-400 p-2 flex-grow outline-none" placeholder="원하는 이슈 키워드 검색하기">
+            <button onclick="searchKeyword()" class="bg-green-500 text-white p-2 rounded-full">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </button>
+        </div>
+
+        <div class="bg-white shadow-md rounded p-4 min-h-8">
+            <div class="flex flex-row flex-wrap items-center space-x-4">
+                <span class="font-bold text-lg text-black">제안</span>
+            {% for keyword in keyword_suggestions %}
+                <a href="/report/?q={{ keyword }}" class="text-blue-600">{{ keyword }}</a>
+            {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function searchKeyword() {
+            var keyword = document.getElementById('searchInput').value;
+            window.location.href = '/report?q=' + encodeURIComponent(keyword);
+        }
+    </script>
+</body>
+</html>
