@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
-from app.v2.external_request import RequestTrend, EmbeddingExecutor, get_naver_news
+from app.v2.external_request import RequestTrend, EmbeddingExecutor, get_naver_news, CompletionExecutor
 from app.v2.model.content import Content
 
 
@@ -39,19 +39,54 @@ def create_embedding_result(issues: list):
     return embedding_results
 
 
-def grouping_issues(embedding_results):
+def cluster_issues(embedding_results):
     embeddings, items = zip(*embedding_results)
     embeddings = StandardScaler().fit_transform(embeddings)
     dbscan = DBSCAN(eps=0.5, min_samples=2, metric='cosine')
     labels = dbscan.fit_predict(embeddings)
 
-    clustered_items = {}
+    clustered_issues = {}
     for item, label in zip(items, labels):
-        if label not in clustered_items:
-            clustered_items[label] = []
-        clustered_items[label].append(item)
+        if label not in clustered_issues:
+            clustered_issues[label] = []
+        clustered_issues[label].append(item)
 
-    return clustered_items
+    return clustered_issues
+
+def create_group_title(clustered_issues):
+
+    group_titles = {}
+
+    for cluster_num, items in clustered_issues.items():
+        titles = [item['title'] for item in items]
+
+        completion_executor = CompletionExecutor(
+            host='https://clovastudio.stream.ntruss.com',
+            api_key=os.getenv("CLOVA_CHAT_COMPLETION_CLIENT_KEY"),
+            api_key_primary_val=os.getenv("CLOVA_CHAT_COMPLETION_CLIENT_KEY_PRIMARY_VAR"),
+            request_id=os.getenv("CLOVA_CHAT_COMPLETION_REQUEST_ID")
+        )
+        preset_text = [{"role": "system",
+                        "content": "적합한 제목을 도출하는 AI입니다."
+                                   "### 지시사항\n"
+                                   "- 입력된 제목들에서 핵심 내용을 조합하여 1줄로 나타냅니다.\n"
+                                   "\n## 응답형식: 제목"},
+                       {"role": "user", "content": f"{titles}"}]
+
+        request_data = {
+            'messages': preset_text,
+            'topP': 0.8,
+            'topK': 0,
+            'maxTokens': 128,
+            'temperature': 0.1,
+            'repeatPenalty': 1.0,
+            'stopBefore': [],
+            'includeAiFilters': False,
+            'seed': 0
+        }
+        result = completion_executor.execute(request_data)
+        group_titles[cluster_num] = result
+    return group_titles
 
 
 def get_content(q: str):
@@ -75,7 +110,8 @@ def get_content(q: str):
 
 
 if __name__ == '__main__':
-    issues = collect_issues("티몬")
-    result = create_embedding_result(issues)
-
-    print(grouping_issues(result))
+    a = collect_issues("티몬")
+    b = create_embedding_result(a)
+    c = cluster_issues(b)
+    d = create_group_title(c)
+    print(d)
