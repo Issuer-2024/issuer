@@ -6,8 +6,3 @@ from datetime import date
 class RecentlyAdded:
     keyword: str
     elapsed_time: date
-
-
-@dataclass
-class RecentlyAddedList:
-    recently_added: list[RecentlyAdded]
