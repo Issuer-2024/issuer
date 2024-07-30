@@ -5,3 +5,4 @@ from app.v1.request_external_api.request_suggestions import RequestSuggestions
 from app.v1.request_external_api.request_news_summary import get_news_summary
 from app.v1.request_external_api.request_clova_sentiment import get_clova_sentiment
 from app.v1.request_external_api.request_google_trend_daily_rank import get_google_trend_daily_rank
+from app.v1.request_external_api.request_trend import RequestTrend

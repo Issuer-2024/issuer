@@ -1,16 +1,20 @@
 <div class="bg-white flex rounded p-6" style="border: 1px solid #ccc">
-    <div class="flex flex-col">
-        <div>
-            <h2>title
-            </h2>
+    <div class="flex flex-col gap-4">
+        <div class="flex flex-col">
+            <span style="font-size: 2.25rem; font-weight: 700; height: 1;">
+                {{ content.keyword }}
+            </span>
+            <span style="font-size:0.9rem; color: dimgray">문서 생성 시각:
+                {{ content.created_at }}
+            </span>
         </div>
-        <div>
-            <span>최근 수정 시각:</span>
+
+        <div class="display flex justify-center">
+            {% with trend=content.keyword_trend_data, chart_id=1 %}
+                {% include "main_report_graph.html" %}
+            {% endwith %}
         </div>
-        <div>
-            그래프
-        </div>
-        <div class="flex    ">
+        <div class="flex">
             {% include "table_of_contents.html" %}
         </div>
         <div>
