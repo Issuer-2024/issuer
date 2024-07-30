@@ -1,7 +1,15 @@
+import os
 from datetime import datetime, timedelta
 
-from app.v2.external_request import RequestTrend
+from app.v2.external_request import RequestTrend, EmbeddingExecutor
 from app.v2.model.content import Content
+def embedding():
+    executor = EmbeddingExecutor(
+        host='clovastudio.apigw.ntruss.com',
+        api_key=os.getenv("CLOVA_EMBEDDING_CLIENT_KEY"),
+        api_key_primary_val=os.getenv("CLOVA_EMBEDDING_CLIENT_KEY_PRIMARY_VAR"),
+        request_id=os.getenv("CLOVA_EMBEDDING_REQUEST_ID")
+    )
 
 
 def get_content(q: str):

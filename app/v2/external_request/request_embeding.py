@@ -1,9 +1,8 @@
 import json
 import http.client
-import os
 
 
-class CompletionExecutor:
+class EmbeddingExecutor:
     def __init__(self, host, api_key, api_key_primary_val, request_id):
         self._host = host
         self._api_key = api_key
@@ -31,12 +30,3 @@ class CompletionExecutor:
             return res['result']['embedding']
         else:
             return 'Error'
-
-
-if __name__ == '__main__':
-    completion_executor = CompletionExecutor(
-        host='clovastudio.apigw.ntruss.com',
-        api_key=os.getenv("CLOVA_EMBEDDING_CLIENT_KEY"),
-        api_key_primary_val = os.getenv("CLOVA_EMBEDDING_CLIENT_KEY_PRIMARY_VAR"),
-        request_id=os.getenv("CLOVA_EMBEDDING_REQUEST_ID")
-    )
