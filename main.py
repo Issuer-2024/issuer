@@ -59,9 +59,10 @@ async def render_main_v2(request: Request):
     )
 
 @app.get("/test/report")
-async def render_report_v2(request: Request):
+async def render_report_v2(q: str, request: Request):
     return templates_v2.TemplateResponse(
         request=request, name="report.html", context={
+            'title': q,
 
         }
     )
