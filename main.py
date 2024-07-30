@@ -58,5 +58,13 @@ async def render_main_v2(request: Request):
         }
     )
 
+@app.get("/test/report")
+async def render_report_v2(request: Request):
+    return templates_v2.TemplateResponse(
+        request=request, name="report.html", context={
+
+        }
+    )
+
 
 uvicorn.run(app, host='0.0.0.0', port=8000)
