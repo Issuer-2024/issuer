@@ -3,9 +3,9 @@ from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
 
-from app.request_external_api import RequestNewsComments
-from app.timeline import get_news_list_by_date
-from app.util import CompletionExecutor
+from app.v1.request_external_api import RequestNewsComments
+from app.v1.timeline import get_news_list_by_date
+from app.v1.util import CompletionExecutor
 
 import os
 

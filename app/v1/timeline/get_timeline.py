@@ -4,10 +4,11 @@ import dotenv
 import requests
 from bs4 import BeautifulSoup
 
-from app.request_external_api import RequestTrend, RequestNewsComments, get_news_summary, get_clova_summary, \
+from app.v1.request_external_api import RequestTrend, RequestNewsComments, get_news_summary, get_clova_summary, \
     get_clova_sentiment
 
 dotenv.load_dotenv()
+
 
 def get_date_to_collect(duration: int):
     date_list = []
@@ -90,7 +91,8 @@ def get_timeline_v2(q: str):
         for url in news_list[:3]:
             comments_data = RequestNewsComments.get_news_comments(url)
             for comment_data in comments_data:
-                comment_data['trend_score'] = comment_data['sympathy_count'] + comment_data['antipathy_count'] + comment_data['reply_count']
+                comment_data['trend_score'] = comment_data['sympathy_count'] + comment_data['antipathy_count'] + \
+                                              comment_data['reply_count']
             news_comments[date] += comments_data
 
     for date, item in news_comments.items():
@@ -147,7 +149,6 @@ def get_timeline_v2(q: str):
     #         result[date]['comments_keywords'] = ast.literal_eval(keywords)
     #     except Exception as e:
     #         continue
-
 
     trend_data = get_trend_data(q)
     for date, item in trend_data.items():

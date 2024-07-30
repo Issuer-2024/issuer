@@ -1,9 +1,9 @@
 import os
 from datetime import datetime
 
-from app.request_external_api import get_news_summary
-from app.timeline import get_news_list_by_date
-from app.util import CompletionExecutor
+from app.v1.request_external_api import get_news_summary
+from app.v1.timeline import get_news_list_by_date
+from app.v1.util import CompletionExecutor
 
 
 def get_news_title_list(q: str) -> list:

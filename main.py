@@ -3,11 +3,13 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
-from app.opinion import get_news_comments_opinion
-from app.report import get_keyword_trend_variation, get_suggestions_trend_data
-from app.report.toady_issue_summary import get_today_issue_summary
-from app.request_external_api import get_google_trend_daily_rank
-from app.timeline.get_timeline import get_timeline_v2
+from app.v1.opinion import get_news_comments_opinion
+from app.v1.report import get_keyword_trend_variation, get_suggestions_trend_data
+from app.v1.report import get_today_issue_summary
+from app.v1.request_external_api import get_google_trend_daily_rank
+from app.v1.timeline.get_timeline import get_timeline_v2
+from app.v2.content import get_content
+from app.v2.model.report import Report
 
 load_dotenv()
 
@@ -58,10 +60,13 @@ async def render_main_v2(request: Request):
         }
     )
 
+
 @app.get("/test/report")
-async def render_report_v2(request: Request):
+async def render_report_v2(q: str, request: Request):
+
     return templates_v2.TemplateResponse(
         request=request, name="report.html", context={
+            'content': get_content(q),
 
         }
     )
