@@ -1,5 +1,5 @@
-from app.request_external_api import get_news_rank
-from app.util import CompletionExecutor, NewsIssueLoader
+from app.v1.request_external_api import get_news_rank
+from app.v1.util import CompletionExecutor
 from dotenv import load_dotenv
 import ast
 import os

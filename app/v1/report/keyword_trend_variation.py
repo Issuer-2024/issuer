@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from app.request_external_api import RequestTrend, RequestSuggestions
+from app.v1.request_external_api import RequestTrend, RequestSuggestions
 
 
 def get_keyword_trend_variation(q: str) -> dict:

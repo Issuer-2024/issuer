@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from app.request_external_api import RequestTrend, RequestSuggestions
+from app.v1.request_external_api import RequestTrend, RequestSuggestions
 
 
 def get_suggestion_trend(q: str):  # 키워드의 제안 검색어의 일주일 트랜드 데이터를 가져옵니다.

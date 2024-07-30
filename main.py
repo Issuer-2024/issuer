@@ -3,11 +3,11 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
-from app.opinion import get_news_comments_opinion
-from app.report import get_keyword_trend_variation, get_suggestions_trend_data
-from app.report.toady_issue_summary import get_today_issue_summary
-from app.request_external_api import get_google_trend_daily_rank
-from app.timeline.get_timeline import get_timeline_v2
+from app.v1.opinion import get_news_comments_opinion
+from app.v1.report import get_keyword_trend_variation, get_suggestions_trend_data
+from app.v1.report import get_today_issue_summary
+from app.v1.request_external_api import get_google_trend_daily_rank
+from app.v1.timeline.get_timeline import get_timeline_v2
 
 load_dotenv()
 
