@@ -15,10 +15,16 @@
             {% endwith %}
         </div>
         <div class="flex">
-            {% include "table_of_contents.html" %}
+            {% with table_of_contents=content.table_of_contents %}
+                {% include "table_of_contents.html" %}
+            {% endwith %}
         </div>
         <div>
-            {% include "category.html" %}
+            {% for item in content.body %}
+                {% with title=item.title, content=item.content, num=item.num %}
+                    {% include "body.html" %}
+                {% endwith %}
+            {% endfor %}
         </div>
     </div>
 </div>
