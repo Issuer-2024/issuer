@@ -1,6 +1,8 @@
 import json
 import os
+import pprint
 import re
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 
@@ -12,7 +14,7 @@ from app.v2.model.content import Content
 
 
 def collect_issues(q: str):
-    naver_news_response = get_naver_news(q, 10, 1, sort='sim')
+    naver_news_response = get_naver_news(q, 5, 1, sort='sim')
     news_items = naver_news_response.json().get('items', [])
     news_items = [news_item for news_item in news_items if
                   news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
@@ -136,6 +138,60 @@ def get_content(q: str):
                                                                  'date',
                                                                  keyword_groups)[0]['data']
 
-    return Content(title, created_at, trend_search_data, [], {})
+    a = collect_issues(q)
+    b = create_embedding_result(a)
+    c = cluster_issues(b)
+    d = create_group_title(c)
+    e = create_group_content(c)
+
+    body = {"개요": "", "현재 이슈": {
+        cluster_num: {
+            "title": title,
+            "content": ""
+        } for cluster_num, title in d.items()
+    }}
+
+    for cluster_num, content in e.items():
+        body["현재 이슈"][cluster_num]["content"] = content
+
+    table_of_contents = [{'title': "개요", 'depth': 0}, {'title': "현재 이슈", 'depth': 0}]
+    table_of_contents += [{'title': v['title'], 'depth': 1} for v in body['현재 이슈'].values()]
+    print(body)
+    return Content(title, created_at, trend_search_data, table_of_contents, body)
 
 
+if __name__ == '__main__':
+    start_time = time.time()
+
+    step_start = time.time()
+    a = collect_issues("쯔양")
+    print(f"collect_issues took {time.time() - step_start:.2f} seconds")
+
+    step_start = time.time()
+    b = create_embedding_result(a)
+    print(f"create_embedding_result took {time.time() - step_start:.2f} seconds")
+
+    step_start = time.time()
+    c = cluster_issues(b)
+    print(f"cluster_issues took {time.time() - step_start:.2f} seconds")
+
+    step_start = time.time()
+    d = create_group_title(c)
+    print(f"create_group_title took {time.time() - step_start:.2f} seconds")
+
+    step_start = time.time()
+    e = create_group_content(c)
+    print(f"create_group_content took {time.time() - step_start:.2f} seconds")
+
+    body = {"개요": "", "현재 이슈": {
+        cluster_num: {
+            "title": title,
+            "content": ""
+        } for cluster_num, title in d.items()
+    }}
+
+    for cluster_num, content in e.items():
+        body["현재 이슈"][cluster_num]["content"] = content
+
+    pprint.pprint(body)
+    print(f"Total execution took {time.time() - start_time:.2f} seconds")

@@ -22,7 +22,6 @@ class ClovaSummary:
         conn.request('POST', '/testapp/v1/api-tools/summarization/v2/e78cb202bcd745f0ae8225f20f7c1a7a', json.dumps(completion_request), headers)
         response = conn.getresponse()
         result = json.loads(response.read().decode(encoding='utf-8'))
-        print(result)
         conn.close()
         return result
 
