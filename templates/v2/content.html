@@ -20,8 +20,8 @@
             {% endwith %}
         </div>
         <div>
-            {% for title, content in content.body.items() %}
-                {% with title=title, content=content %}
+            {% for item in content.body %}
+                {% with title=item.title, content=item.content, num=item.num %}
                     {% include "body.html" %}
                 {% endwith %}
             {% endfor %}

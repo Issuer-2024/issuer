@@ -1,7 +1,6 @@
 import json
 import os
 import pprint
-import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
@@ -9,12 +8,12 @@ from datetime import datetime, timedelta
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
 from app.v2.external_request import RequestTrend, EmbeddingExecutor, get_naver_news, CompletionExecutor, \
-    get_news_summary, ClovaSummary
+    get_news_summary, ClovaSummary, HCX003Chat
 from app.v2.model.content import Content
 
 
 def collect_issues(q: str):
-    naver_news_response = get_naver_news(q, 5, 1, sort='sim')
+    naver_news_response = get_naver_news(q, 30, 1, sort='sim')
     news_items = naver_news_response.json().get('items', [])
     news_items = [news_item for news_item in news_items if
                   news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
@@ -63,7 +62,7 @@ def create_group_title(clustered_issues):
     group_titles = {}
 
     for cluster_num, items in clustered_issues.items():
-        titles = [item['title'] for item in items]
+        titles = [item['title'] for item in items[:5]]
 
         completion_executor = CompletionExecutor(
             host='https://clovastudio.stream.ntruss.com',
@@ -95,28 +94,38 @@ def create_group_title(clustered_issues):
 
 
 def create_group_content(clustered_issues):
-    clova_summary = ClovaSummary(
-        host='clovastudio.apigw.ntruss.com',
-        api_key=os.getenv("CLOVA_SUMMARY_CLIENT_KEY"),
-        api_key_primary_val=os.getenv('CLOVA_SUMMARY_CLIENT_KEY_PRIMARY_VAR'),
-        request_id=os.getenv("CLOVA_SUMMARY_REQUEST_ID")
+    chat = HCX003Chat(
+        host='https://clovastudio.stream.ntruss.com',
+        api_key=os.getenv('CLOVA_CHAT_COMPLETION_003_CLIENT_KEY'),
+        api_key_primary_val=os.getenv('CLOVA_CHAT_COMPLETION_003_CLIENT_KEY_PRIMARY_VAR'),
+        request_id=os.getenv('CLOVA_CHAT_COMPLETION_003_CLIENT_KEY_REQUEST_ID'),
     )
 
     group_contents = {}
 
     for cluster_num, items in clustered_issues.items():
-        contents = [get_news_summary(item['link'])['summary'] for item in items]
-        request_data = {
-            "texts": contents,
-            "segMinSize": 300,
-            "includeAiFilters": True,
-            "autoSentenceSplitter": True,
-            "segCount": -1,
-            "segMaxSize": 1000
-        }
-        request_data_json = json.dumps(request_data)
+        contents = [get_news_summary(item['link'])['summary'] for item in items[:5]]
+        preset_text = [{"role": "system",
+                        "content": "- 내용을 정리하는 AI입니다."
+                                   "- 반드시 본문과 관련된 내용만 출력합니다."
+                                   "- 본문의 핵심 내용이 잘 드러나게 정리합니다."
+                                   "- 최소 300자 이내로 내용을 출력합니다."
+                        },
+                       {"role": "user", "content": f"{"".join(contents)}"}]
 
-        group_contents_summary = clova_summary.execute(json.loads(request_data_json))
+        request_data = {
+            'messages': preset_text,
+            'topP': 0.8,
+            'topK': 0,
+            'maxTokens': 256,
+            'temperature': 0.5,
+            'repeatPenalty': 5.0,
+            'stopBefore': [],
+            'includeAiFilters': False,
+            'seed': 0
+        }
+
+        group_contents_summary = chat.execute(request_data)
         group_contents[cluster_num] = group_contents_summary
     return group_contents
 
@@ -144,19 +153,13 @@ def get_content(q: str):
     d = create_group_title(c)
     e = create_group_content(c)
 
-    body = {"개요": "", "현재 이슈": {
-        cluster_num: {
-            "title": title,
-            "content": ""
-        } for cluster_num, title in d.items()
-    }}
+    table_of_contents = [{'title': "개요", 'depth': 0, 'num': '1'}, {'title': "현재 이슈", 'depth': 0, 'num': '2'}]
+    table_of_contents += [{'title': title, 'depth': 1, 'num': '2.' + str(i + 1)} for i, title in enumerate(d.values())]
 
-    for cluster_num, content in e.items():
-        body["현재 이슈"][cluster_num]["content"] = content
+    body = [{'title': "개요", 'content': "", 'num': '1'}, {'title': "현재 이슈", 'content': "", 'num': '2'}]
+    body += [{'title': title, 'content': content, 'num': '2.' + str(i + 1)}
+             for i, (title, content) in enumerate(zip(d.values(), e.values()))]
 
-    table_of_contents = [{'title': "개요", 'depth': 0}, {'title': "현재 이슈", 'depth': 0}]
-    table_of_contents += [{'title': v['title'], 'depth': 1} for v in body['현재 이슈'].values()]
-    print(body)
     return Content(title, created_at, trend_search_data, table_of_contents, body)
 
 

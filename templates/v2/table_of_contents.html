@@ -1,10 +1,10 @@
 <div>
     <div class="flex flex-col p-6 " style="border: 1px solid #ccc">
     <span>목차</span>
-    <ul class="list-decimal list-inside">
+    <div class="flex flex-col">
         {% for item in table_of_contents %}
-            <li class="ml-{{ item.depth }}">{{ item.title }}</li>
+            <div style="margin-left: {{ item.depth }}rem;">{{ item.num }}. {{ item.title }}</div>
         {% endfor %}
-    </ul>
+    </div>
 </div>
 </div>
