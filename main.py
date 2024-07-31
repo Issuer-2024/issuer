@@ -1,11 +1,7 @@
-import asyncio
-
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
-from jinja2 import Environment, FileSystemLoader
-from starlette.responses import HTMLResponse, StreamingResponse
 from starlette.templating import Jinja2Templates
 from app.v1.opinion import get_news_comments_opinion
 from app.v1.report import get_keyword_trend_variation, get_suggestions_trend_data
@@ -73,7 +69,6 @@ async def render_report_v2(q: str, request: Request):
 
         }
     )
-env = Environment(loader=FileSystemLoader('templates'))
 
 
 uvicorn.run(app, host='0.0.0.0', port=8000)

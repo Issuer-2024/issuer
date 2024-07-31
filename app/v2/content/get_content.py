@@ -111,7 +111,7 @@ def create_group_content(clustered_issues):
                                    "- 본문의 핵심 내용이 잘 드러나게 정리합니다."
                                    "- 최소 300자 이내로 내용을 출력합니다."
                         },
-                       {"role": "user", "content": f"{"".join(contents)}"}]
+                       {"role": "user", "content": f"{''.join(contents)}"}]
 
         request_data = {
             'messages': preset_text,
