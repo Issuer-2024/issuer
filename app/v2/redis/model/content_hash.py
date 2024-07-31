@@ -1,9 +1,11 @@
-from redis_om import HashModel
+from typing import List, Dict, Any
+
+from redis_om import HashModel, Field, JsonModel
 
 
-class ContentHash(HashModel):
-    keyword: str
+class ContentHash(JsonModel):
+    keyword: str = Field(index=True)
     created_at: str
-    keyword_trend_data: list
-    table_of_contents: list
-    body: list
+    keyword_trend_data: List[Dict[str, Any]]
+    table_of_contents: List[Dict[str, Any]]
+    body: List[Dict[str, Any]]

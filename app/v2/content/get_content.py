@@ -10,6 +10,7 @@ from sklearn.preprocessing import StandardScaler
 from app.v2.external_request import RequestTrend, EmbeddingExecutor, get_naver_news, CompletionExecutor, \
     get_news_summary, ClovaSummary, HCX003Chat
 from app.v2.model.content import Content
+from app.v2.redis.redis_util import read_cache_content, save_to_caching
 
 
 def collect_issues(q: str):
@@ -130,7 +131,12 @@ def create_group_content(clustered_issues):
     return group_contents
 
 
-def get_content(q: str):
+def get_content(q: str, background_task):
+
+    caching = read_cache_content(q)
+    if caching:
+        return caching
+
     title = q
     created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -160,7 +166,10 @@ def get_content(q: str):
     body += [{'title': title, 'content': content, 'num': '2.' + str(i + 1)}
              for i, (title, content) in enumerate(zip(d.values(), e.values()))]
 
-    return Content(title, created_at, trend_search_data, table_of_contents, body)
+    result = Content(title, created_at, trend_search_data, table_of_contents, body)
+    save_to_caching(result, background_task)
+
+    return result
 
 
 if __name__ == '__main__':
