@@ -13,25 +13,14 @@ from app.v1.timeline.get_timeline import get_timeline_v2
 from app.v2.content import get_content
 from app.v2.keyword_rank import get_keyword_rank
 
-from redis_om import get_redis_connection
-
-redis = None
-db_redis = None
+from app.v2.redis.redis_connection import connect_redis
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global redis
-    global db_redis
-    redis = get_redis_connection(
-        host="localhost",
-        port=6379,
-        decode_responses=True
-    )
-    db_redis = redis
+    connect_redis()
     yield
     # Clean up the ML models and release the resources
-    redis.close()
 
 
 load_dotenv()

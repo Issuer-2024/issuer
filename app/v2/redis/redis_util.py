@@ -1,0 +1,25 @@
+import time
+
+from app.v2.model.content import Content
+from app.v2.redis.model import ContentHash
+from app.v2.redis.redis_connection import redis, db_redis
+from fastapi import FastAPI, BackgroundTasks
+
+
+def move_to_db_and_delete_from_cache(content_id: str):
+    time.sleep(3600)  # 1 hour
+    content = ContentHash.get(content_id)
+    if content:
+        db_redis.hset(f"content:{content_id}", mapping=content.dict())
+        ContentHash.delete(content_id)
+
+
+def save(content: Content, background_tasks: BackgroundTasks):
+    content_hash = ContentHash(keyword=content.keyword,
+                               created_at=content.created_at,
+                               keyword_trend_data=content.keyword_trend_data,
+                               table_of_contents=content.table_of_contents,
+                               body=content.body)
+    content_hash.save()
+    background_tasks.add_task(move_to_db_and_delete_from_cache, content_hash.pk)
+
