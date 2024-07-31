@@ -5,3 +5,4 @@ from app.v2.external_request.request_llm_dash import CompletionExecutor
 from app.v2.external_request.request_news_summary import get_news_summary
 from app.v2.external_request.request_clova_summary import ClovaSummary
 from app.v2.external_request.request_llm_003 import HCX003Chat
+from app.v2.external_request.request_google_trend_daily_rank import get_google_trend_daily_rank

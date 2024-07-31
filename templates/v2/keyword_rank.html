@@ -1,4 +1,4 @@
-<div class="flex flex-col bg-white rounded-lg p-6 " style="border: 1px solid #ccc">
+<div class="flex flex-col bg-white rounded-lg p-6" style="border: 1px solid #ccc">
     <div class="flex justify-center items-center mb-3">
         <img src="https://placehold.co/40x40" alt="Title Icon" class="w-10 h-10 mr-2">
         <div style="width: 15rem">
@@ -6,15 +6,20 @@
         </div>
     </div>
     <ol class="list-decimal list-inside space-y-2 text-gray-700">
-        <li>라파엘 나달</li>
-        <li>김제덕</li>
-        <li>조코비치</li>
-        <li>양궁</li>
-        <li>김우진</li>
-        <li>이우석</li>
-        <li>파리올림픽</li>
-        <li>반효진</li>
-        <li>안산(양궁)</li>
-        <li>허미미</li>
+        {% for item in keyword_rank %}
+            <li>
+                <a href="/test/report?q={{ item.keyword }}" class="hover-link">{{ item.keyword }}</a>
+            </li>
+        {% endfor %}
     </ol>
 </div>
+
+<style>
+    .hover-link {
+        transition: background-color 0.3s ease;
+        padding: 0.5rem;
+    }
+    .hover-link:hover {
+        background-color: #e0e0e0;
+    }
+</style>

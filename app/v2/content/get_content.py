@@ -10,10 +10,11 @@ from sklearn.preprocessing import StandardScaler
 from app.v2.external_request import RequestTrend, EmbeddingExecutor, get_naver_news, CompletionExecutor, \
     get_news_summary, ClovaSummary, HCX003Chat
 from app.v2.model.content import Content
+from app.v2.redis.redis_util import read_cache_content, save_to_caching
 
 
 def collect_issues(q: str):
-    naver_news_response = get_naver_news(q, 30, 1, sort='sim')
+    naver_news_response = get_naver_news(q, 10, 1, sort='sim')
     news_items = naver_news_response.json().get('items', [])
     news_items = [news_item for news_item in news_items if
                   news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
@@ -44,6 +45,9 @@ def create_embedding_result(issues: list):
 
 
 def cluster_issues(embedding_results):
+    if not embedding_results:
+        return {}
+
     embeddings, items = zip(*embedding_results)
     embeddings = StandardScaler().fit_transform(embeddings)
     dbscan = DBSCAN(eps=0.5, min_samples=2, metric='cosine')
@@ -111,7 +115,7 @@ def create_group_content(clustered_issues):
                                    "- 본문의 핵심 내용이 잘 드러나게 정리합니다."
                                    "- 최소 300자 이내로 내용을 출력합니다."
                         },
-                       {"role": "user", "content": f"{"".join(contents)}"}]
+                       {"role": "user", "content": f"{''.join(contents)}"}]
 
         request_data = {
             'messages': preset_text,
@@ -130,7 +134,12 @@ def create_group_content(clustered_issues):
     return group_contents
 
 
-def get_content(q: str):
+def get_content(q: str, background_task):
+
+    caching = read_cache_content(q)
+    if caching:
+        return caching
+
     title = q
     created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -148,6 +157,7 @@ def get_content(q: str):
                                                                  keyword_groups)[0]['data']
 
     a = collect_issues(q)
+    print(a)
     b = create_embedding_result(a)
     c = cluster_issues(b)
     d = create_group_title(c)
@@ -160,7 +170,10 @@ def get_content(q: str):
     body += [{'title': title, 'content': content, 'num': '2.' + str(i + 1)}
              for i, (title, content) in enumerate(zip(d.values(), e.values()))]
 
-    return Content(title, created_at, trend_search_data, table_of_contents, body)
+    result = Content(title, created_at, trend_search_data, table_of_contents, body)
+    save_to_caching(result, background_task)
+
+    return result
 
 
 if __name__ == '__main__':

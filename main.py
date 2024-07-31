@@ -1,11 +1,10 @@
-import asyncio
+from contextlib import asynccontextmanager
 
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
-from jinja2 import Environment, FileSystemLoader
-from starlette.responses import HTMLResponse, StreamingResponse
+from starlette.background import BackgroundTask
 from starlette.templating import Jinja2Templates
 from app.v1.opinion import get_news_comments_opinion
 from app.v1.report import get_keyword_trend_variation, get_suggestions_trend_data
@@ -13,11 +12,22 @@ from app.v1.report import get_today_issue_summary
 from app.v1.request_external_api import get_google_trend_daily_rank
 from app.v1.timeline.get_timeline import get_timeline_v2
 from app.v2.content import get_content
-from app.v2.model.report import Report
+from app.v2.keyword_rank import get_keyword_rank
+from app.v2.recently_added.get_recently_added import get_recently_added_sep
+
+from app.v2.redis.redis_connection import connect_redis
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    connect_redis()
+    yield
+    # Clean up the ML models and release the resources
+
 
 load_dotenv()
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates_v1 = Jinja2Templates(directory="templates/v1")
 templates_v2 = Jinja2Templates(directory="templates/v2")
@@ -64,16 +74,16 @@ async def render_main_v2(request: Request):
         }
     )
 
-@app.get("/test/report")
-async def render_report_v2(q: str, request: Request):
 
+@app.get("/test/report")
+async def render_report_v2(q: str, request: Request, background_task: BackgroundTasks):
     return templates_v2.TemplateResponse(
         request=request, name="report.html", context={
-            'content': get_content(q),
-
+            'content': get_content(q, background_task),
+            'keyword_rank': get_keyword_rank(),
+            'recently_added_sep': get_recently_added_sep()
         }
     )
-env = Environment(loader=FileSystemLoader('templates'))
 
 
 uvicorn.run(app, host='0.0.0.0', port=8000)
