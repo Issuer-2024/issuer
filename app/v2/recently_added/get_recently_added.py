@@ -10,8 +10,11 @@ def calculate_elapsed_time(created_at_str: str) -> str:
     # 현재 시간을 한국 시간대로 설정
     KST = pytz.timezone('Asia/Seoul')
     now = datetime.now(KST)
-    # created_at을 datetime 객체로 변환
-    created_at = datetime.strptime(created_at_str, '%Y-%m-%d %H:%M:%S').replace(tzinfo=KST)
+
+    # created_at을 datetime 객체로 변환하고 한국 시간대로 설정
+    created_at_naive = datetime.strptime(created_at_str, '%Y-%m-%d %H:%M:%S')
+    created_at = KST.localize(created_at_naive)
+
     # elapsed_time 계산
     elapsed_time = now - created_at
 
@@ -39,5 +42,4 @@ def get_recently_added_sep():
         )
         for item in items[:limit]
     ]
-    print(recently_added_list)
     return recently_added_list

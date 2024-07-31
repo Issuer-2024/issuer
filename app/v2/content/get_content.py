@@ -14,7 +14,7 @@ from app.v2.redis.redis_util import read_cache_content, save_to_caching
 
 
 def collect_issues(q: str):
-    naver_news_response = get_naver_news(q, 1, 1, sort='sim')
+    naver_news_response = get_naver_news(q, 10, 1, sort='sim')
     news_items = naver_news_response.json().get('items', [])
     news_items = [news_item for news_item in news_items if
                   news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
@@ -45,6 +45,9 @@ def create_embedding_result(issues: list):
 
 
 def cluster_issues(embedding_results):
+    if not embedding_results:
+        return {}
+
     embeddings, items = zip(*embedding_results)
     embeddings = StandardScaler().fit_transform(embeddings)
     dbscan = DBSCAN(eps=0.5, min_samples=2, metric='cosine')
@@ -154,6 +157,7 @@ def get_content(q: str, background_task):
                                                                  keyword_groups)[0]['data']
 
     a = collect_issues(q)
+    print(a)
     b = create_embedding_result(a)
     c = cluster_issues(b)
     d = create_group_title(c)

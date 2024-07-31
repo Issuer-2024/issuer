@@ -5,16 +5,24 @@
             <span class="text-xl font-bold mb-4">최근 생성</span>
         </div>
     </div>
-    <ol class="list-decimal list-inside space-y-2 text-gray-700">
-        <li>라파엘 나달</li>
-        <li>김제덕</li>
-        <li>조코비치</li>
-        <li>양궁</li>
-        <li>김우진</li>
-        <li>이우석</li>
-        <li>파리올림픽</li>
-        <li>반효진</li>
-        <li>안산(양궁)</li>
-        <li>허미미</li>
-    </ol>
+    <div class="flex flex-col p-1 space-y-2 text-gray-700">
+    {% for item in recently_added_sep %}
+        <a href="/test/report?q={{ item.keyword }}" class="hover-link-recent">
+            <div class="flex justify-between">
+                <div>{{ item.keyword }}</div>
+                <div>{{ item.elapsed_time }}</div>
+            </div>
+        </a>
+    {% endfor %}
+    </div>
 </div>
+<style>
+    .hover-link-recent {
+        border-radius: 0.25rem;
+        transition: background-color 0.3s ease;
+    }
+
+    .hover-link-recent:hover {
+        background-color: #f0f0f0;
+    }
+</style>
