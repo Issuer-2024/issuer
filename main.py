@@ -13,6 +13,7 @@ from app.v1.request_external_api import get_google_trend_daily_rank
 from app.v1.timeline.get_timeline import get_timeline_v2
 from app.v2.content import get_content
 from app.v2.keyword_rank import get_keyword_rank
+from app.v2.recently_added.get_recently_added import get_recently_added_sep
 
 from app.v2.redis.redis_connection import connect_redis
 
@@ -79,7 +80,8 @@ async def render_report_v2(q: str, request: Request, background_task: Background
     return templates_v2.TemplateResponse(
         request=request, name="report.html", context={
             'content': get_content(q, background_task),
-            'keyword_rank': get_keyword_rank()
+            'keyword_rank': get_keyword_rank(),
+            'recently_added_sep': get_recently_added_sep()
         }
     )
 
