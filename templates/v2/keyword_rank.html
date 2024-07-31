@@ -1,4 +1,4 @@
-<div class="flex flex-col bg-white rounded-lg p-6 " style="border: 1px solid #ccc">
+<div class="flex flex-col bg-white rounded-lg p-6" style="border: 1px solid #ccc">
     <div class="flex justify-center items-center mb-3">
         <img src="https://placehold.co/40x40" alt="Title Icon" class="w-10 h-10 mr-2">
         <div style="width: 15rem">
@@ -7,8 +7,19 @@
     </div>
     <ol class="list-decimal list-inside space-y-2 text-gray-700">
         {% for item in keyword_rank %}
-            <li>{{ item.keyword }}</li>
-
+            <li>
+                <a href="/test/report?q={{ item.keyword }}" class="hover-link">{{ item.keyword }}</a>
+            </li>
         {% endfor %}
     </ol>
 </div>
+
+<style>
+    .hover-link {
+        transition: background-color 0.3s ease;
+        padding: 0.5rem;
+    }
+    .hover-link:hover {
+        background-color: #e0e0e0;
+    }
+</style>
