@@ -1,0 +1,1 @@
+from app.v2.keyword_rank.get_keyword_rank import get_keyword_rank

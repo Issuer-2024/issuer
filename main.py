@@ -9,7 +9,7 @@ from app.v1.report import get_today_issue_summary
 from app.v1.request_external_api import get_google_trend_daily_rank
 from app.v1.timeline.get_timeline import get_timeline_v2
 from app.v2.content import get_content
-from app.v2.model.report import Report
+from app.v2.keyword_rank import get_keyword_rank
 
 load_dotenv()
 
@@ -66,7 +66,7 @@ async def render_report_v2(q: str, request: Request):
     return templates_v2.TemplateResponse(
         request=request, name="report.html", context={
             'content': get_content(q),
-
+            'keyword_rank': get_keyword_rank()
         }
     )
 
