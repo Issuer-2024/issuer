@@ -73,6 +73,23 @@ jobs:
           password: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
+            export NAVER_API_CLIENT_ID: ${{ secrets.NAVER_API_CLIENT_ID }}
+            export NAVER_API_CLIENT_SECRET: ${{ secrets.NAVER_API_CLIENT_SECRET }}
+            export CLOVA_API_CLIENT_ID: ${{ secrets.CLOVA_API_CLIENT_ID }}
+            export CLOVA_API_CLIENT_SECRET: ${{ secrets.CLOVA_API_CLIENT_SECRET }}
+            export CLOVA_CHAT_COMPLETION_CLIENT_KEY: ${{ secrets.CLOVA_CHAT_COMPLETION_CLIENT_KEY }}
+            export CLOVA_CHAT_COMPLETION_CLIENT_KEY_PRIMARY_VAR: ${{ secrets.CLOVA_CHAT_COMPLETION_CLIENT_KEY_PRIMARY_VAR }}
+            export CLOVA_CHAT_COMPLETION_REQUEST_ID: ${{ secrets.CLOVA_CHAT_COMPLETION_REQUEST_ID }}
+            export CLOVA_EMBEDDING_CLIENT_KEY: ${{ secrets.CLOVA_EMBEDDING_CLIENT_KEY }}
+            export CLOVA_EMBEDDING_CLIENT_KEY_PRIMARY_VAR: ${{ secrets.CLOVA_EMBEDDING_CLIENT_KEY_PRIMARY_VAR }}
+            export CLOVA_EMBEDDING_REQUEST_ID: ${{ secrets.CLOVA_EMBEDDING_REQUEST_ID }}
+            export CLOVA_SUMMARY_CLIENT_KEY: ${{ secrets.CLOVA_SUMMARY_CLIENT_KEY }}
+            export CLOVA_SUMMARY_CLIENT_KEY_PRIMARY_VAR: ${{ secrets.CLOVA_SUMMARY_CLIENT_KEY_PRIMARY_VAR }}
+            export CLOVA_SUMMARY_REQUEST_ID: ${{ secrets.CLOVA_SUMMARY_REQUEST_ID }}
+            export CLOVA_CHAT_COMPLETION_003_CLIENT_KEY: ${{ secrets.CLOVA_CHAT_COMPLETION_003_CLIENT_KEY }}
+            export CLOVA_CHAT_COMPLETION_003_CLIENT_KEY_PRIMARY_VAR: ${{ secrets.CLOVA_CHAT_COMPLETION_003_CLIENT_KEY_PRIMARY_VAR }}
+            export CLOVA_CHAT_COMPLETION_003_CLIENT_KEY_REQUEST_ID: ${{ secrets.CLOVA_CHAT_COMPLETION_003_CLIENT_KEY_REQUEST_ID }}
+            
             cd /
             docker-compose pull
             docker-compose up -d
