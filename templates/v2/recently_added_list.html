@@ -47,7 +47,7 @@
 
 
         function fetchChanges() {
-            fetch('/test/recent-add-sep') // 서버에서 변경 내역을 가져오는 엔드포인트
+            fetch('/test/api/recent-add-sep') // 서버에서 변경 내역을 가져오는 엔드포인트
                 .then(response => response.json())
                 .then(data => {
                     const changesList = document.getElementById('recent-add-list');

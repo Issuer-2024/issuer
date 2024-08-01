@@ -85,7 +85,7 @@ async def render_report_v2(q: str, request: Request, background_task: Background
         }
     )
 
-@app.get("/test/recent-add-sep")
+@app.get("/test/api/recent-add-sep")
 async def get_recent_add():
     return get_recently_added_sep()
 
