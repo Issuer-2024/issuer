@@ -1,10 +1,8 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pytz
 
 from app.v2.model.creating import Creating
-from app.v2.model.recently_added import RecentlyAdded
-from app.v2.redis.model import ContentHash
 from app.v2.redis.model.creating_hash import CreatingHash
 
 

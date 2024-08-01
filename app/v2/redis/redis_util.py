@@ -7,8 +7,8 @@ from redis_om import Migrator
 from app.v2.model.content import Content
 from app.v2.redis.model import ContentHash
 from app.v2.redis.model.creating_hash import CreatingHash
-from app.v2.redis.redis_connection import redis, db_redis
-from fastapi import FastAPI, BackgroundTasks, HTTPException
+from app.v2.redis.redis_connection import db_redis
+from fastapi import BackgroundTasks
 
 
 def move_to_db_and_delete_from_cache(content_id: str):

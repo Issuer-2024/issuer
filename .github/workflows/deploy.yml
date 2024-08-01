@@ -62,16 +62,13 @@ jobs:
           password: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/issuer-app:latest
-            docker stop issuer-app || true
-            docker rm issuer-app || true
-            docker run -d --name issuer-app -p 8000:8000 \
-              -e NAVER_API_CLIENT_ID=${{ secrets.NAVER_API_CLIENT_ID }} \
-              -e NAVER_API_CLIENT_SECRET=${{ secrets.NAVER_API_CLIENT_SECRET }} \
-              -e CLOVA_API_CLIENT_ID=${{ secrets.CLOVA_API_CLIENT_ID }} \
-              -e CLOVA_API_CLIENT_SECRET=${{ secrets.CLOVA_API_CLIENT_SECRET }} \
-              -e CLOVA_CHAT_COMPLETION_CLIENT_KEY=${{ secrets.CLOVA_CHAT_COMPLETION_CLIENT_KEY }} \
-              -e CLOVA_CHAT_COMPLETION_CLIENT_KEY_PRIMARY_VAR=${{ secrets.CLOVA_CHAT_COMPLETION_CLIENT_KEY_PRIMARY_VAR }} \
-              -e CLOVA_CHAT_COMPLETION_REQUEST_ID=${{ secrets.CLOVA_CHAT_COMPLETION_REQUEST_ID }} \
-              ${{ secrets.DOCKERHUB_USERNAME }}/issuer-app:latest
+            # docker-compose.yml 파일을 원격 서버로 복사
+            scp -o StrictHostKeyChecking=no ./docker-compose.yml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/
+
+            # Docker Compose를 사용하여 컨테이너 실행
+            ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+            cd /
+            docker-compose pull
+            docker-compose up -d
             docker image prune -af
+            EOF

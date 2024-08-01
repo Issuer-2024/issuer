@@ -1,6 +1,6 @@
 from typing import List, Dict, Any
 
-from redis_om import HashModel, Field, JsonModel
+from redis_om import Field, JsonModel
 
 
 class ContentHash(JsonModel):

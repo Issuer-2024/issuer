@@ -4,13 +4,8 @@ import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
-from starlette.background import BackgroundTask
 from starlette.templating import Jinja2Templates
-from app.v1.opinion import get_news_comments_opinion
-from app.v1.report import get_keyword_trend_variation, get_suggestions_trend_data
-from app.v1.report import get_today_issue_summary
 from app.v1.request_external_api import get_google_trend_daily_rank
-from app.v1.timeline.get_timeline import get_timeline_v2
 from app.v2.content import get_content, create_content
 from app.v2.creating.get_creating import get_creating_sep
 from app.v2.keyword_rank import get_keyword_rank
