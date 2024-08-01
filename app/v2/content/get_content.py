@@ -134,12 +134,14 @@ def create_group_content(clustered_issues):
     return group_contents
 
 
-def get_content(q: str, background_task):
-
+def get_content(q: str):
     caching = read_cache_content(q)
     if caching:
         return caching
+    return None
 
+
+def create_content(q: str, background_task):
     title = q
     created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -172,8 +174,6 @@ def get_content(q: str, background_task):
 
     result = Content(title, created_at, trend_search_data, table_of_contents, body)
     save_to_caching(result, background_task)
-
-    return result
 
 
 if __name__ == '__main__':
