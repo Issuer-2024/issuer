@@ -14,7 +14,7 @@ from app.v2.redis.redis_util import read_cache_content, save_to_caching
 
 
 def collect_issues(q: str):
-    naver_news_response = get_naver_news(q, 10, 1, sort='sim')
+    naver_news_response = get_naver_news(q, 1, 1, sort='sim')
     news_items = naver_news_response.json().get('items', [])
     news_items = [news_item for news_item in news_items if
                   news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
