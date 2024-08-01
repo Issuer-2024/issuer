@@ -7,7 +7,7 @@ db_redis = None
 def connect_redis():
     global redis, db_redis
     redis = get_redis_connection(
-        host="localhost",
+        host="redis",
         port=6379,
         decode_responses=True
     )
