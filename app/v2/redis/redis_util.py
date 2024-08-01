@@ -32,7 +32,7 @@ def save_to_caching(content: Content, background_tasks: BackgroundTasks):
 def save_creating(keyword: str):
     KST = pytz.timezone('Asia/Seoul')
     now = datetime.now(KST)
-    creating = Creating(keyword, now)
+    creating = Creating(keyword=keyword, started_at=now)
 
     creating.save()
 
@@ -40,7 +40,7 @@ def remove_creating(keyword: str):
     keys = Creating.find(Creating.keyword == keyword).all()
     if not keys:
         return
-    [Creating.remove(key) for key in keys]
+    [Creating.delete(key) for key in keys]
 
 
 def read_cache_content(keyword: str):

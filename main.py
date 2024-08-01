@@ -79,24 +79,22 @@ async def render_main_v2(request: Request):
 async def render_report_v2(q: str, request: Request, background_task: BackgroundTasks):
 
     content = get_content(q)
+    keyword_rank = get_keyword_rank()
     if not content:
+        background_task.add_task(create_content, q, background_task)
         return templates_v2.TemplateResponse(
             request=request, name="creating.html", context={
-
+                'keyword': q,
+                'keyword_rank': keyword_rank
             }
         )
 
     return templates_v2.TemplateResponse(
         request=request, name="report.html", context={
-            'content': get_content(q),
-            'keyword_rank': get_keyword_rank(),
-            'recently_added_sep': get_recently_added_sep()
+            'content': content,
+            'keyword_rank': keyword_rank
         }
     )
-
-@app.get("/test/api/request-report")
-async def request_report(q: str, background_task: BackgroundTasks):
-    create_content(q, background_task)
 
 @app.get("/test/api/recent-add-sep")
 async def get_recent_add():
