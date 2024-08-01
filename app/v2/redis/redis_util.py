@@ -1,9 +1,12 @@
 import time
+from datetime import datetime
 
+import pytz
 from redis_om import Migrator
 
 from app.v2.model.content import Content
 from app.v2.redis.model import ContentHash
+from app.v2.redis.model.creating import Creating
 from app.v2.redis.redis_connection import redis, db_redis
 from fastapi import FastAPI, BackgroundTasks, HTTPException
 
@@ -24,6 +27,20 @@ def save_to_caching(content: Content, background_tasks: BackgroundTasks):
                                body=content.body)
     content_hash.save()
     background_tasks.add_task(move_to_db_and_delete_from_cache, content_hash.pk)
+
+
+def save_creating(keyword: str):
+    KST = pytz.timezone('Asia/Seoul')
+    now = datetime.now(KST)
+    creating = Creating(keyword, now)
+
+    creating.save()
+
+def remove_creating(keyword: str):
+    keys = Creating.find(Creating.keyword == keyword).all()
+    if not keys:
+        return
+    [Creating.remove(key) for key in keys]
 
 
 def read_cache_content(keyword: str):
