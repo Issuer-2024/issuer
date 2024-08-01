@@ -50,7 +50,6 @@ def remove_creating(keyword: str):
     if not keys:
         return
     for key in keys:
-        print(key)
         CreatingHash.delete(key.pk)
 
 

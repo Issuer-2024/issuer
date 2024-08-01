@@ -14,7 +14,7 @@ from app.v2.redis.redis_util import read_cache_content, save_to_caching, save_cr
 
 
 def collect_issues(q: str):
-    naver_news_response = get_naver_news(q, 1, 1, sort='sim')
+    naver_news_response = get_naver_news(q, 10, 1, sort='sim')
     news_items = naver_news_response.json().get('items', [])
     news_items = [news_item for news_item in news_items if
                   news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
@@ -166,19 +166,16 @@ def create_content(q: str, background_task):
                                                                  keyword_groups)[0]['data']
 
     a = collect_issues(q)
-    print(a)
     b = create_embedding_result(a)
     c = cluster_issues(b)
     d = create_group_title(c)
     e = create_group_content(c)
-
     table_of_contents = [{'title': "개요", 'depth': 0, 'num': '1'}, {'title': "현재 이슈", 'depth': 0, 'num': '2'}]
     table_of_contents += [{'title': title, 'depth': 1, 'num': '2.' + str(i + 1)} for i, title in enumerate(d.values())]
 
     body = [{'title': "개요", 'content': "", 'num': '1'}, {'title': "현재 이슈", 'content': "", 'num': '2'}]
-    body += [{'title': title, 'content': content, 'num': '2.' + str(i + 1)}
-             for i, (title, content) in enumerate(zip(d.values(), e.values()))]
-
+    body += [{'ref': ref, 'title': title, 'content': content, 'num': '2.' + str(i + 1)}
+             for i, (ref, title, content) in enumerate(zip(c.values(), d.values(), e.values()))]
     result = Content(title, created_at, trend_search_data, table_of_contents, body)
     save_to_caching(result, background_task)
 

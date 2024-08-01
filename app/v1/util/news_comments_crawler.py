@@ -51,7 +51,6 @@ class NewsCommentsCrawler:
         )
         driver.get(url)
         # 페이지 소스 파싱
-        print(url)
         WebDriverWait(driver, 10).until(
             EC.presence_of_element_located((By.LINK_TEXT, "MY댓글"))
         )
