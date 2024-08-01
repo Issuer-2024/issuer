@@ -102,6 +102,6 @@ jobs:
             export CLOVA_CHAT_COMPLETION_003_CLIENT_KEY_REQUEST_ID=${{ secrets.CLOVA_CHAT_COMPLETION_003_CLIENT_KEY_REQUEST_ID }}
             
             cd /
-            docker-compose pull
+            docker-compose pull app
             docker-compose -p issuer up -d
             docker image prune -af
