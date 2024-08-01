@@ -19,7 +19,19 @@
             <div>
                 {% include "recently_added_list.html" %}
             </div>
+            <div>
+                {% include "creating_list.html" %}
+            </div>
+
         </div>
     </div>
+<script>
+    window.onload = () => {
+        fetchChanges();
+        fetchCreating();
+        setInterval(fetchChanges, 15000)
+        setInterval(fetchCreating, 15000)
+    }
+</script>
 </body>
 </html>

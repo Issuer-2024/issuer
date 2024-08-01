@@ -11,7 +11,8 @@ from app.v1.report import get_keyword_trend_variation, get_suggestions_trend_dat
 from app.v1.report import get_today_issue_summary
 from app.v1.request_external_api import get_google_trend_daily_rank
 from app.v1.timeline.get_timeline import get_timeline_v2
-from app.v2.content import get_content
+from app.v2.content import get_content, create_content
+from app.v2.creating.get_creating import get_creating_sep
 from app.v2.keyword_rank import get_keyword_rank
 from app.v2.recently_added.get_recently_added import get_recently_added_sep
 
@@ -77,11 +78,22 @@ async def render_main_v2(request: Request):
 
 @app.get("/test/report")
 async def render_report_v2(q: str, request: Request, background_task: BackgroundTasks):
+
+    content = get_content(q)
+    keyword_rank = get_keyword_rank()
+    if not content:
+        background_task.add_task(create_content, q, background_task)
+        return templates_v2.TemplateResponse(
+            request=request, name="creating.html", context={
+                'keyword': q,
+                'keyword_rank': keyword_rank
+            }
+        )
+
     return templates_v2.TemplateResponse(
         request=request, name="report.html", context={
-            'content': get_content(q, background_task),
-            'keyword_rank': get_keyword_rank(),
-            'recently_added_sep': get_recently_added_sep()
+            'content': content,
+            'keyword_rank': keyword_rank
         }
     )
 
@@ -89,5 +101,8 @@ async def render_report_v2(q: str, request: Request, background_task: Background
 async def get_recent_add():
     return get_recently_added_sep()
 
+@app.get("/test/api/creating-sep")
+async def creating_sep():
+    return get_creating_sep()
 
 uvicorn.run(app, host='0.0.0.0', port=8000)
