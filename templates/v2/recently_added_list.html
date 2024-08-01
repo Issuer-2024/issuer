@@ -1,19 +1,16 @@
-<div class="flex flex-col bg-white rounded-lg p-6 " style="border: 1px solid #ccc">
-    <div class="flex justify-center items-center mb-3">
-        <img src="https://placehold.co/40x40" alt="Title Icon" class="w-10 h-10 mr-2">
-        <div style="width: 15rem">
-            <span class="text-xl font-bold mb-4">최근 생성</span>
-        </div>
-    </div>
-    <div id="recent-add-list" class="flex flex-col p-1 space-y-2 text-gray-700">
-    {% for item in recently_added_sep %}
-        <a href="/test/report?q={{ item.keyword }}" class="hover-link-recent">
-            <div class="flex justify-between">
-                <div>{{ item.keyword }}</div>
-                <div>{{ item.elapsed_time }}</div>
+<div class="flex flex-col bg-white rounded-lg " style="border: 1px solid #ccc">
+
+    <div id="container" class="rounded-lg"></div>
+    <div class="p-6">
+        <div class="flex justify-center items-center mb-3">
+            <img src="https://placehold.co/40x40" alt="Title Icon" class="w-10 h-10 mr-2">
+            <div style="width: 15rem">
+                <span class="text-xl font-bold mb-4">최근 생성</span>
             </div>
-        </a>
-    {% endfor %}
+        </div>
+        <div id="recent-add-list" class="flex flex-col p-1 space-y-2 text-gray-700">
+
+        </div>
     </div>
 </div>
 <style>
@@ -25,9 +22,30 @@
     .hover-link-recent:hover {
         background-color: #f0f0f0;
     }
+
+    #container {
+      height: 3px;
+    }
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/progressbar.js@1.0.1/dist/progressbar.min.js"></script>
 <script>
+            var bar = new ProgressBar.Line(container, {
+                strokeWidth: 4,
+                easing: 'easeInOut',
+                duration: 15000,
+                color: '#FFEA82',
+                trailColor: '#eee',
+                trailWidth: 1,
+                svgStyle: {width: '100%', height: '100%'},
+                from: {color: '#FFEA82'},
+                to: {color: '#ED6A5A'},
+                step: (state, bar) => {
+                    bar.path.setAttribute('stroke', state.color);
+                }
+            });
+
+
         function fetchChanges() {
             fetch('/test/recent-add-sep') // 서버에서 변경 내역을 가져오는 엔드포인트
                 .then(response => response.json())
@@ -38,17 +56,22 @@
                         const divItem = document.createElement('div');
                         divItem.innerHTML = `
                             <a href="/test/report?q=${encodeURIComponent(change.keyword)}" class="hover-link-recent">
-                                <div class="flex justify-between">
+                                <div class="flex justify-between hover-link-recent">
                                     <div>${change.keyword}</div>
                                     <div>${change.elapsed_time}</div>
                                 </div>
                             </a>
                         `;
                         changesList.appendChild(divItem);
+                        bar.set(0)
+                        bar.animate(1.0)
                     });
                 })
                 .catch(error => console.error('Error fetching changes:', error));
         }
+
+
+
 
         // 일정 주기로 fetchChanges 함수 호출
         setInterval(fetchChanges, 15000); // 5초마다 갱신
