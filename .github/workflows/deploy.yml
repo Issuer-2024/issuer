@@ -53,6 +53,17 @@ jobs:
       - name: Push Docker image to DockerHub
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/issuer-app:latest
 
+
+      - name: copy file via ssh password
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.PORT }}
+          source: "docker-compose.yml"
+          target: "/"
+
       # 7. 원격 서버에 SSH로 접속하여 Docker 이미지 업데이트 및 실행
       - name: SSH and Deploy
         uses: appleboy/ssh-action@v0.1.5
@@ -62,11 +73,6 @@ jobs:
           password: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            # docker-compose.yml 파일을 원격 서버로 복사
-            scp -o StrictHostKeyChecking=no ./docker-compose.yml ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/
-
-            # Docker Compose를 사용하여 컨테이너 실행
-            ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
             cd /
             docker-compose pull
             docker-compose up -d
