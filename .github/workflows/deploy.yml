@@ -103,5 +103,5 @@ jobs:
             
             cd /
             docker-compose pull
-            docker-compose up -p issuer -d
+            docker-compose -p issuer up -d
             docker image prune -af
