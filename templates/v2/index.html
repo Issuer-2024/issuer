@@ -41,6 +41,11 @@
             var keyword = document.getElementById('searchInput').value;
             window.location.href = '/report?q=' + encodeURIComponent(keyword);
         }
+        document.getElementById('searchInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                searchKeyword();
+            }
+        });
     </script>
 </body>
 </html>

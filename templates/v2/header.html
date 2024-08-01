@@ -1,17 +1,17 @@
 <div class="bg-gray-500 relative z-10 h-14 flex justify-between items-center px-4 bg-gradient-to-r from-teal-500 to-green-500" style="padding: 0 15% 0 15%">
     <div class="flex space-x-4">
-        <button class="flex items-center bg-transparent hover:bg-white hover:bg-opacity-10 text-white font-bold py-2 px-1 rounded transition duration-300">
+        <a href="/" class="flex items-center bg-transparent hover:bg-white hover:bg-opacity-10 text-white font-bold py-2 px-1 rounded transition duration-300">
             <span class="text-xl">ISSUER</span>
-        </button>
-        <button class="flex items-center bg-transparent hover:bg-white hover:bg-opacity-10 text-white font-bold py-2 px-1 rounded transition duration-300">
+        </a>
+        <a href="recently-added" class="flex items-center bg-transparent hover:bg-white hover:bg-opacity-10 text-white font-bold py-2 px-1 rounded transition duration-300">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-4V8a1 1 0 012 0v6a1 1 0 01-2 0zm1-9a1.5 1.5 0 110 3 1.5 1.5 0 010-3z" clip-rule="evenodd"/>
             </svg>
-            <span class="ml-1 text-lg">최근 변경</span>
-        </button>
+            <span class="ml-1 text-lg">최근 생성</span>
+        </a>
     </div>
     <div class="relative flex-1 max-w-xs ml-4 sm:ml-0">
-        <input class="w-full py-2 pl-4 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" type="search" placeholder="여기에서 검색">
+        <input id="searchInput" class="w-full py-2 pl-4 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" type="search" placeholder="여기에서 검색">
         <button class="absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 rounded-r-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M14.795 13.408l5.204 5.204a1 1 0 01-1.414 1.414l-5.204-5.204a7.5 7.5 0 111.414-1.414zM8.5 14A5.5 5.5 0 103 8.5 5.506 5.506 0 008.5 14z"/>
@@ -24,6 +24,11 @@
             var keyword = document.getElementById('searchInput').value;
             window.location.href = '/report?q=' + encodeURIComponent(keyword);
         }
+        document.getElementById('searchInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                searchKeyword();
+            }
+        });
     </script>
 </div>
 
