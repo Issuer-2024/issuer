@@ -7,3 +7,4 @@ fastapi~=0.111.0
 scikit-learn~=1.4.2
 uvicorn~=0.30.1
 starlette~=0.37.2
+redis-om==0.3.1
