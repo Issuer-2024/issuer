@@ -18,5 +18,12 @@
             </svg>
         </button>
     </div>
+
+    <script>
+        function searchKeyword() {
+            var keyword = document.getElementById('searchInput').value;
+            window.location.href = '/report?q=' + encodeURIComponent(keyword);
+        }
+    </script>
 </div>
 

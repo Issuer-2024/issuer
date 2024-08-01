@@ -47,7 +47,7 @@
 
 
         function fetchChanges() {
-            fetch('/test/api/recent-add-sep') // 서버에서 변경 내역을 가져오는 엔드포인트
+            fetch('/api/recent-add-sep') // 서버에서 변경 내역을 가져오는 엔드포인트
                 .then(response => response.json())
                 .then(data => {
                     const changesList = document.getElementById('recent-add-list');
@@ -55,7 +55,7 @@
                     data.forEach(change => {
                         const divItem = document.createElement('div');
                         divItem.innerHTML = `
-                            <a href="/test/report?q=${encodeURIComponent(change.keyword)}" class="hover-link-recent">
+                            <a href="/report?q=${encodeURIComponent(change.keyword)}" class="hover-link-recent">
                                 <div class="flex justify-between hover-link-recent">
                                     <div>${change.keyword}</div>
                                     <div>${change.elapsed_time}</div>

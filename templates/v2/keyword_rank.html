@@ -8,7 +8,7 @@
     <ol class="list-decimal list-inside space-y-2 text-gray-700">
         {% for item in keyword_rank %}
             <li>
-                <a href="/test/report?q={{ item.keyword }}" class="hover-link">{{ item.keyword }}</a>
+                <a href="/report?q={{ item.keyword }}" class="hover-link">{{ item.keyword }}</a>
             </li>
         {% endfor %}
     </ol>

@@ -33,41 +33,40 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates_v1 = Jinja2Templates(directory="templates/v1")
 templates_v2 = Jinja2Templates(directory="templates/v2")
 
+# @app.get("/")
+# async def render_main(request: Request):
+#     return templates_v1.TemplateResponse(
+#         request=request, name="index.html", context={
+#             "keyword_suggestions": get_google_trend_daily_rank()
+#         }
+#     )
+#
+#
+# @app.get("/report")
+# def render_report(q: str, request: Request):
+#     return templates_v1.TemplateResponse(
+#         request=request, name="report.html", context={"issue_summary": get_today_issue_summary(q),
+#                                                       "trend_variation": get_keyword_trend_variation(q),
+#                                                       "suggestion_trend_data": get_suggestions_trend_data(q)
+#                                                       }
+#     )
+#
+#
+# @app.get("/opinion")
+# def render_opinion(q: str, request: Request):
+#     return templates_v1.TemplateResponse(
+#         request=request, name="opinion.html", context={"opinions": get_news_comments_opinion(q)}
+#     )
+#
+#
+# @app.get("/timeline")
+# def render_timeline(q: str, request: Request):
+#     return templates_v1.TemplateResponse(
+#         request=request, name="timeline.html", context={"timeline": get_timeline_v2(q)}
+#     )
+
 
 @app.get("/")
-async def render_main(request: Request):
-    return templates_v1.TemplateResponse(
-        request=request, name="index.html", context={
-            "keyword_suggestions": get_google_trend_daily_rank()
-        }
-    )
-
-
-@app.get("/report")
-def render_report(q: str, request: Request):
-    return templates_v1.TemplateResponse(
-        request=request, name="report.html", context={"issue_summary": get_today_issue_summary(q),
-                                                      "trend_variation": get_keyword_trend_variation(q),
-                                                      "suggestion_trend_data": get_suggestions_trend_data(q)
-                                                      }
-    )
-
-
-@app.get("/opinion")
-def render_opinion(q: str, request: Request):
-    return templates_v1.TemplateResponse(
-        request=request, name="opinion.html", context={"opinions": get_news_comments_opinion(q)}
-    )
-
-
-@app.get("/timeline")
-def render_timeline(q: str, request: Request):
-    return templates_v1.TemplateResponse(
-        request=request, name="timeline.html", context={"timeline": get_timeline_v2(q)}
-    )
-
-
-@app.get("/test/")
 async def render_main_v2(request: Request):
     return templates_v2.TemplateResponse(
         request=request, name="index.html", context={
@@ -76,7 +75,7 @@ async def render_main_v2(request: Request):
     )
 
 
-@app.get("/test/report")
+@app.get("/report")
 async def render_report_v2(q: str, request: Request, background_task: BackgroundTasks):
 
     content = get_content(q)
@@ -97,11 +96,11 @@ async def render_report_v2(q: str, request: Request, background_task: Background
         }
     )
 
-@app.get("/test/api/recent-add-sep")
+@app.get("/api/recent-add-sep")
 async def get_recent_add():
     return get_recently_added_sep()
 
-@app.get("/test/api/creating-sep")
+@app.get("/api/creating-sep")
 async def creating_sep():
     return get_creating_sep()
 
