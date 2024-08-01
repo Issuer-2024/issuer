@@ -36,6 +36,14 @@ def save_creating(keyword: str):
 
     creating_hash.save()
 
+def read_creating(keyword: str):
+    Migrator().run()
+    keys = CreatingHash.find(CreatingHash.keyword == keyword).all()
+    if not keys:
+        return None
+    creating = [CreatingHash.get(key.pk) for key in keys]
+    return creating[0]
+
 def remove_creating(keyword: str):
     Migrator().run()
     keys = CreatingHash.find(CreatingHash.keyword == keyword).all()
