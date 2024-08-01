@@ -174,8 +174,8 @@ def create_content(q: str, background_task):
     table_of_contents += [{'title': title, 'depth': 1, 'num': '2.' + str(i + 1)} for i, title in enumerate(d.values())]
 
     body = [{'title': "개요", 'content': "", 'num': '1'}, {'title': "현재 이슈", 'content': "", 'num': '2'}]
-    body += [{'source': source, 'title': title, 'content': content, 'num': '2.' + str(i + 1)}
-             for i, (source, title, content) in enumerate(zip(c.values(), d.values(), e.values()))]
+    body += [{'ref': ref, 'title': title, 'content': content, 'num': '2.' + str(i + 1)}
+             for i, (ref, title, content) in enumerate(zip(c.values(), d.values(), e.values()))]
     result = Content(title, created_at, trend_search_data, table_of_contents, body)
     save_to_caching(result, background_task)
 

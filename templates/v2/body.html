@@ -8,6 +8,33 @@
             </div>
         </div>
         <hr class="my-4">
+    {% if ref %}
+        <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2">
+                <div style="width:1rem;">
+                    <div class="default font-display text-lg font-medium text-textMain dark:text-textMainDark selection:bg-super/50 selection:text-textMain dark:selection:bg-superDuper/10 dark:selection:text-superDark"><div class="w-[24px]"><svg aria-hidden="true" focusable="false" data-prefix="fak" data-icon="sources" class="svg-inline--fa fa-sources fa-fw " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M262.4 32a76.8 76.8 0 1 1 0 153.6 76.8 76.8 0 1 1 0-153.6zm0 51.2a25.6 25.6 0 1 0 0 51.2 25.6 25.6 0 1 0 0-51.2zM416 185.6a76.8 76.8 0 1 1 0 153.6 76.8 76.8 0 1 1 0-153.6zm0 51.2a25.6 25.6 0 1 0 0 51.2 25.6 25.6 0 1 0 0-51.2zM108.8 185.6a76.8 76.8 0 1 1 0 153.6 76.8 76.8 0 1 1 0-153.6zm0 51.2a25.6 25.6 0 1 0 0 51.2 25.6 25.6 0 1 0 0-51.2zM262.4 339.2a76.8 76.8 0 1 1 0 153.6 76.8 76.8 0 1 1 0-153.6zm0 51.2a25.6 25.6 0 1 0 0 51.2 25.6 25.6 0 1 0 0-51.2z"></path></svg></div></div>
+                </div>
+                <span style="font-size: 1.125rem">출처</span>
+            </div>
+            <div class="flex mb-6 gap-4">
+            {% for r in ref[:3] %}
+                <a href="{{ r.link }}" class="flex items-center justify-start p-4 bg-slate-100 rounded-lg" style="border: 1px solid #ccc; width: 10rem; height: 6rem">
+                    <div class="ml-4">
+                        <h3 id="ref-title" class="text-xs text-teal-400">{{ r.title[:15] }}... - naver news</h3>
+                    </div>
+                </a>
+            {% endfor %}
+            {% if (ref | length) > 3 %}
+                <a class="flex items-center justify-start p-4 bg-gray-50 rounded-lg" style="border: 1px solid #ccc; width: 10rem; height:6rem">
+                    <div class="ml-4">
+                        <h3 id="ref-title" class="text-xs text-gray-400">{{ (ref | length) - 3 }}개 더보기</h3>
+                    </div>
+                </a>
+            {% endif %}
+            </div>
+        </div>
+
+    {% endif %}
         <p class="text-gray-700 leading-relaxed">
             {{ content | replace('"', '') }}
         </p>

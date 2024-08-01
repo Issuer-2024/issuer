@@ -21,7 +21,7 @@
         </div>
         <div>
             {% for item in content.body %}
-                {% with title=item.title, content=item.content, num=item.num %}
+                {% with ref=item.ref, title=item.title, content=item.content, num=item.num %}
                     {% include "body.html" %}
                 {% endwith %}
             {% endfor %}
