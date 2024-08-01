@@ -22,9 +22,16 @@ services:
       CLOVA_CHAT_COMPLETION_003_CLIENT_KEY: ${CLOVA_CHAT_COMPLETION_003_CLIENT_KEY}
       CLOVA_CHAT_COMPLETION_003_CLIENT_KEY_PRIMARY_VAR: ${CLOVA_CHAT_COMPLETION_003_CLIENT_KEY_PRIMARY_VAR}
       CLOVA_CHAT_COMPLETION_003_CLIENT_KEY_REQUEST_ID: ${CLOVA_CHAT_COMPLETION_003_CLIENT_KEY_REQUEST_ID}
-
+    networks:
+      - issuer-app-network
   redis:
     image: redis/redis-stack:latest
     ports:
       - "6379:6379"
       - "8001:8001"
+    networks:
+      - issuer-app-network
+
+networks:
+  issuer-app-network:
+    driver: bridge
