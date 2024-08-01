@@ -12,6 +12,7 @@ from app.v1.report import get_today_issue_summary
 from app.v1.request_external_api import get_google_trend_daily_rank
 from app.v1.timeline.get_timeline import get_timeline_v2
 from app.v2.content import get_content, create_content
+from app.v2.creating.get_creating import get_creating_sep
 from app.v2.keyword_rank import get_keyword_rank
 from app.v2.recently_added.get_recently_added import get_recently_added_sep
 
@@ -100,5 +101,8 @@ async def render_report_v2(q: str, request: Request, background_task: Background
 async def get_recent_add():
     return get_recently_added_sep()
 
+@app.get("/test/api/creating-sep")
+async def creating_sep():
+    return get_creating_sep()
 
 uvicorn.run(app, host='0.0.0.0', port=8000)

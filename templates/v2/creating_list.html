@@ -1,14 +1,14 @@
 <div class="flex flex-col bg-white rounded-lg " style="border: 1px solid #ccc">
 
-    <div id="container" class="rounded-lg"></div>
+    <div id="container1" class="rounded-lg"></div>
     <div class="p-6">
         <div class="flex justify-center items-center mb-3">
             <img src="https://placehold.co/40x40" alt="Title Icon" class="w-10 h-10 mr-2">
             <div style="width: 15rem">
-                <span class="text-xl font-bold mb-4">최근 생성</span>
+                <span class="text-xl font-bold mb-4">생성 중</span>
             </div>
         </div>
-        <div id="recent-add-list" class="flex flex-col p-1 space-y-2 text-gray-700">
+        <div id="creating-list" class="flex flex-col p-1 space-y-2 text-gray-700">
 
         </div>
     </div>
@@ -23,14 +23,14 @@
         background-color: #f0f0f0;
     }
 
-    #container {
+    #container1 {
       height: 3px;
     }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/progressbar.js@1.0.1/dist/progressbar.min.js"></script>
 <script>
-            var bar = new ProgressBar.Line(container, {
+            var bar2 = new ProgressBar.Line(container1, {
                 strokeWidth: 4,
                 easing: 'easeInOut',
                 duration: 15000,
@@ -46,11 +46,11 @@
             });
 
 
-        function fetchChanges() {
-            fetch('/test/api/recent-add-sep') // 서버에서 변경 내역을 가져오는 엔드포인트
+        function fetchCreating() {
+            fetch('/test/api/creating-sep') // 서버에서 변경 내역을 가져오는 엔드포인트
                 .then(response => response.json())
                 .then(data => {
-                    const changesList = document.getElementById('recent-add-list');
+                    const changesList = document.getElementById('creating-list');
                     changesList.innerHTML = ''; // 기존 목록을 비우기
                     data.forEach(change => {
                         const divItem = document.createElement('div');
@@ -63,13 +63,12 @@
                             </a>
                         `;
                         changesList.appendChild(divItem);
-                        bar.set(0)
-                        bar.animate(1.0)
+                        bar2.set(0)
+                        bar2.animate(1.0)
                     });
                 })
                 .catch(error => console.error('Error fetching changes:', error));
         }
-
 
 
 
