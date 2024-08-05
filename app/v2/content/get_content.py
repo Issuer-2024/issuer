@@ -8,17 +8,22 @@ from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
 
 from app.v2.content.get_estimated_search_amount import get_estimated_search_amount
+from app.v2.content.get_high_searching_news import get_high_searching_days, get_high_searching_news
 from app.v2.external_request import RequestTrend, EmbeddingExecutor, get_naver_news, CompletionExecutor, \
     get_news_summary, ClovaSummary, HCX003Chat
 from app.v2.model.content import Content
 from app.v2.redis.redis_util import read_cache_content, save_to_caching, save_creating, remove_creating, read_creating
 
 
-def collect_issues(q: str):
+def collect_issues(q: str, estimated_search_amount: list):
+    high_searching_days = get_high_searching_days(estimated_search_amount)
+    high_searching_news = get_high_searching_news(q, high_searching_days)
+
     naver_news_response = get_naver_news(q, 10, 1, sort='sim')
     news_items = naver_news_response.json().get('items', [])
     news_items = [news_item for news_item in news_items if
                   news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
+    news_items += high_searching_news
     return news_items
 
 
@@ -51,7 +56,7 @@ def cluster_issues(embedding_results):
 
     embeddings, items = zip(*embedding_results)
     embeddings = StandardScaler().fit_transform(embeddings)
-    dbscan = DBSCAN(eps=0.5, min_samples=2, metric='cosine')
+    dbscan = DBSCAN(eps=0.7, min_samples=2, metric='cosine')
     labels = dbscan.fit_predict(embeddings)
 
     clustered_issues = {}
@@ -108,7 +113,6 @@ def create_group_content(clustered_issues):
 
     group_contents = {}
     for cluster_num, items in clustered_issues.items():
-
         contents = [get_news_summary(item['link'])['summary'] for item in items[:5]]
         preset_text = [{"role": "system",
                         "content": "- 내용을 정리하는 AI입니다."
@@ -143,12 +147,10 @@ def get_content(q: str):
 
 
 def create_content(q: str, background_task):
-
     if read_creating(q):
         return
 
     save_creating(q)
-
 
     title = q
     created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -165,8 +167,9 @@ def create_content(q: str, background_task):
                                                                  today,
                                                                  'date',
                                                                  keyword_groups)[0]['data']
+    estimated_search_amount = get_estimated_search_amount(q, trend_search_data)
 
-    a = collect_issues(q)
+    a = collect_issues(q, estimated_search_amount)
     b = create_embedding_result(a)
     c = cluster_issues(b)
     d = create_group_title(c)
@@ -177,44 +180,65 @@ def create_content(q: str, background_task):
     body = [{'title': "개요", 'content': "", 'num': '1'}, {'title': "현재 이슈", 'content': "", 'num': '2'}]
     body += [{'ref': ref, 'title': title, 'content': content, 'num': '2.' + str(i + 1)}
              for i, (ref, title, content) in enumerate(zip(c.values(), d.values(), e.values()))]
-    result = Content(title, created_at, get_estimated_search_amount(q, trend_search_data), table_of_contents, body)
+    result = Content(title, created_at, estimated_search_amount, table_of_contents, body)
     save_to_caching(result, background_task)
 
     remove_creating(q)
 
 
 if __name__ == '__main__':
-    start_time = time.time()
+    q = "쯔양"
+    title = q
+    created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    step_start = time.time()
-    a = collect_issues("쯔양")
-    print(f"collect_issues took {time.time() - step_start:.2f} seconds")
+    today = datetime.today()
+    one_months_ago = (today - timedelta(days=30)).replace(day=1).strftime('%Y-%m-%d')
+    today = today.strftime('%Y-%m-%d')
 
-    step_start = time.time()
-    b = create_embedding_result(a)
-    print(f"create_embedding_result took {time.time() - step_start:.2f} seconds")
+    keyword_groups = [
+        {'groupName': q, 'keywords': [q]}
+    ]
 
-    step_start = time.time()
-    c = cluster_issues(b)
-    print(f"cluster_issues took {time.time() - step_start:.2f} seconds")
+    trend_search_data = RequestTrend.get_naver_trend_search_data(one_months_ago,
+                                                                 today,
+                                                                 'date',
+                                                                 keyword_groups)[0]['data']
+    estimated_search_amount = get_estimated_search_amount(q, trend_search_data)
 
-    step_start = time.time()
-    d = create_group_title(c)
-    print(f"create_group_title took {time.time() - step_start:.2f} seconds")
-
-    step_start = time.time()
-    e = create_group_content(c)
-    print(f"create_group_content took {time.time() - step_start:.2f} seconds")
-
-    body = {"개요": "", "현재 이슈": {
-        cluster_num: {
-            "title": title,
-            "content": ""
-        } for cluster_num, title in d.items()
-    }}
-
-    for cluster_num, content in e.items():
-        body["현재 이슈"][cluster_num]["content"] = content
-
-    pprint.pprint(body)
-    print(f"Total execution took {time.time() - start_time:.2f} seconds")
+    a = collect_issues(q, estimated_search_amount)
+    import pprint
+    pprint.pprint(a)
+    # start_time = time.time()
+    #
+    # step_start = time.time()
+    # a = collect_issues("쯔양")
+    # print(f"collect_issues took {time.time() - step_start:.2f} seconds")
+    #
+    # step_start = time.time()
+    # b = create_embedding_result(a)
+    # print(f"create_embedding_result took {time.time() - step_start:.2f} seconds")
+    #
+    # step_start = time.time()
+    # c = cluster_issues(b)
+    # print(f"cluster_issues took {time.time() - step_start:.2f} seconds")
+    #
+    # step_start = time.time()
+    # d = create_group_title(c)
+    # print(f"create_group_title took {time.time() - step_start:.2f} seconds")
+    #
+    # step_start = time.time()
+    # e = create_group_content(c)
+    # print(f"create_group_content took {time.time() - step_start:.2f} seconds")
+    #
+    # body = {"개요": "", "현재 이슈": {
+    #     cluster_num: {
+    #         "title": title,
+    #         "content": ""
+    #     } for cluster_num, title in d.items()
+    # }}
+    #
+    # for cluster_num, content in e.items():
+    #     body["현재 이슈"][cluster_num]["content"] = content
+    #
+    # pprint.pprint(body)
+    # print(f"Total execution took {time.time() - start_time:.2f} seconds")

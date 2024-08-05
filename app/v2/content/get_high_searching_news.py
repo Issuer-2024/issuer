@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
+from app.v2.external_request import get_news_summary
 
-from app.v2.content.get_estimated_search_amount import get_estimated_search_amount
 
 def get_news_list_by_date(q: str, date: str):
     news_list = []
@@ -33,38 +33,18 @@ def get_high_searching_days(estimated_search_amount):
 
     return high_searching_days
 
+
 def get_high_searching_news(q, high_searching_days):
-    result = []
+    news_items = []
     for high_searching_day in high_searching_days:
         date = high_searching_day['period'].replace('-', '')
-        news = get_news_list_by_date(q, date)[:3]
-        result.append({'date': date, 'news': news})
+        links = get_news_list_by_date(q, date)[:3]
+        for link in links:
+            summary = get_news_summary(link)
+            title = summary['title']
+            news_items.append({'pubDate': date, 'title': title, 'link': link})
 
-    return result
-
-
-if __name__ == '__main__':
-    keyword = "쯔양"
-    from datetime import datetime, timedelta
-
-    today = datetime.today()
-    one_months_ago = (today - timedelta(days=30)).replace(day=1).strftime('%Y-%m-%d')
-    today = today.strftime('%Y-%m-%d')
-
-    keyword_groups = [
-        {'groupName': keyword, 'keywords': [keyword]}
-    ]
-    from app.v2.external_request import RequestTrend
-
-    trend_search_data = RequestTrend.get_naver_trend_search_data(one_months_ago,
-                                                                 today,
-                                                                 'date',
-                                                                 keyword_groups)[0]['data']
-    import pprint
-    estimated_search_amount = get_estimated_search_amount(keyword, trend_search_data)
-    get_high_searching_days = get_high_searching_days(estimated_search_amount)
-    pprint.pprint(get_high_searching_news(keyword, get_high_searching_days))
-
+    return news_items
 
 
 
