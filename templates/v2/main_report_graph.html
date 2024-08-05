@@ -9,7 +9,7 @@
 
         // Chart.js 데이터 형식으로 변환
         const labels = data.map(item => item.period);
-        const dataValues = data.map(item => item.ratio);
+        const dataValues = data.map(item => item.estimated);
         const chartId = "{{ chart_id }}";
 
         const ctx = document.getElementById(chartId).getContext('2d');
@@ -53,7 +53,7 @@
                     y: {
                         title: {
                             display: true,
-                            text: 'Ratio'
+                            text: '검색량'
                         },
                         grid: {
                             display: false // Y축 그리드를 숨깁니다.

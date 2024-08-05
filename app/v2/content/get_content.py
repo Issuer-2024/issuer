@@ -107,8 +107,8 @@ def create_group_content(clustered_issues):
     )
 
     group_contents = {}
-
     for cluster_num, items in clustered_issues.items():
+
         contents = [get_news_summary(item['link'])['summary'] for item in items[:5]]
         preset_text = [{"role": "system",
                         "content": "- 내용을 정리하는 AI입니다."

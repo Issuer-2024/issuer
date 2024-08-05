@@ -21,7 +21,12 @@ def get_news_summary(url):
         return None
     try:
         url = f"https://tts.news.naver.com/article/{media_id}/{article_id}/summary"
-        raw = requests.get(url).text
+        response = requests.get(url)
+
+        if not response.status_code == 200:
+            return {'title': '', 'summary': ''}
+
+        raw = response.text
         json_data = json.loads(raw)
         news_summary = {'title': json_data['title'], 'summary': json_data['summary']}
         return news_summary
