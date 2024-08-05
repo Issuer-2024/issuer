@@ -47,6 +47,9 @@ def get_search_amount(hintKeywords):
     r = requests.get(BASE_URL + uri, params=params,
                      headers=get_header(method, uri, API_KEY, SECRET_KEY, CUSTOMER_ID))
 
-    # return pd.DataFrame(r.json()['keywordList'])
-    result = r.json()['keywordList'][0]
-    return result['monthlyMobileQcCnt'] + result['monthlyPcQcCnt']
+    try:
+        # return pd.DataFrame(r.json()['keywordList'])
+        result = r.json()['keywordList'][0]
+        return int(result['monthlyMobileQcCnt']) + int(result['monthlyPcQcCnt'])
+    except Exception as e:
+        return None

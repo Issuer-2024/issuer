@@ -1,12 +1,15 @@
 import requests
 import json
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 NAVER_API_HEADERS = {
     'X-Naver-Client-Id': os.getenv('NAVER_API_CLIENT_ID'),
     'X-Naver-Client-Secret': os.getenv('NAVER_API_CLIENT_SECRET'),
 }
-
 
 class RequestTrend:
     @staticmethod

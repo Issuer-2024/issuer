@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
+
+from app.v2.content.get_estimated_search_amount import get_estimated_search_amount
 from app.v2.external_request import RequestTrend, EmbeddingExecutor, get_naver_news, CompletionExecutor, \
     get_news_summary, ClovaSummary, HCX003Chat
 from app.v2.model.content import Content
@@ -175,7 +177,7 @@ def create_content(q: str, background_task):
     body = [{'title': "개요", 'content': "", 'num': '1'}, {'title': "현재 이슈", 'content': "", 'num': '2'}]
     body += [{'ref': ref, 'title': title, 'content': content, 'num': '2.' + str(i + 1)}
              for i, (ref, title, content) in enumerate(zip(c.values(), d.values(), e.values()))]
-    result = Content(title, created_at, trend_search_data, table_of_contents, body)
+    result = Content(title, created_at, get_estimated_search_amount(q, trend_search_data), table_of_contents, body)
     save_to_caching(result, background_task)
 
     remove_creating(q)
