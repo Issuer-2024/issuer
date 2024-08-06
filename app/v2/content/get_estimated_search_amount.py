@@ -20,7 +20,7 @@ if __name__ == '__main__':
     from datetime import datetime, timedelta
 
     today = datetime.today()
-    one_months_ago = (today - timedelta(days=30)).replace(day=1).strftime('%Y-%m-%d')
+    one_months_ago = (today - timedelta(days=30)).strftime('%Y-%m-%d')
     today = today.strftime('%Y-%m-%d')
 
     keyword_groups = [
