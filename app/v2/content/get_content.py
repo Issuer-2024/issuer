@@ -15,6 +15,20 @@ from app.v2.model.content import Content
 from app.v2.redis.redis_util import read_cache_content, save_to_caching, save_creating, remove_creating, read_creating
 
 
+def convert_pubDate_format(data):
+    for item in data:
+        try:
+            date_obj = datetime.strptime(item['pubDate'], '%a, %d %b %Y %H:%M:%S %z')
+            item['pubDate'] = date_obj.strftime('%Y%m%d')
+        except ValueError:
+            try:
+                date_obj = datetime.strptime(item['pubDate'], '%Y%m%d')
+                item['pubDate'] = date_obj.strftime('%Y%m%d')
+            except ValueError:
+                continue
+
+
+
 def collect_issues(q: str, estimated_search_amount: list):
     high_searching_days = get_high_searching_days(estimated_search_amount)
     high_searching_news = get_high_searching_news(q, high_searching_days)
@@ -24,6 +38,7 @@ def collect_issues(q: str, estimated_search_amount: list):
     news_items = [news_item for news_item in news_items if
                   news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
     news_items += high_searching_news
+    convert_pubDate_format(news_items)
     return news_items
 
 
@@ -56,11 +71,13 @@ def cluster_issues(embedding_results):
 
     embeddings, items = zip(*embedding_results)
     embeddings = StandardScaler().fit_transform(embeddings)
-    dbscan = DBSCAN(eps=0.7, min_samples=2, metric='cosine')
+    dbscan = DBSCAN(eps=0.6, min_samples=2, metric='cosine')
     labels = dbscan.fit_predict(embeddings)
 
     clustered_issues = {}
     for item, label in zip(items, labels):
+        if label == -1:
+            continue
         if label not in clustered_issues:
             clustered_issues[label] = []
         clustered_issues[label].append(item)
@@ -206,8 +223,11 @@ if __name__ == '__main__':
     estimated_search_amount = get_estimated_search_amount(q, trend_search_data)
 
     a = collect_issues(q, estimated_search_amount)
+    b = create_embedding_result(a)
+    c = cluster_issues(b)
     import pprint
-    pprint.pprint(a)
+
+    pprint.pprint(c)
     # start_time = time.time()
     #
     # step_start = time.time()

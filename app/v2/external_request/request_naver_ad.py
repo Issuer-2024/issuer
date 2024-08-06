@@ -40,7 +40,7 @@ def get_search_amount(hintKeywords):
     method = 'GET'
 
     params = {}
-
+    hintKeywords = hintKeywords.replace(' ', '')
     params['hintKeywords'] = hintKeywords
     params['showDetail'] = '1'
 

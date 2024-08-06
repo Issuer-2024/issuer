@@ -1,0 +1,5 @@
+<div class="display flex justify-center">
+    {% with trend=content.keyword_trend_data, chart_id=1 %}
+        {% include "main_report_graph.html" %}
+    {% endwith %}
+</div>
