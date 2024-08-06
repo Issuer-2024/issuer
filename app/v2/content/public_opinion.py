@@ -1,16 +1,17 @@
 import time
 from datetime import datetime, timedelta
 
+import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
 from app.v2.external_request import get_news_summary
 from app.v2.external_request.request_news_comments import RequestNewsComments
 
-office_codes = ['1003', '1421', '1001', '1015', '1437']
+office_codes = ['1001', '1421', '1003', '1015', '1437']
 
 
-# 뉴시스, 뉴스1, 연합뉴스, 한국경제 JTBC
+# 연합뉴스, 뉴스1, 뉴시스, 한국경제 JTBC
 
 
 def add_days(date_str, dur):
@@ -55,7 +56,7 @@ def get_dates_to_collect(ago):
 
 
 def collect_comments(q: str):
-    dates_to_collect = get_dates_to_collect(q)
+    dates = get_dates_to_collect(30)
     all_comments_data = []
     for office_code in office_codes[:1]:
         news_urls = []
@@ -69,26 +70,59 @@ def collect_comments(q: str):
         for url in news_urls:
             summary = get_news_summary(url)
             comments = RequestNewsComments.get_news_comments(url)
-            all_comments_data.append({'url': {'summary': summary, 'comments': comments}})
+            all_comments_data.append({'url': url, 'summary': summary, 'comments': comments})
 
+    return all_comments_data
+
+
+def get_comments_interaction_by_date(q):
+    all_comments_data = collect_comments(q)
+    comments = []
+    for data in all_comments_data:
+        comments += data['comments']
+
+    # 데이터프레임으로 변환
+    df = pd.DataFrame(comments)
+    df['total_interaction'] = df['antipathy_count'] + df['sympathy_count'] + df['reply_count']
+    # 날짜 형식 변환
+    df['date'] = pd.to_datetime(df['date']).dt.date
+
+    # 일자별로 집계
+    interaction_result = df.groupby('date').agg({
+        'antipathy_count': 'sum',
+        'sympathy_count': 'sum',
+        'reply_count': 'sum'
+    }).reset_index()
+
+    # 일자별 댓글 수 집계
+    comment_count_result = df.groupby('date').size().reset_index(name='comment_count')
+
+    # 두 결과 합치기
+    final_result = pd.merge(interaction_result, comment_count_result, on='date')
+
+    return final_result
 
 if __name__ == '__main__':
-    import pprint
+    print(get_comments_interaction_by_date("코스피"))
 
-    dates = get_dates_to_collect(30)
-    all_comments_data = []
-    for office_code in office_codes[:1]:
-        news_urls = []
-        for i in range(0, len(dates)):
-            tmp = get_news_list_by_office_code("엔비디아 주가", dates[i], office_code)
-            while tmp == "Error":
-                time.sleep(0.5)
-                tmp = get_news_list_by_office_code("엔비디아 주가", dates[i], office_code)
-            news_urls += tmp
 
-        for url in news_urls:
-            summary = get_news_summary(url)
-            comments = RequestNewsComments.get_news_comments(url)
-            all_comments_data.append({'url': {'summary': summary, 'comments': comments}})
-
-    pprint.pprint(all_comments_data)
+# if __name__ == '__main__':
+    # import pprint
+    #
+    # dates = get_dates_to_collect(30)
+    # all_comments_data = []
+    # for office_code in office_codes[:1]:
+    #     news_urls = []
+    #     for i in range(0, len(dates)):
+    #         tmp = get_news_list_by_office_code("엔비디아 주가", dates[i], office_code)
+    #         while tmp == "Error":
+    #             time.sleep(0.5)
+    #             tmp = get_news_list_by_office_code("엔비디아 주가", dates[i], office_code)
+    #         news_urls += tmp
+    #
+    #     for url in news_urls:
+    #         summary = get_news_summary(url)
+    #         comments = RequestNewsComments.get_news_comments(url)
+    #         all_comments_data.append({'url': url, 'summary': summary, 'comments': comments})
+    #
+    # pprint.pprint(all_comments_data)
