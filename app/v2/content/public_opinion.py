@@ -7,6 +7,9 @@ from bs4 import BeautifulSoup
 
 from app.v2.external_request import get_news_summary
 from app.v2.external_request.request_news_comments import RequestNewsComments
+from konlpy.tag import Okt
+from collections import Counter
+
 
 office_codes = ['1001', '1421', '1003', '1015', '1437']
 
@@ -75,11 +78,7 @@ def collect_comments(q: str):
     return all_comments_data
 
 
-import pandas as pd
-
-def get_public_opinion_activity_data(q):
-    # collect_comments 함수 호출하여 댓글 데이터 수집
-    all_comments_data = collect_comments(q)
+def get_public_opinion_activity_data(all_comments_data):
     comments = []
     for data in all_comments_data:
         comments += data['comments']
@@ -109,27 +108,52 @@ def get_public_opinion_activity_data(q):
     return final_result.to_dict(orient='list')
 
 
+def get_word_frequency(all_comments_data):
+    okt = Okt()
+    tmp = []
+    for data in all_comments_data:
+        for comment in data['comments']:
+            tmp += comment['contents']
+    all_comments_txt = ''.join(tmp)
+    nouns = okt.nouns(all_comments_txt)
+    for i, v in enumerate(nouns):
+        if len(v) < 2:
+            nouns.pop(i)
+    counter = Counter(nouns)
+    most_common = counter.most_common(30)
+
+    print("키워드와 빈도수:", most_common)
+
+def get_statistic(q):
+    all_comments_data = collect_comments(q)
+    public_opinion_activity_data = get_public_opinion_activity_data(all_comments_data)
+    word_frequency = get_word_frequency(all_comments_data)
+
+    return public_opinion_activity_data, word_frequency
+
+
 if __name__ == '__main__':
-    print(get_public_opinion_activity_data("코스피"))
+    all_comments_data = collect_comments("주식")
+    get_word_frequency(all_comments_data)
 
 
 # if __name__ == '__main__':
-    # import pprint
-    #
-    # dates = get_dates_to_collect(30)
-    # all_comments_data = []
-    # for office_code in office_codes[:1]:
-    #     news_urls = []
-    #     for i in range(0, len(dates)):
-    #         tmp = get_news_list_by_office_code("엔비디아 주가", dates[i], office_code)
-    #         while tmp == "Error":
-    #             time.sleep(0.5)
-    #             tmp = get_news_list_by_office_code("엔비디아 주가", dates[i], office_code)
-    #         news_urls += tmp
-    #
-    #     for url in news_urls:
-    #         summary = get_news_summary(url)
-    #         comments = RequestNewsComments.get_news_comments(url)
-    #         all_comments_data.append({'url': url, 'summary': summary, 'comments': comments})
-    #
-    # pprint.pprint(all_comments_data)
+# import pprint
+#
+# dates = get_dates_to_collect(30)
+# all_comments_data = []
+# for office_code in office_codes[:1]:
+#     news_urls = []
+#     for i in range(0, len(dates)):
+#         tmp = get_news_list_by_office_code("엔비디아 주가", dates[i], office_code)
+#         while tmp == "Error":
+#             time.sleep(0.5)
+#             tmp = get_news_list_by_office_code("엔비디아 주가", dates[i], office_code)
+#         news_urls += tmp
+#
+#     for url in news_urls:
+#         summary = get_news_summary(url)
+#         comments = RequestNewsComments.get_news_comments(url)
+#         all_comments_data.append({'url': url, 'summary': summary, 'comments': comments})
+#
+# pprint.pprint(all_comments_data)
