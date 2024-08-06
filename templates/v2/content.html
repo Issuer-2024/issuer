@@ -1,5 +1,5 @@
 <div class="bg-white flex rounded p-6" style="border: 1px solid #ccc">
-    <div class="flex flex-col gap-4">
+    <div class="flex flex-col gap-4" style="width:100%;">
         <div class="flex flex-col">
             <span style="font-size: 2.25rem; font-weight: 700; height: 1;">
                 {{ content.keyword }}
@@ -8,23 +8,85 @@
                 {{ content.created_at }}
             </span>
         </div>
+            <div class="flex items-center justify-center gap-6">
+                <div>
+                    <button id="data-analysis-btn" class="block p-1 font-sans text-sm antialiased font-normal leading-normal text-blue-gray-900">
+                        데이터 분석
+                    </button>
+                </div>
+                <div>
+                    <button id="issue-data-btn" class="block p-1 font-sans text-sm antialiased font-normal leading-normal text-blue-gray-900">
+                        이슈 정리
+                    </button>
+                </div>
+                <div>
+                    <button id="reaction-data-btn" class="block p-1 font-sans text-sm antialiased font-normal leading-normal text-blue-gray-900">
+                        여론 확인
+                    </button>
+                </div>
+            </div>
+        <div id="report-main">
 
-        <div class="display flex justify-center">
-            {% with trend=content.keyword_trend_data, chart_id=1 %}
-                {% include "main_report_graph.html" %}
-            {% endwith %}
         </div>
-        <div class="flex">
-            {% with table_of_contents=content.table_of_contents %}
-                {% include "table_of_contents.html" %}
-            {% endwith %}
+        <div id="data-analysis" style="display: none;">
+            <div class="px-10">
+                <div class="mb-2">
+                    <span style="font-size: 1.25rem; font-weight: 700; height: 1;">
+                    검색량 분석
+                    </span>
+                </div>
+                <div class="flex flex-col items-center">
+                {% with trend=content.keyword_trend_data, chart_id=1 %}
+                    {% include "main_report_graph.html" %}
+                {% endwith %}
+                </div>
+                <div class="my-2">
+                    <span style="font-size: 1.25rem; font-weight: 700; height: 1;">
+                    연관어 분석
+                    </span>
+                </div>
+                <div>
+
+                </div>
+                <div class="my-2">
+                    <span style="font-size: 1.25rem; font-weight: 700; height: 1;">
+                    여론 분석
+                    </span>
+                </div>
+            </div>
         </div>
-        <div>
+
+        <div id="issue-data" style="display: none;">
+            <div class="flex flex-col">
+            <div class="flex">
+                {% with table_of_contents=content.table_of_contents %}
+                    {% include "table_of_contents.html" %}
+                {% endwith %}
+            </div>
+            <div>
             {% for item in content.body %}
                 {% with ref=item.ref, title=item.title, content=item.content, num=item.num %}
                     {% include "body.html" %}
                 {% endwith %}
             {% endfor %}
+            </div>
+                </div>
         </div>
+
+
     </div>
+
+    <script>
+        document.getElementById('report-main').innerHTML = document.getElementById('data-analysis').innerHTML
+        document.getElementById('data-analysis-btn').addEventListener('click', function() {
+            location.reload()
+        });
+        document.getElementById('issue-data-btn').addEventListener('click', function() {
+            document.getElementById('report-main').innerHTML = document.getElementById('issue-data').innerHTML
+        });
+        document.getElementById('reaction-data-btn').addEventListener('click', function() {
+            document.getElementById('report-main').innerHTML = document.getElementById('reaction-data').innerHTML
+        });
+    </script>
+
 </div>
