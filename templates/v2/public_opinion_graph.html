@@ -1,0 +1,96 @@
+<div class="p-4 flex flex-col bg-white rounded-lg p-6 justify-center items-center" style="border: 1px solid #ccc; width: 100%">
+    <canvas id="{{ chart_id }}" class="justify-center items-center"></canvas>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // 데이터 설정
+        const data = {{ opinion | safe }}
+
+        // Chart.js 데이터 형식으로 변환
+        const labels = data.date;
+        const totalInteraction = data.total_interaction;
+        const antipathyCount = data.antipathy_count;
+        const sympathyCount = data.sympathy_count;
+        const replyCount = data.reply_count;
+        const commentCount = data.comment_count;
+        const chartId = "{{ chart_id }}";
+
+        const ctx = document.getElementById(chartId).getContext('2d');
+        const myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Total Interaction',
+                    data: totalInteraction,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false // 레전드를 숨깁니다.
+                    },
+                    title: {
+                        display: false,
+                        text: 'Ratio Over Time'
+                    },
+                    tooltip: {
+                        enabled: true, // 도구 설명을 활성화합니다.
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function (context) {
+                                const index = context.dataIndex;
+                                const date = labels[index];
+                                const total = totalInteraction[index];
+                                const antipathy = antipathyCount[index];
+                                const sympathy = sympathyCount[index];
+                                const reply = replyCount[index];
+                                const comment = commentCount[index];
+
+                                return [
+                                    `Date: ${date}`,
+                                    `Total Interaction: ${total}`,
+                                    `Antipathy Count: ${antipathy}`,
+                                    `Sympathy Count: ${sympathy}`,
+                                    `Reply Count: ${reply}`,
+                                    `Comment Count: ${comment}`
+                                ];
+                            }
+                        }
+                    }
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: '일자'
+                        },
+                        grid: {
+                            display: false // X축 그리드를 숨깁니다.
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: '사용자 활동 수치'
+                        },
+                        grid: {
+                            display: false // Y축 그리드를 숨깁니다.
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>

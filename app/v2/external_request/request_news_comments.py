@@ -31,7 +31,7 @@ class RequestNewsComments:
         if not media_id or not article_id:
             return None
         try:
-            url = f"https://apis.naver.com/commentBox/cbox/web_naver_list_jsonp.json?ticket=news&pool=cbox5&_callback=&lang=ko&country=KR&objectId=news{media_id}%2C{article_id}&pageSize={30}"
+            url = f"https://apis.naver.com/commentBox/cbox/web_naver_list_jsonp.json?ticket=news&pool=cbox5&_callback=&lang=ko&country=KR&objectId=news{media_id}%2C{article_id}&pageSize={num}"
             html = requests.get(url, headers=header)
             comment_text = json.loads(html.text.replace('_callback(', '')[:-2])
             comments = [{'date': comment_info['regTime'],

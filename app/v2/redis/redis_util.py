@@ -23,6 +23,7 @@ def save_to_caching(content: Content, background_tasks: BackgroundTasks):
     content_hash = ContentHash(keyword=content.keyword,
                                created_at=content.created_at,
                                keyword_trend_data=content.keyword_trend_data,
+                               public_opinion_activity_data=content.public_opinion_activity_data,
                                table_of_contents=content.table_of_contents,
                                body=content.body)
     content_hash.save()

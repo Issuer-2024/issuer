@@ -75,12 +75,14 @@ def collect_comments(q: str):
     return all_comments_data
 
 
-def get_comments_interaction_by_date(q):
+import pandas as pd
+
+def get_public_opinion_activity_data(q):
+    # collect_comments 함수 호출하여 댓글 데이터 수집
     all_comments_data = collect_comments(q)
     comments = []
     for data in all_comments_data:
         comments += data['comments']
-
     # 데이터프레임으로 변환
     df = pd.DataFrame(comments)
     df['total_interaction'] = df['antipathy_count'] + df['sympathy_count'] + df['reply_count']
@@ -91,7 +93,8 @@ def get_comments_interaction_by_date(q):
     interaction_result = df.groupby('date').agg({
         'antipathy_count': 'sum',
         'sympathy_count': 'sum',
-        'reply_count': 'sum'
+        'reply_count': 'sum',
+        'total_interaction': 'sum'
     }).reset_index()
 
     # 일자별 댓글 수 집계
@@ -100,10 +103,14 @@ def get_comments_interaction_by_date(q):
     # 두 결과 합치기
     final_result = pd.merge(interaction_result, comment_count_result, on='date')
 
-    return final_result
+    # date 필드의 날짜 형식을 YYYY-MM-DD 형태로 변환
+    final_result['date'] = final_result['date'].astype(str)
+
+    return final_result.to_dict(orient='list')
+
 
 if __name__ == '__main__':
-    print(get_comments_interaction_by_date("코스피"))
+    print(get_public_opinion_activity_data("코스피"))
 
 
 # if __name__ == '__main__':

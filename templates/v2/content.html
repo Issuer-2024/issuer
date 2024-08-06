@@ -53,6 +53,11 @@
                     여론 분석
                     </span>
                 </div>
+                <div class="flex flex-col items-center">
+                {% with opinion=content.public_opinion_activity_data, chart_id=3 %}
+                    {% include "public_opinion_graph.html" %}
+                {% endwith %}
+                </div>
             </div>
         </div>
 
