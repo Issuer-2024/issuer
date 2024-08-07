@@ -23,6 +23,6 @@ class HCX003Chat:
         if response.status_code == 200:
             return response.json()['result']['message']['content']
         else:
-            response.raise_for_status()
+            return None
 
 

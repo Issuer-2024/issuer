@@ -7,7 +7,7 @@ def get_estimated_search_amount(q, trend_search_data):
         search_amount = sum(item['ratio'] for item in trend_search_data)
 
     total_ratio = sum(item['ratio'] for item in trend_search_data)
-    per = search_amount / total_ratio
+    per = search_amount / (total_ratio+1)
     estimated_search_amount = trend_search_data
     for i in range(len(trend_search_data)):
         estimated_search_amount[i]['estimated'] = round(estimated_search_amount[i]['ratio'] * per, 2)

@@ -1,4 +1,5 @@
 import os
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 
@@ -8,6 +9,7 @@ from sklearn.preprocessing import StandardScaler
 from app.v2.content.get_high_searching_news import get_high_searching_days, get_high_searching_news
 from app.v2.external_request import EmbeddingExecutor, get_naver_news, CompletionExecutor, \
     get_news_summary, HCX003Chat
+from app.v2.external_request.request_news_comments import RequestNewsComments
 
 
 def convert_pubDate_format(data):
@@ -23,17 +25,19 @@ def convert_pubDate_format(data):
                 continue
 
 
-
 def collect_issues(q: str, estimated_search_amount: list):
-    high_searching_days = get_high_searching_days(estimated_search_amount)
-    high_searching_news = get_high_searching_news(q, high_searching_days)
+    #high_searching_news = get_high_searching_news(q, get_high_searching_days(estimated_search_amount))
 
-    naver_news_response = get_naver_news(q, 10, 1, sort='sim')
+    naver_news_response = get_naver_news(q, 100, 1, sort='sim')
     news_items = naver_news_response.json().get('items', [])
     news_items = [news_item for news_item in news_items if
                   news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
-    news_items += high_searching_news
+    #news_items += high_searching_news
     convert_pubDate_format(news_items)
+
+    news_items = [news_item for news_item in news_items
+                  if RequestNewsComments.get_news_comments_num(news_item['link']) >= 10]
+    print(len(news_items))
     return news_items
 
 
@@ -66,13 +70,11 @@ def cluster_issues(embedding_results):
 
     embeddings, items = zip(*embedding_results)
     embeddings = StandardScaler().fit_transform(embeddings)
-    dbscan = DBSCAN(eps=0.6, min_samples=2, metric='cosine')
+    dbscan = DBSCAN(eps=0.5, min_samples=2, metric='cosine')
     labels = dbscan.fit_predict(embeddings)
 
     clustered_issues = {}
     for item, label in zip(items, labels):
-        if label == -1:
-            continue
         if label not in clustered_issues:
             clustered_issues[label] = []
         clustered_issues[label].append(item)
@@ -110,7 +112,11 @@ def create_group_title(clustered_issues):
             'includeAiFilters': False,
             'seed': 0
         }
-        result = completion_executor.execute(request_data)
+        result = None
+        while result is None:
+            result = completion_executor.execute(request_data)
+            if result is None:
+                time.sleep(5)
         group_titles[cluster_num] = result
     return group_titles
 
@@ -145,7 +151,10 @@ def create_group_content(clustered_issues):
             'includeAiFilters': False,
             'seed': 0
         }
-
-        group_contents_summary = chat.execute(request_data)
+        group_contents_summary = None
+        while group_contents_summary is None:
+            group_contents_summary = chat.execute(request_data)
+            if group_contents_summary is None:
+                time.sleep(5)
         group_contents[cluster_num] = group_contents_summary
     return group_contents

@@ -5,13 +5,13 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
-from app.v2.external_request import get_news_summary
+from app.v2.external_request import get_news_summary, get_naver_news
 from app.v2.external_request.request_news_comments import RequestNewsComments
 from konlpy.tag import Okt
 from collections import Counter
 
-
 office_codes = ['1001', '1421', '1003', '1015', '1437']
+proxies = {'http': 'http://127.0.0.1:8080', 'https': 'http://127.0.0.1:8080'}
 
 
 # 연합뉴스, 뉴스1, 뉴시스, 한국경제 JTBC
@@ -25,12 +25,19 @@ def add_days(date_str, dur):
 
 
 def get_news_list_by_office_code(q: str, date, office_code, dur=3):
+    header = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36',
+        'accept': "*/*",
+        'accept-encoding': 'gzip, deflate, br',
+        'accept-language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+        'referer': 'https://n.news.naver.com',
+    }
     news_list = []
     url = f'https://search.naver.com/search.naver?where=news&query={q}&sm=tab_opt&sort=0&photo=0&field=0&pd=3&ds={date}&de={add_days(date, dur)}&docid=&related=0&mynews=1&office_type=2&office_section_code=2&news_office_checked={office_code}&nso=so%3Ar%2Cp%3Afrom20240707to20240707&is_sug_officeid=0&office_category=0&service_area=2'
     # pd =  (기간) 1=1주 2=1달 3=사용자 정의
     # news_office_checked (언론사 코드)
     # 웹 페이지의 HTML 가져오기
-    response = requests.get(url)
+    response = requests.get(url, headers=header)
     if response.status_code != 200:
         return "Error"
 
@@ -49,6 +56,17 @@ def get_news_list_by_office_code(q: str, date, office_code, dur=3):
     return news_list
 
 
+def get_news_list_by_api(q: str):
+    news_items = []
+    for i in range(10):
+        naver_news_response = get_naver_news(q, 100, i + 1, sort='sim')
+        tmp = naver_news_response.json().get('items', [])
+        tmp = [news_item for news_item in tmp if
+               news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
+        news_items += tmp
+    return news_items
+
+
 def get_dates_to_collect(ago):
     dates = []
     today = datetime.today()
@@ -61,12 +79,12 @@ def get_dates_to_collect(ago):
 def collect_comments(q: str):
     dates = get_dates_to_collect(30)
     all_comments_data = []
-    for office_code in office_codes[:1]:
+    for office_code in office_codes[:5]:
         news_urls = []
         for i in range(0, len(dates)):
             tmp = get_news_list_by_office_code(q, dates[i], office_code)
             while tmp == "Error":
-                time.sleep(0.5)
+                time.sleep(3)
                 tmp = get_news_list_by_office_code(q, dates[i], office_code)
             news_urls += tmp
 
@@ -77,13 +95,36 @@ def collect_comments(q: str):
 
     return all_comments_data
 
+def collect_comments_by_api(q: str):
+    all_comments_data = []
+    news_items = get_news_list_by_api(q)
+    for news_item in news_items:
+        news_item['link']
 
-def get_public_opinion_activity_data(all_comments_data):
+
+def get_comments_from_clusters(clusters):
     comments = []
-    for data in all_comments_data:
-        comments += data['comments']
+    for cluster in clusters.values():
+        for news_item in cluster:
+            comment = RequestNewsComments.get_news_comments(news_item['link'])
+            comments += comment
+    return comments
+
+
+def get_public_opinion_activity_data(clusters):
+
+    comments = get_comments_from_clusters(clusters)
     # 데이터프레임으로 변환
     df = pd.DataFrame(comments)
+    if 'date' not in df.columns:
+        df['date'] = '19700101'
+    if 'antipathy_count' not in df.columns:
+        df['antipathy_count'] = 0
+    if 'sympathy_count' not in df.columns:
+        df['sympathy_count'] = 0
+    if 'reply_count' not in df.columns:
+        df['reply_count'] = 0
+
     df['total_interaction'] = df['antipathy_count'] + df['sympathy_count'] + df['reply_count']
     # 날짜 형식 변환
     df['date'] = pd.to_datetime(df['date']).dt.date
@@ -108,12 +149,12 @@ def get_public_opinion_activity_data(all_comments_data):
     return final_result.to_dict(orient='list')
 
 
-def get_word_frequency(all_comments_data):
+def get_word_frequency(clusters):
     okt = Okt()
     tmp = []
-    for data in all_comments_data:
-        for comment in data['comments']:
-            tmp += comment['contents']
+    comments = get_comments_from_clusters(clusters)
+    for comment in comments:
+        tmp += comment['contents']
     all_comments_txt = ''.join(tmp)
     nouns = okt.nouns(all_comments_txt)
     for i, v in enumerate(nouns):
@@ -122,20 +163,18 @@ def get_word_frequency(all_comments_data):
     counter = Counter(nouns)
     most_common = counter.most_common(30)
 
-    print("키워드와 빈도수:", most_common)
+    return most_common
 
-def get_statistic(q):
-    all_comments_data = collect_comments(q)
-    public_opinion_activity_data = get_public_opinion_activity_data(all_comments_data)
-    word_frequency = get_word_frequency(all_comments_data)
+
+def get_public_opinion_statistic(q, clusters):
+    public_opinion_activity_data = get_public_opinion_activity_data(clusters)
+    word_frequency = get_word_frequency(clusters)
 
     return public_opinion_activity_data, word_frequency
 
 
 if __name__ == '__main__':
-    all_comments_data = collect_comments("주식")
-    get_word_frequency(all_comments_data)
-
+    pass
 
 # if __name__ == '__main__':
 # import pprint

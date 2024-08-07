@@ -30,7 +30,6 @@ def get_high_searching_days(estimated_search_amount):
 
     high_searching_days = [item for item in estimated_search_amount if
                            item['ratio'] >= 5 and item['estimated'] > threshold]
-
     return high_searching_days
 
 

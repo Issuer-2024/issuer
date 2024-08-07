@@ -29,8 +29,7 @@
 
         </div>
         <div id="data-analysis" style="display: none;">
-            <div class="px-10">
-                <div class="mb-2">
+                <div class="my-2" style="margin: 5rem 0 1rem 0">
                     <span style="font-size: 1.25rem; font-weight: 700; height: 1;">
                     검색량 분석
                     </span>
@@ -40,15 +39,48 @@
                     {% include "main_report_graph.html" %}
                 {% endwith %}
                 </div>
-                <div class="my-2">
+            <div class="my-2" style="margin: 5rem 0 1rem 0">
                     <span style="font-size: 1.25rem; font-weight: 700; height: 1;">
-                    연관어 분석
+                    연관 검색어 분석
                     </span>
-                </div>
-                <div>
+            </div>
+            <div class="flex flex-col items-center">
+                <div class="">
+                    <div class="">
+                        <table class="min-w-full bg-white">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-800 uppercase text-sm leading-normal">
+                                    <th class="py-3 px-6 text-left">키워드</th>
+                                    <th class="py-3 px-6 text-left">트랜드 비율</th>
+                                    <th class="py-3 px-6 text-left">이슈 날짜</th>
+                                    <th class="py-3 px-6 text-left">트랜드</th>
+                                    <th class="py-3 px-6 text-left">트랜드 점수</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-600 text-sm font-light">
 
+                            {% for item in content.keyword_suggestions_data %}
+                                <tr class="border-b border-gray-200 hover:bg-gray-100">
+                                    <td class="py-3 px-6 text-left">{{ item.keyword }}</td>
+                                    <td class="py-3 px-6 text-left">{{ item.trend_proportion | round(2) }}%</td>
+                                    <td class="py-3 px-6 text-left">
+                                        {{ item.most_trend_day }}
+                                    </td>
+                                    <td class="py-3 px-6 text-left">
+                                        {% with trend=item.trend, chart_id=item.id+20 %}
+                                            {% include "main_report_graph.html" %}
+                                        {% endwith %}</td>
+                                    <td class="py-3 px-6 text-left">{{ item.score | round(2) }}</td>
+
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="my-2">
+            </div>
+
+                <div class="my-2" style="margin: 5rem 0 1rem 0">
                     <span style="font-size: 1.25rem; font-weight: 700; height: 1;">
                     여론 분석
                     </span>
@@ -58,6 +90,15 @@
                     {% include "public_opinion_graph.html" %}
                 {% endwith %}
                 </div>
+                <div class="my-2" style="margin: 5rem 0 1rem 0">
+                    <span style="font-size: 1.25rem; font-weight: 700; height: 1;">
+                    댓글 키워드 분석
+                    </span>
+                </div>
+                <div class="flex flex-col items-center">
+                {% with data=content.public_opinion_word_frequency, chart_id=99 %}
+                    {% include "word_cloud.html" %}
+                {% endwith %}
             </div>
         </div>
 
