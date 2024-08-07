@@ -20,7 +20,7 @@
                     </button>
                 </div>
                 <div>
-                    <button id="reaction-data-btn" class="block p-1 font-sans text-sm antialiased font-normal leading-normal text-blue-gray-900">
+                    <button id="public-opinion-btn" class="block p-1 font-sans text-sm antialiased font-normal leading-normal text-blue-gray-900">
                         여론 확인
                     </button>
                 </div>
@@ -119,6 +119,39 @@
                 </div>
         </div>
 
+         <div id="issue-data" style="display: none;">
+            <div class="flex flex-col">
+            <div class="flex">
+                {% with table_of_contents=content.table_of_contents %}
+                    {% include "table_of_contents.html" %}
+                {% endwith %}
+            </div>
+            <div>
+            {% for item in content.body %}
+                {% with ref=item.ref, title=item.title, content=item.content, num=item.num %}
+                    {% include "body.html" %}
+                {% endwith %}
+            {% endfor %}
+            </div>
+                </div>
+        </div>
+
+        <div id="public-opinion-data" style="display: none;">
+            <div class="flex flex-col">
+            <div class="flex">
+                {% with table_of_contents=content.table_of_contents %}
+                    {% include "table_of_contents.html" %}
+                {% endwith %}
+            </div>
+            <div>
+                {% for item in content.trend_public_opinion.high_sympathy %}
+                    {{ item.contents }}<br>
+                {% endfor %}
+
+            </div>
+                </div>
+        </div>
+
 
     </div>
 
@@ -130,8 +163,8 @@
         document.getElementById('issue-data-btn').addEventListener('click', function() {
             document.getElementById('report-main').innerHTML = document.getElementById('issue-data').innerHTML
         });
-        document.getElementById('reaction-data-btn').addEventListener('click', function() {
-            document.getElementById('report-main').innerHTML = document.getElementById('reaction-data').innerHTML
+        document.getElementById('public-opinion-btn').addEventListener('click', function() {
+            document.getElementById('report-main').innerHTML = document.getElementById('public-opinion-data').innerHTML
         });
     </script>
 

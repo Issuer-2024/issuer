@@ -95,6 +95,7 @@ def collect_comments(q: str):
 
     return all_comments_data
 
+
 def collect_comments_by_api(q: str):
     all_comments_data = []
     news_items = get_news_list_by_api(q)
@@ -112,7 +113,6 @@ def get_comments_from_clusters(clusters):
 
 
 def get_public_opinion_activity_data(clusters):
-
     comments = get_comments_from_clusters(clusters)
     # 데이터프레임으로 변환
     df = pd.DataFrame(comments)
@@ -145,7 +145,6 @@ def get_public_opinion_activity_data(clusters):
 
     # date 필드의 날짜 형식을 YYYY-MM-DD 형태로 변환
     final_result['date'] = final_result['date'].astype(str)
-
     return final_result.to_dict(orient='list')
 
 
@@ -171,6 +170,63 @@ def get_public_opinion_statistic(q, clusters):
     word_frequency = get_word_frequency(clusters)
 
     return public_opinion_activity_data, word_frequency
+
+
+def get_trend_public_opinion(clusters):
+    trend_public_opinion = {'high_sympathy': [],
+                            'high_interaction': [],
+                            'keywords': []
+                            }
+
+    comments = []
+    for cluster in clusters.values():
+        for news_item in cluster:
+            comment = RequestNewsComments.get_news_comments(news_item['link'])
+            for i in range(len(comment)):
+                comment[i]['title'] = news_item['title']
+                comment[i]['link'] = news_item['link']
+            comments += comment
+
+    # 데이터프레임으로 변환
+    df = pd.DataFrame(comments)
+    if 'date' not in df.columns:
+        df['date'] = '19700101'
+    if 'antipathy_count' not in df.columns:
+        df['antipathy_count'] = 0
+    if 'sympathy_count' not in df.columns:
+        df['sympathy_count'] = 0
+    if 'reply_count' not in df.columns:
+        df['reply_count'] = 0
+
+    df['total_interaction'] = df['antipathy_count'] + df['sympathy_count'] + df['reply_count']
+    df['sympathy_ratio'] = df['sympathy_count'] / (df['antipathy_count'] + 1)
+    # 날짜 형식 변환
+    df['date'] = pd.to_datetime(df['date']).dt.date
+
+    df_sorted_sympathy_count = df.sort_values(by='sympathy_count', ascending=False)
+    df_sorted_total_interaction = df.sort_values(by='total_interaction', ascending=False)
+    trend_public_opinion['high_sympathy'] = df_sorted_sympathy_count.to_dict(orient='records')[:10]
+    trend_public_opinion['high_interaction'] = df_sorted_total_interaction.to_dict(orient='records')[:10]
+
+    okt = Okt()
+    keyword_map = {}
+    for index, row in df.iterrows():
+        nouns = okt.nouns(row['contents'])
+        nouns = [v for v in nouns if len(v) >= 2]
+        for noun in nouns:
+            if noun not in keyword_map:
+                keyword_map[noun] = []
+            keyword_map[noun].append(row.to_dict())
+
+    # 리스트 요소가 많은 상위 10개의 key, value 쌍 추출
+    top_10_keywords = sorted(keyword_map.items(), key=lambda item: len(item[1]), reverse=True)[:10]
+
+    # 결과 리스트 생성
+    top_10_list = [{k: v} for k, v in top_10_keywords]
+
+    trend_public_opinion['keywords'] = top_10_list
+    print(top_10_list)
+    return trend_public_opinion
 
 
 if __name__ == '__main__':

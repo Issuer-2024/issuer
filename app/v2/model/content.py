@@ -11,3 +11,4 @@ class Content:
     public_opinion_word_frequency: list
     table_of_contents: list
     body: list
+    trend_public_opinion: list
