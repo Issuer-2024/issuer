@@ -63,6 +63,7 @@ def create_content(q: str, background_task):
     keywords = [item['keyword'] for item in public_opinion_word_frequency[:10]]
     table_of_public_opinion += [{'title': keyword, 'depth': 1, 'num': '3.' + str(i + 1)}
                                 for i, keyword in enumerate(keywords)]
+    table_of_public_opinion += [{'title': "감정별 댓글", 'depth': 0, 'num': 4}]
 
     result = Content(title,
                      created_at,

@@ -37,7 +37,6 @@ def collect_issues(q: str, estimated_search_amount: list):
 
     news_items = [news_item for news_item in news_items
                   if RequestNewsComments.get_news_comments_num(news_item['link']) >= 10]
-    print(len(news_items))
     return news_items
 
 

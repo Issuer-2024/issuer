@@ -40,22 +40,23 @@ def get_most_trend_day(trend_data: list):  # 가장 인기 있었던 날의 일�
 def get_suggestions_trend_data(q: str):
     suggestion_entire_data = []
     suggestion_trend = get_suggestion_trend(q)
-
     for i, data in enumerate(suggestion_trend):  # title, keywords, data
+        search_amount = get_search_amount(data['title'])
+        if not search_amount:
+            search_amount = 0
         tmp = {'id': i, 'keyword': data['title'], 'trend': data['data'],
                'score': get_suggestion_trend_score(data['data']),
                'most_trend_day': get_most_trend_day(data['data']),
-                'search_amount': get_search_amount(q)
+               'search_amount': search_amount
                }
         suggestion_entire_data.append(tmp)
 
     total_score = sum(item['score'] for item in suggestion_entire_data)
     for i in range(len(suggestion_entire_data)):
         suggestion_entire_data[i]['trend_proportion'] = suggestion_entire_data[i]['score'] / (total_score + 1) * 100
-
-    suggestion_entire_data.sort(key=lambda x: x['score'], reverse=True)
+    suggestion_entire_data.sort(key=lambda x: x['search_amount'], reverse=True)
     return suggestion_entire_data
 
 
 if __name__ == '__main__':
-    print(get_suggestions_trend_data("쯔양"))
+    print(get_suggestions_trend_data("슈가"))

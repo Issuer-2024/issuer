@@ -100,7 +100,7 @@ jobs:
             export CLOVA_CHAT_COMPLETION_003_CLIENT_KEY_REQUEST_ID=${{ secrets.CLOVA_CHAT_COMPLETION_003_CLIENT_KEY_REQUEST_ID }}
             export NAVER_AD_API_KEY=${{ secrets.NAVER_AD_API_KEY }}
             export NAVER_AD_SECRET_KEY=${{ secrets.NAVER_AD_SECRET_KEY }}
-            export NAVER_AD_CUSTOMER_ID${{ secrets.NAVER_AD_CUSTOMER_ID }}
+            export NAVER_AD_CUSTOMER_ID=${{ secrets.NAVER_AD_CUSTOMER_ID }}
             
             cd /
             docker-compose pull app

@@ -34,6 +34,8 @@
             {% endfor %}
             </div>
         </div>
+
+
     </div>
 
     <script>
@@ -46,6 +48,13 @@
                 searchKeyword();
             }
         });
+
+        window.onload = () => {
+        fetchChanges();
+        fetchCreating();
+        setInterval(fetchChanges, 15000)
+        setInterval(fetchCreating, 15000)
+    }
     </script>
 </body>
 </html>

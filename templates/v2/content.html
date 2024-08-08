@@ -7,6 +7,9 @@
             <span style="font-size:0.9rem; color: dimgray">문서 생성 시각:
                 {{ content.created_at }}
             </span>
+            <a href="history?q={{ content.keyword }}">
+                <span style="font-weight: 500; font-size:0.9rem; color: gray">이전 문서</span>
+            </a>
         </div>
             <div class="flex items-center justify-center gap-6">
                 <div>
@@ -51,37 +54,62 @@
                     {% endwith %}
             </div>
             <div class="flex flex-col items-center">
-                <div class="">
-                    <div class="">
-                        <table class="min-w-full bg-white">
-                            <thead>
-                                <tr class="bg-gray-100 text-gray-800 uppercase text-sm leading-normal">
-                                    <th class="py-3 px-6 text-left">키워드</th>
-                                    <th class="py-3 px-6 text-left">트랜드 비율</th>
-                                    <th class="py-3 px-6 text-left">이슈 날짜</th>
-                                    <th class="py-3 px-6 text-left">월간 검색량</th>
-                                    <th class="py-3 px-6 text-left">트랜드 점수</th>
-                                </tr>
-                            </thead>
-                            <tbody class="text-gray-600 text-sm font-light">
+                <table class="min-w-full bg-white">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-800 uppercase text-sm leading-normal">
+                            <th class="py-3 px-6 text-left">키워드</th>
+                            <th class="py-3 px-6 text-left">
+                                <div class="flex gap-1 items-center">
+                                    <span>트렌드 비율</span>
+                                    {% with description="해당 수치는 전체 연관 검색량에서 해당 연관 검색량이 차지하는 비율입니다." %}
+                                        {% include "question_mark.html" %}
+                                    {% endwith %}
+                                </div>
 
-                            {% for item in content.keyword_suggestions_data %}
-                                <tr class="border-b border-gray-200 hover:bg-gray-100">
-                                    <td class="py-3 px-6 text-left"><a href="/report?q={{ item.keyword }}">{{ item.keyword }}</a></td>
-                                    <td class="py-3 px-6 text-left">{{ item.trend_proportion | round(2) }}%</td>
-                                    <td class="py-3 px-6 text-left">
-                                        {{ item.most_trend_day }}
-                                    </td>
-                                    <td class="py-3 px-6 text-left">
-                                        {{ item.search_amount }}
-                                    <td class="py-3 px-6 text-left">{{ item.score | round(2) }}</td>
+                            </th>
+                            <th class="py-3 px-6 text-left"><div class="flex gap-1 items-center">
+                                    <span>이슈 날짜</span>
+                                    {% with description="해당 날짜는 가장 검색량이 많았던 날짜입니다." %}
+                                        {% include "question_mark.html" %}
+                                    {% endwith %}
+                                </div></th>
+                            <th class="py-3 px-6 text-left">
+                                <div class="flex gap-1 items-center">
+                                    <span>월간 검색량</span>
+                                    {% with description="NAVER AD에서 제공하는 검색량 수치입니다." %}
+                                        {% include "question_mark.html" %}
+                                    {% endwith %}
+                                </div>
 
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                            </th>
+<!--                                    <th class="py-3 px-6 text-left">-->
+<!--                                        <div class="flex gap-1 items-center">-->
+<!--                                            <span>트렌드 점수</span>-->
+<!--                                            {% with description="해당 수치는 검색한 키워드와 얼마나 연관된 지를 나타내며 " %}-->
+<!--                                                {% include "question_mark.html" %}-->
+<!--                                            {% endwith %}-->
+<!--                                        </div>-->
+
+<!--                                    </th>-->
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-600 text-sm font-light">
+
+                    {% for item in content.keyword_suggestions_data %}
+                        <tr class="border-b border-gray-200 hover:bg-gray-100">
+                            <td class="py-3 px-6 text-left"><a href="/report?q={{ item.keyword }}">{{ item.keyword }}</a></td>
+                            <td class="py-3 px-6 text-left">{{ item.trend_proportion | round(2) }}%</td>
+                            <td class="py-3 px-6 text-left">
+                                {{ item.most_trend_day }}
+                            </td>
+                            <td class="py-3 px-6 text-left">
+                                {{ item.search_amount }}
+<!--                                    <td class="py-3 px-6 text-left">{{ item.score | round(2) }}</td>-->
+
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
             </div>
 
                 <div class="flex items-center gap-1 my-2" style="margin: 5rem 0 1rem 0">
@@ -94,7 +122,6 @@
                 </div>
                 <div class="flex flex-col items-center">
                 <section class="bg-white p-5 m-3 rounded">
-                      <h4 class="text-xl">Rating Score</h4>
                       <div class="flex flex-col lg:flex-row items-center gap-5 mt-5">
                         <div
                           class="flex justify-evenly items-center w-96 lg:w-1/3 p-3 m-3 border border-gray-300 rounded"
@@ -178,6 +205,31 @@
                     {% include "word_cloud.html" %}
                 {% endwith %}
             </div>
+
+            <div class="flex flex-col items-center">
+                <table class="min-w-full bg-white">
+                    <thead>
+                        <tr class="bg-gray-100 text-gray-800 uppercase text-sm leading-normal">
+                            <th class="py-3 px-6 text-left">단어</th>
+                            <th class="py-3 px-6 text-left">
+                                <div class="flex gap-1 items-center">
+                                    <span>등장 횟수</span>
+                                </div>
+
+                            </th>
+                    </thead>
+                    <tbody class="text-gray-600 text-sm font-light">
+
+                    {% for item in content.public_opinion_word_frequency[:10] %}
+                        <tr class="border-b border-gray-200 hover:bg-gray-100">
+                            <td class="py-3 px-6 text-left"><a href="/report?q={{ item.keyword }}">{{ item.keyword }}</a></td>
+                            <td class="py-3 px-6 text-left">{{ item.count }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
         </div>
 
         <div id="issue-data" style="display: none;">
@@ -224,8 +276,17 @@
                 {% endfor %}
             </div>
                 </div>
+
+            <div class="flex items-center mb-4">
+                <img src="https://placehold.co/40x40" alt="Title Icon" class="w-10 h-10 mr-2">
+                <div class="flex gap-2">
+                    <a href="" style="color: #0275d8; font-size: 1.8em; font-weight: 600">4.</a>
+                    <h3 class="font-bold" style="font-size: 1.8em">감정별 댓글</h3>
+                </div>
+            </div>
+            <hr class="my-4">
             <div class="flex flex-col gap-4 p-4">
-            <div class="text-2xl">사용자 반응</div>
+
             <div class="flex space-x-4">
               <div>😊: {{ content.public_opinion_sentiment.positive | round(2) }}</div>
               <div>😐: {{ content.public_opinion_sentiment.neutral | round(2) }}</div>
