@@ -59,7 +59,7 @@
                                     <th class="py-3 px-6 text-left">키워드</th>
                                     <th class="py-3 px-6 text-left">트랜드 비율</th>
                                     <th class="py-3 px-6 text-left">이슈 날짜</th>
-                                    <th class="py-3 px-6 text-left">트랜드</th>
+                                    <th class="py-3 px-6 text-left">월간 검색량</th>
                                     <th class="py-3 px-6 text-left">트랜드 점수</th>
                                 </tr>
                             </thead>
@@ -67,13 +67,13 @@
 
                             {% for item in content.keyword_suggestions_data %}
                                 <tr class="border-b border-gray-200 hover:bg-gray-100">
-                                    <td class="py-3 px-6 text-left">{{ item.keyword }}</td>
+                                    <td class="py-3 px-6 text-left"><a href="/report?q={{ item.keyword }}">{{ item.keyword }}</a></td>
                                     <td class="py-3 px-6 text-left">{{ item.trend_proportion | round(2) }}%</td>
                                     <td class="py-3 px-6 text-left">
                                         {{ item.most_trend_day }}
                                     </td>
                                     <td class="py-3 px-6 text-left">
-
+                                        {{ item.search_amount }}
                                     <td class="py-3 px-6 text-left">{{ item.score | round(2) }}</td>
 
                                 </tr>
@@ -114,7 +114,7 @@
                             />
                           </svg>
                           <div class="text-center">
-                            <h2 class="text-4xl font-bold pb-2">0%</h2>
+                            <h2 class="text-3xl font-bold pb-2">{{ content.public_opinion_sentiment.positive | round(2) }}%</h2>
                             <h4 class="inline text-gray-500 text-md">긍정</h4>
                           </div>
                         </div>
@@ -136,7 +136,7 @@
                             />
                           </svg>
                           <div class="text-center">
-                            <h2 class="text-4xl font-bold pb-2">0%</h2>
+                            <h2 class="text-3xl font-bold pb-2">{{ content.public_opinion_sentiment.neutral | round(2) }}%</h2>
                             <h4 class="inline text-gray-500 text-md">중립</h4>
                           </div>
                         </div>
@@ -158,7 +158,7 @@
                             />
                           </svg>
                           <div class="text-center">
-                            <h2 class="text-4xl font-bold pb-2">0%</h2>
+                            <h2 class="text-3xl font-bold pb-2">{{ content.public_opinion_sentiment.negative | round(2) }}%</h2>
                             <h4 class="inline text-gray-500 text-md">부정</h4>
                           </div>
                         </div>
@@ -197,23 +197,6 @@
                 </div>
         </div>
 
-         <div id="issue-data" style="display: none;">
-            <div class="flex flex-col">
-            <div class="flex">
-                {% with table_of_contents=content.table_of_contents %}
-                    {% include "table_of_contents.html" %}
-                {% endwith %}
-            </div>
-            <div>
-            {% for item in content.body %}
-                {% with ref=item.ref, title=item.title, content=item.content, num=item.num %}
-                    {% include "body.html" %}
-                {% endwith %}
-            {% endfor %}
-            </div>
-                </div>
-        </div>
-
         <div id="public-opinion-data" style="display: none;">
             <div class="flex flex-col">
                 <div class="flex">
@@ -222,30 +205,80 @@
                     {% endwith %}
                 </div>
                 <div>
-                    {% with title="공감 수가 높은 댓글 TOP", data=content.trend_public_opinion.high_sympathy, num=1 %}
+                    {% with title="공감 수가 높은 댓글 TOP", data=content.public_opinion_trend.high_sympathy, num=1 %}
                         {% include "public_opinion_body.html" %}
                     {% endwith %}
                 </div>
                 <div>
-                    {% with title="상호 작용이 많은 댓글 TOP", data=content.trend_public_opinion.high_interaction, num=2 %}
+                    {% with title="상호 작용이 많은 댓글 TOP", data=content.public_opinion_trend.high_interaction, num=2 %}
                         {% include "public_opinion_body.html" %}
                     {% endwith %}
                 </div>
             <div>
-                {% for data in content.trend_public_opinion.keywords %}
+                {% for data in content.public_opinion_word_frequency[:10] %}
                     <div>
-                        {% with title=data.keyword, data=data.comments, num=loop.index %}
+                        {% with title=data.keyword, data=data.comments[:10], num=loop.index %}
                             {% include "public_opinion_body.html" %}
                         {% endwith %}
                     </div>
                 {% endfor %}
             </div>
                 </div>
+            <div class="flex flex-col gap-4 p-4">
+            <div class="text-2xl">사용자 반응</div>
+            <div class="flex space-x-4">
+              <div>😊: {{ content.public_opinion_sentiment.positive | round(2) }}</div>
+              <div>😐: {{ content.public_opinion_sentiment.neutral | round(2) }}</div>
+              <div>👿: {{ content.public_opinion_sentiment.negative | round(2) }}</div>
+            </div>
+            <div class="flex space-x-4">
+              <div class="flex flex-col flex-1">
+              {% for sentence in content.public_opinion_sentiment.comments.positive %}
+                <div class="comment">😊: {{ sentence }}</div>
+              {% endfor %}
+              {% if not content.public_opinion_sentiment.comments.positive %}
+                <div class="comment">긍정 댓글이 없습니다.😭</div>
+              {% endif %}
+              </div>
+              <div class="flex flex-col flex-1">
+              {% for sentence in content.public_opinion_sentiment.comments.neutral %}
+              <div class="comment">😐: {{ sentence }}</div>
+              {% endfor %}
+              {% if not content.public_opinion_sentiment.comments.neutral %}
+                <div class="comment">중립 댓글이 없습니다.😐</div>
+              {% endif %}
+              </div>
+              <div class="flex flex-col flex-1">
+              {% for sentence in content.public_opinion_sentiment.comments.negative %}
+              <div class="comment">👿: {{ sentence }}</div>
+              {% endfor %}
+              {% if not content.public_opinion_sentiment.comments.negative %}
+                <div class="comment">부정 댓글이 없습니다.😈</div>
+              {% endif %}
+              </div>
+            </div>
+          </div>
         </div>
 
 
     </div>
 
+    <style>
+        .comment {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+      cursor: pointer;
+    }
+    .comment:hover {
+      white-space: normal;
+      background-color: #f1f5f9;
+      border-radius: 4px;
+      padding: 2px 4px;
+      z-index: 20;
+    }
+    </style>
     <script>
         document.getElementById('report-main').innerHTML = document.getElementById('data-analysis').innerHTML
         document.getElementById('data-analysis-btn').addEventListener('click', function () {

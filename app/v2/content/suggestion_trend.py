@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 from app.v2.external_request import RequestTrend
+from app.v2.external_request.request_naver_ad import get_search_amount
 from app.v2.external_request.request_suggestions import RequestSuggestions
 
 
@@ -43,7 +44,9 @@ def get_suggestions_trend_data(q: str):
     for i, data in enumerate(suggestion_trend):  # title, keywords, data
         tmp = {'id': i, 'keyword': data['title'], 'trend': data['data'],
                'score': get_suggestion_trend_score(data['data']),
-               'most_trend_day': get_most_trend_day(data['data'])}
+               'most_trend_day': get_most_trend_day(data['data']),
+                'search_amount': get_search_amount(q)
+               }
         suggestion_entire_data.append(tmp)
 
     total_score = sum(item['score'] for item in suggestion_entire_data)

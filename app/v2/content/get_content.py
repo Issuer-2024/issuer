@@ -3,8 +3,7 @@ from datetime import datetime, timedelta
 from app.v2.content.get_estimated_search_amount import get_estimated_search_amount
 from app.v2.content.issue_info import collect_issues, create_embedding_result, cluster_issues, create_group_title, \
     create_group_content
-from app.v2.content.public_opinion import get_public_opinion_activity_data, get_public_opinion_statistic, \
-    get_trend_public_opinion
+from app.v2.content.public_opinion import get_public_opinion
 from app.v2.content.suggestion_trend import get_suggestions_trend_data
 from app.v2.external_request import RequestTrend
 from app.v2.model.content import Content
@@ -46,10 +45,8 @@ def create_content(q: str, background_task):
     d = create_group_title(c)
     e = create_group_content(c)
 
-    public_opinion_activity_data, public_opinion_word_frequency = get_public_opinion_statistic(q, c)
+    public_opinion_word_frequency, public_opinion_sentiment, public_opinion_trend = get_public_opinion(c)
     keyword_suggestions_data = get_suggestions_trend_data(q)
-
-    trend_public_opinion = get_trend_public_opinion(c)
 
     table_of_contents = [{'title': "개요", 'depth': 0, 'num': '1'}, {'title': "현재 이슈", 'depth': 0, 'num': '2'}]
     table_of_contents += [{'title': title, 'depth': 1, 'num': '2.' + str(i + 1)} for i, title in enumerate(d.values())]
@@ -63,23 +60,20 @@ def create_content(q: str, background_task):
                                {'title': "키워드 별 댓글", 'depth': 0, 'num': '3'}
                                ]
 
-    tmp = trend_public_opinion['keywords']
-    table_of_public_opinion_keywords = []
-    for d in tmp:
-        table_of_public_opinion_keywords.append(d['keyword'])
+    keywords = [item['keyword'] for item in public_opinion_word_frequency[:10]]
     table_of_public_opinion += [{'title': keyword, 'depth': 1, 'num': '3.' + str(i + 1)}
-                                for i, keyword in enumerate(table_of_public_opinion_keywords)]
+                                for i, keyword in enumerate(keywords)]
 
     result = Content(title,
                      created_at,
                      estimated_search_amount,
                      keyword_suggestions_data,
-                     public_opinion_activity_data,
+                     public_opinion_sentiment,
                      public_opinion_word_frequency,
                      table_of_contents,
                      body,
-                     trend_public_opinion,
-                     table_of_public_opinion)
+                     table_of_public_opinion,
+                     public_opinion_trend)
     save_to_caching(result, background_task)
 
     remove_creating(q)

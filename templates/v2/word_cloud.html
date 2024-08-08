@@ -10,7 +10,7 @@
 
         // set the dimensions and margins of the graph
         var margin = {top: 0, right: 0, bottom: 0, left: 0},
-            width = 330 - margin.left - margin.right,
+            width = 1400 - margin.left - margin.right,
             height = 300 - margin.top - margin.bottom;
 
         // append the svg object to the body of the page
@@ -21,7 +21,7 @@
         // Constructs a new cloud layout instance. It run an algorithm to find the position of words that suits your requirements
         var layout = d3.layout.cloud()
           .size([width, height])
-          .words(myWords.map(function(d) { return {text: d[0], size: d[1]}; }))
+          .words(myWords.map(function(d) { return {text: d.keyword, size: d.count}; }))
           .padding(0)
           .fontSize(function(d) {return d.size * 5})
           .on("end", draw);
