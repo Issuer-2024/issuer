@@ -13,3 +13,4 @@ class ContentHash(JsonModel):
     table_of_contents: List[Dict[str, Any]]
     body: List[Dict[str, Any]]
     trend_public_opinion: Any
+    table_of_public_opinion: Any

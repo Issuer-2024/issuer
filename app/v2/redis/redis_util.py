@@ -28,7 +28,8 @@ def save_to_caching(content: Content, background_tasks: BackgroundTasks):
                                public_opinion_word_frequency=content.public_opinion_word_frequency,
                                table_of_contents=content.table_of_contents,
                                body=content.body,
-                               trend_public_opinion=content.trend_public_opinion)
+                               trend_public_opinion=content.trend_public_opinion,
+                               table_of_public_opinion=content.table_of_public_opinion,)
     content_hash.save()
     background_tasks.add_task(move_to_db_and_delete_from_cache, content_hash.pk)
 

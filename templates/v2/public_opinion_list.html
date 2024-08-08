@@ -1,0 +1,24 @@
+    <ul class="bg-white shadow overflow-hidden sm:rounded-md">
+        {% for item in items%}
+                <li class="border-t border-gray-200" style="">
+                    <a href="{{ item.link }}">
+                    <div class="px-4 py-5 sm:px-6">
+                        <div class="flex items-center justify-between">
+                            <span>{{ item.contents }}</span>
+                        </div>
+                        <div class="mt-4 flex items-center gap-4">
+                            <p class="text-sm font-medium text-gray-500">좋아요:
+                                <span class="text-red-600">{{ item.sympathy_count }}</span>
+                            </p>
+                            <p class="text-sm font-medium text-gray-500">싫어요:
+                                <span class="text-blue-600">{{ item.antipathy_count }}</span>
+                            </p>
+                            <p class="text-sm font-medium text-gray-500">답글:
+                                <span class="text-black-600">{{ item.reply_count }}</span>
+                            </p>
+                        </div>
+                    </div>
+                    </a>
+                </li>
+        {% endfor %}
+    </ul>

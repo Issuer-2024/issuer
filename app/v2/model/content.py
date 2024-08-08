@@ -12,3 +12,4 @@ class Content:
     table_of_contents: list
     body: list
     trend_public_opinion: list
+    table_of_public_opinion: list

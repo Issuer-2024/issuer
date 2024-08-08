@@ -57,6 +57,19 @@ def create_content(q: str, background_task):
     body = [{'title': "개요", 'content': "", 'num': '1'}, {'title': "현재 이슈", 'content': "", 'num': '2'}]
     body += [{'ref': ref, 'title': title, 'content': content, 'num': '2.' + str(i + 1)}
              for i, (ref, title, content) in enumerate(zip(c.values(), d.values(), e.values()))]
+
+    table_of_public_opinion = [{'title': "공감 수가 높은 댓글", 'depth': 0, 'num': '1'},
+                               {'title': "상호 작용이 많은 댓글", 'depth': 0, 'num': '2'},
+                               {'title': "키워드 별 댓글", 'depth': 0, 'num': '3'}
+                               ]
+
+    tmp = trend_public_opinion['keywords']
+    table_of_public_opinion_keywords = []
+    for d in tmp:
+        table_of_public_opinion_keywords.append(d['keyword'])
+    table_of_public_opinion += [{'title': keyword, 'depth': 1, 'num': '3.' + str(i + 1)}
+                                for i, keyword in enumerate(table_of_public_opinion_keywords)]
+
     result = Content(title,
                      created_at,
                      estimated_search_amount,
@@ -65,7 +78,8 @@ def create_content(q: str, background_task):
                      public_opinion_word_frequency,
                      table_of_contents,
                      body,
-                     trend_public_opinion)
+                     trend_public_opinion,
+                     table_of_public_opinion)
     save_to_caching(result, background_task)
 
     remove_creating(q)

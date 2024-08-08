@@ -6,6 +6,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from app.v2.external_request import get_news_summary, get_naver_news
+from app.v2.external_request.request_clova_sentimet import get_clova_sentiment
 from app.v2.external_request.request_news_comments import RequestNewsComments
 from konlpy.tag import Okt
 from collections import Counter
@@ -209,6 +210,7 @@ def get_trend_public_opinion(clusters):
     trend_public_opinion['high_interaction'] = df_sorted_total_interaction.to_dict(orient='records')[:10]
 
     okt = Okt()
+
     keyword_map = {}
     for index, row in df.iterrows():
         nouns = okt.nouns(row['contents'])
@@ -222,10 +224,10 @@ def get_trend_public_opinion(clusters):
     top_10_keywords = sorted(keyword_map.items(), key=lambda item: len(item[1]), reverse=True)[:10]
 
     # 결과 리스트 생성
-    top_10_list = [{k: v} for k, v in top_10_keywords]
+    top_10_list = [{'keyword': k, 'comments': sorted(v, key=lambda x: x['total_interaction'], reverse=True)[:10]} for k, v in
+                   top_10_keywords]
 
     trend_public_opinion['keywords'] = top_10_list
-    print(top_10_list)
     return trend_public_opinion
 
 
