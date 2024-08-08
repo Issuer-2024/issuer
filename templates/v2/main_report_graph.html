@@ -37,8 +37,28 @@
                         text: 'Ratio Over Time'
                     },
                     tooltip: {
-                        enabled: false // 도구 설명을 비활성화합니다.
+                        enabled: true, // 도구 설명을 활성화합니다.
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function (context) {
+                                const index = context.dataIndex;
+                                const date = labels[index];
+                                const values = parseInt(dataValues[index]);
+
+
+                                return [
+                                    `날짜: ${date}`,
+                                    `검색량: ${values}`,
+
+                                ];
+                            }
+                        }
                     }
+                },
+                hover: {
+                    mode: 'nearest',
+                    intersect: true
                 },
                 scales: {
                     x: {
