@@ -23,8 +23,13 @@ def save_to_caching(content: Content, background_tasks: BackgroundTasks):
     content_hash = ContentHash(keyword=content.keyword,
                                created_at=content.created_at,
                                keyword_trend_data=content.keyword_trend_data,
+                               keyword_suggestions_data=content.keyword_suggestions_data,
+                               public_opinion_sentiment=content.public_opinion_sentiment,
+                               public_opinion_word_frequency=content.public_opinion_word_frequency,
                                table_of_contents=content.table_of_contents,
-                               body=content.body)
+                               body=content.body,
+                               table_of_public_opinion=content.table_of_public_opinion,
+                               public_opinion_trend=content.public_opinion_trend)
     content_hash.save()
     background_tasks.add_task(move_to_db_and_delete_from_cache, content_hash.pk)
 

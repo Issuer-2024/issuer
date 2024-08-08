@@ -1,0 +1,50 @@
+
+    <div id="word-cloud-{{ id }}"></div>
+    <script src="https://d3js.org/d3.v4.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/holtzy/D3-graph-gallery@master/LIB/d3.layout.cloud.js"></script>
+    <script>
+
+        var wcID = "#word-cloud-{{ id }}";
+        // 데이터 준비
+        var myWords = {{ data | safe }};
+
+        // set the dimensions and margins of the graph
+        var margin = {top: 0, right: 0, bottom: 0, left: 0},
+            width = 1400 - margin.left - margin.right,
+            height = 300 - margin.top - margin.bottom;
+
+        // append the svg object to the body of the page
+        var svg = d3.select(wcID).append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+
+        // Constructs a new cloud layout instance. It run an algorithm to find the position of words that suits your requirements
+        var layout = d3.layout.cloud()
+          .size([width, height])
+          .words(myWords.map(function(d) { return {text: d.keyword, size: d.count}; }))
+          .padding(0)
+          .fontSize(function(d) {return d.size * 5})
+          .on("end", draw);
+        layout.start();
+
+        // This function takes the output of 'layout' above and draw the words
+        // Better not to touch it. To change parameters, play with the 'layout' variable above
+        function draw(words) {
+          svg
+            .append("g")
+              .attr("transform", "translate(" + layout.size()[0] / 2 + "," + layout.size()[1] / 2 + ")")
+              .selectAll("text")
+                .data(words)
+              .enter().append("text")
+                .style("font-size", function(d) { return d.size; })
+                .style("fill", "#000")
+                .attr("text-anchor", "middle")
+                .style("font-family", "Impact")
+                .attr("transform", function(d) {
+                  return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+                })
+                .text(function(d) { return d.text; });
+        }
+</script>
+</body>
+</html>

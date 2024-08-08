@@ -20,7 +20,7 @@
                     </button>
                 </div>
                 <div>
-                    <button id="reaction-data-btn" class="block p-1 font-sans text-sm antialiased font-normal leading-normal text-blue-gray-900">
+                    <button id="public-opinion-btn" class="block p-1 font-sans text-sm antialiased font-normal leading-normal text-blue-gray-900">
                         여론 확인
                     </button>
                 </div>
@@ -29,30 +29,154 @@
 
         </div>
         <div id="data-analysis" style="display: none;">
-            <div class="px-10">
-                <div class="mb-2">
+                <div class="flex items-center gap-1 my-2" style="margin: 1rem 0 1rem 0">
                     <span style="font-size: 1.25rem; font-weight: 700; height: 1;">
                     검색량 분석
                     </span>
+                    {% with description="해당 검색량은 NAVER AD에서 제공하는 월 검색량과 NAVER TREND API에서 제공하는 상대적인 검색량을 통해 추정된 수치입니다. 실제 검색량과 다를 수 있습니다." %}
+                        {% include "question_mark.html" %}
+                    {% endwith %}
                 </div>
                 <div class="flex flex-col items-center">
                 {% with trend=content.keyword_trend_data, chart_id=1 %}
                     {% include "main_report_graph.html" %}
                 {% endwith %}
                 </div>
-                <div class="my-2">
+            <div class="flex items-center gap-1 my-2" style="margin: 5rem 0 1rem 0">
                     <span style="font-size: 1.25rem; font-weight: 700; height: 1;">
-                    연관어 분석
+                    연관 검색어 분석
                     </span>
-                </div>
-                <div>
+                    {% with description="검색한 키워드와 연관된 검색어입니다." %}
+                        {% include "question_mark.html" %}
+                    {% endwith %}
+            </div>
+            <div class="flex flex-col items-center">
+                <div class="">
+                    <div class="">
+                        <table class="min-w-full bg-white">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-800 uppercase text-sm leading-normal">
+                                    <th class="py-3 px-6 text-left">키워드</th>
+                                    <th class="py-3 px-6 text-left">트랜드 비율</th>
+                                    <th class="py-3 px-6 text-left">이슈 날짜</th>
+                                    <th class="py-3 px-6 text-left">월간 검색량</th>
+                                    <th class="py-3 px-6 text-left">트랜드 점수</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-600 text-sm font-light">
 
+                            {% for item in content.keyword_suggestions_data %}
+                                <tr class="border-b border-gray-200 hover:bg-gray-100">
+                                    <td class="py-3 px-6 text-left"><a href="/report?q={{ item.keyword }}">{{ item.keyword }}</a></td>
+                                    <td class="py-3 px-6 text-left">{{ item.trend_proportion | round(2) }}%</td>
+                                    <td class="py-3 px-6 text-left">
+                                        {{ item.most_trend_day }}
+                                    </td>
+                                    <td class="py-3 px-6 text-left">
+                                        {{ item.search_amount }}
+                                    <td class="py-3 px-6 text-left">{{ item.score | round(2) }}</td>
+
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="my-2">
+            </div>
+
+                <div class="flex items-center gap-1 my-2" style="margin: 5rem 0 1rem 0">
                     <span style="font-size: 1.25rem; font-weight: 700; height: 1;">
                     여론 분석
                     </span>
+                    {% with description="현재 이슈 기사에서 수집된 댓글의 감정 비율입니다." %}
+                        {% include "question_mark.html" %}
+                    {% endwith %}
                 </div>
+                <div class="flex flex-col items-center">
+                <section class="bg-white p-5 m-3 rounded">
+                      <h4 class="text-xl">Rating Score</h4>
+                      <div class="flex flex-col lg:flex-row items-center gap-5 mt-5">
+                        <div
+                          class="flex justify-evenly items-center w-96 lg:w-1/3 p-3 m-3 border border-gray-300 rounded"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="text-green-400 w-20 h-20"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M15.182 15.182a4.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z"
+                            />
+                          </svg>
+                          <div class="text-center">
+                            <h2 class="text-3xl font-bold pb-2">{{ content.public_opinion_sentiment.positive | round(2) }}%</h2>
+                            <h4 class="inline text-gray-500 text-md">긍정</h4>
+                          </div>
+                        </div>
+                        <div
+                          class="flex justify-evenly items-center w-96 lg:w-1/3 p-3 m-3 border border-gray-300 rounded"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="text-gray-400 w-20 h-20"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M15.182 15.182a25.5 4.5 0 01-6.364 0M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z"
+                            />
+                          </svg>
+                          <div class="text-center">
+                            <h2 class="text-3xl font-bold pb-2">{{ content.public_opinion_sentiment.neutral | round(2) }}%</h2>
+                            <h4 class="inline text-gray-500 text-md">중립</h4>
+                          </div>
+                        </div>
+                        <div
+                          class="flex justify-evenly items-center w-96 lg:w-1/3 p-3 m-3 border border-gray-300 rounded"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="text-red-300 w-20 h-20"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M15.182 16.318A4.486 4.486 0 0012.016 15a4.486 4.486 0 00-3.198 1.318M21 12a9 9 0 11-18 0 9 9 0 0118 0zM9.75 9.75c0 .414-.168.75-.375.75S9 10.164 9 9.75 9.168 9 9.375 9s.375.336.375.75zm-.375 0h.008v.015h-.008V9.75zm5.625 0c0 .414-.168.75-.375.75s-.375-.336-.375-.75.168-.75.375-.75.375.336.375.75zm-.375 0h.008v.015h-.008V9.75z"
+                            />
+                          </svg>
+                          <div class="text-center">
+                            <h2 class="text-3xl font-bold pb-2">{{ content.public_opinion_sentiment.negative | round(2) }}%</h2>
+                            <h4 class="inline text-gray-500 text-md">부정</h4>
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+                </div>
+                <div class="flex items-center gap-1 my-2" style="margin: 5rem 0 1rem 0">
+                    <span style="font-size: 1.25rem; font-weight: 700; height: 1;">
+                    댓글 키워드 분석
+                    </span>
+                    {% with description="현재 이슈 기사에서 수집된 댓글들의 키워드 입니다." %}
+                        {% include "question_mark.html" %}
+                    {% endwith %}
+                </div>
+                <div class="flex flex-col items-center">
+                {% with data=content.public_opinion_word_frequency, chart_id=99 %}
+                    {% include "word_cloud.html" %}
+                {% endwith %}
             </div>
         </div>
 
@@ -73,20 +197,110 @@
                 </div>
         </div>
 
+        <div id="public-opinion-data" style="display: none;">
+            <div class="flex flex-col">
+                <div class="flex">
+                    {% with table_of_contents=content.table_of_public_opinion %}
+                        {% include "table_of_contents.html" %}
+                    {% endwith %}
+                </div>
+                <div>
+                    {% with title="공감 수가 높은 댓글 TOP", data=content.public_opinion_trend.high_sympathy, num=1 %}
+                        {% include "public_opinion_body.html" %}
+                    {% endwith %}
+                </div>
+                <div>
+                    {% with title="상호 작용이 많은 댓글 TOP", data=content.public_opinion_trend.high_interaction, num=2 %}
+                        {% include "public_opinion_body.html" %}
+                    {% endwith %}
+                </div>
+            <div>
+                {% for data in content.public_opinion_word_frequency[:10] %}
+                    <div>
+                        {% with title=data.keyword, data=data.comments[:10], num=loop.index %}
+                            {% include "public_opinion_body.html" %}
+                        {% endwith %}
+                    </div>
+                {% endfor %}
+            </div>
+                </div>
+            <div class="flex flex-col gap-4 p-4">
+            <div class="text-2xl">사용자 반응</div>
+            <div class="flex space-x-4">
+              <div>😊: {{ content.public_opinion_sentiment.positive | round(2) }}</div>
+              <div>😐: {{ content.public_opinion_sentiment.neutral | round(2) }}</div>
+              <div>👿: {{ content.public_opinion_sentiment.negative | round(2) }}</div>
+            </div>
+            <div class="flex space-x-4">
+              <div class="flex flex-col flex-1">
+              {% for sentence in content.public_opinion_sentiment.comments.positive %}
+                <div class="comment">😊: {{ sentence }}</div>
+              {% endfor %}
+              {% if not content.public_opinion_sentiment.comments.positive %}
+                <div class="comment">긍정 댓글이 없습니다.😭</div>
+              {% endif %}
+              </div>
+              <div class="flex flex-col flex-1">
+              {% for sentence in content.public_opinion_sentiment.comments.neutral %}
+              <div class="comment">😐: {{ sentence }}</div>
+              {% endfor %}
+              {% if not content.public_opinion_sentiment.comments.neutral %}
+                <div class="comment">중립 댓글이 없습니다.😐</div>
+              {% endif %}
+              </div>
+              <div class="flex flex-col flex-1">
+              {% for sentence in content.public_opinion_sentiment.comments.negative %}
+              <div class="comment">👿: {{ sentence }}</div>
+              {% endfor %}
+              {% if not content.public_opinion_sentiment.comments.negative %}
+                <div class="comment">부정 댓글이 없습니다.😈</div>
+              {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
 
     </div>
 
+    <style>
+        .comment {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 200px;
+      cursor: pointer;
+    }
+    .comment:hover {
+      white-space: normal;
+      background-color: #f1f5f9;
+      border-radius: 4px;
+      padding: 2px 4px;
+      z-index: 20;
+    }
+    </style>
     <script>
         document.getElementById('report-main').innerHTML = document.getElementById('data-analysis').innerHTML
-        document.getElementById('data-analysis-btn').addEventListener('click', function() {
+        document.getElementById('data-analysis-btn').addEventListener('click', function () {
             location.reload()
         });
-        document.getElementById('issue-data-btn').addEventListener('click', function() {
+        document.getElementById('issue-data-btn').addEventListener('click', function () {
             document.getElementById('report-main').innerHTML = document.getElementById('issue-data').innerHTML
         });
-        document.getElementById('reaction-data-btn').addEventListener('click', function() {
-            document.getElementById('report-main').innerHTML = document.getElementById('reaction-data').innerHTML
+        document.getElementById('public-opinion-btn').addEventListener('click', function () {
+            document.getElementById('report-main').innerHTML = document.getElementById('public-opinion-data').innerHTML
         });
+
+
+        document.querySelectorAll('.icon-container').forEach(function(container) {
+            container.addEventListener('mouseover', function() {
+                container.querySelector('.hidden-description').style.display = 'block';
+            });
+            container.addEventListener('mouseout', function() {
+                container.querySelector('.hidden-description').style.display = 'none';
+            });
+        });
+
     </script>
 
 </div>
