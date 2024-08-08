@@ -3,8 +3,6 @@ name: Build and Deploy with Docker
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 permissions:
   contents: read
@@ -100,6 +98,9 @@ jobs:
             export CLOVA_CHAT_COMPLETION_003_CLIENT_KEY=${{ secrets.CLOVA_CHAT_COMPLETION_003_CLIENT_KEY }}
             export CLOVA_CHAT_COMPLETION_003_CLIENT_KEY_PRIMARY_VAR=${{ secrets.CLOVA_CHAT_COMPLETION_003_CLIENT_KEY_PRIMARY_VAR }}
             export CLOVA_CHAT_COMPLETION_003_CLIENT_KEY_REQUEST_ID=${{ secrets.CLOVA_CHAT_COMPLETION_003_CLIENT_KEY_REQUEST_ID }}
+            export NAVER_AD_API_KEY=${{ secrets.NAVER_AD_API_KEY }}
+            export NAVER_AD_SECRET_KEY=${{ secrets.NAVER_AD_SECRET_KEY }}
+            export NAVER_AD_CUSTOMER_ID${{ secrets.NAVER_AD_CUSTOMER_ID }}
             
             cd /
             docker-compose pull app
