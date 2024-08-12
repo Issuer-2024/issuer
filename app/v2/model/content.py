@@ -13,3 +13,4 @@ class Content:
     body: list
     table_of_public_opinion: list
     public_opinion_trend: list
+    public_opinion_summary: str

@@ -45,7 +45,7 @@ def create_content(q: str, background_task):
     d = create_group_title(c)
     e = create_group_content(c)
 
-    public_opinion_word_frequency, public_opinion_sentiment, public_opinion_trend = get_public_opinion(c)
+    public_opinion_word_frequency, public_opinion_sentiment, public_opinion_trend, public_opinion_summary = get_public_opinion(c)
     keyword_suggestions_data = get_suggestions_trend_data(q)
 
     table_of_contents = [{'title': "개요", 'depth': 0, 'num': '1'}, {'title': "현재 이슈", 'depth': 0, 'num': '2'}]
@@ -74,7 +74,8 @@ def create_content(q: str, background_task):
                      table_of_contents,
                      body,
                      table_of_public_opinion,
-                     public_opinion_trend)
+                     public_opinion_trend,
+                     public_opinion_summary)
     save_to_caching(result, background_task)
 
     remove_creating(q)

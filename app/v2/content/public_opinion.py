@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
 # office_codes = ['1001', '1421', '1003', '1015', '1437']
 # proxies = {'http': 'http://127.0.0.1:8080', 'https': 'http://127.0.0.1:8080'}
 # 연합뉴스, 뉴스1, 뉴시스, 한국경제 JTBC
@@ -158,7 +159,6 @@ def get_comments_from_clusters(clusters):
     return df
 
 
-
 def get_word_frequency(comments_df):
     word_frequency = []
 
@@ -220,10 +220,12 @@ def get_public_opinion_sentiment(comments_df):
 def get_trend_public_opinion(comments_df):
     trend_public_opinion = {
         'high_sympathy': comments_df.sort_values(by='sympathy_count', ascending=False)[:10].to_dict(orient='records'),
-        'high_interaction': comments_df.sort_values(by='total_interaction', ascending=False)[:10].to_dict(orient='records')
+        'high_interaction': comments_df.sort_values(by='total_interaction', ascending=False)[:10].to_dict(
+            orient='records')
     }
 
     return trend_public_opinion
+
 
 def get_public_opinion_summary(comments_df):
     chat = HCX003Chat(
@@ -273,8 +275,9 @@ def get_public_opinion(clusters):
     word_frequency = get_word_frequency(comments_df)
     sentiment = get_public_opinion_sentiment(comments_df)
     trend_public_opinion = get_trend_public_opinion(comments_df)
+    public_opinion_summary = get_public_opinion_summary(comments_df)
 
-    return word_frequency, sentiment, trend_public_opinion
+    return word_frequency, sentiment, trend_public_opinion, public_opinion_summary
 
 
 if __name__ == '__main__':
