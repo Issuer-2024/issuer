@@ -1,3 +1,4 @@
+import time
 from datetime import datetime, timedelta
 
 from app.v2.content.get_estimated_search_amount import get_estimated_search_amount
@@ -45,7 +46,8 @@ def create_content(q: str, background_task):
     d = create_group_title(c)
     e = create_group_content(c)
 
-    public_opinion_word_frequency, public_opinion_sentiment, public_opinion_trend, public_opinion_summary = get_public_opinion(c)
+    public_opinion_word_frequency, public_opinion_sentiment, public_opinion_trend, public_opinion_summary = get_public_opinion(
+        c)
     keyword_suggestions_data = get_suggestions_trend_data(q)
 
     table_of_contents = [{'title': "개요", 'depth': 0, 'num': '1'}, {'title': "현재 이슈", 'depth': 0, 'num': '2'}]
@@ -55,15 +57,17 @@ def create_content(q: str, background_task):
     body += [{'ref': ref, 'title': title, 'content': content, 'num': '2.' + str(i + 1)}
              for i, (ref, title, content) in enumerate(zip(c.values(), d.values(), e.values()))]
 
-    table_of_public_opinion = [{'title': "공감 수가 높은 댓글", 'depth': 0, 'num': '1'},
-                               {'title': "상호 작용이 많은 댓글", 'depth': 0, 'num': '2'},
-                               {'title': "키워드 별 댓글", 'depth': 0, 'num': '3'}
-                               ]
+    table_of_public_opinion = [
+        {'title': "여론 요약", 'depth': 0, 'num': '1'},
+        {'title': "공감 수가 높은 댓글", 'depth': 0, 'num': '2'},
+        {'title': "상호 작용이 많은 댓글", 'depth': 0, 'num': '3'},
+        {'title': "키워드 별 댓글", 'depth': 0, 'num': '4'}
+    ]
 
     keywords = [item['keyword'] for item in public_opinion_word_frequency[:10]]
-    table_of_public_opinion += [{'title': keyword, 'depth': 1, 'num': '3.' + str(i + 1)}
+    table_of_public_opinion += [{'title': keyword, 'depth': 1, 'num': '4.' + str(i + 1)}
                                 for i, keyword in enumerate(keywords)]
-    table_of_public_opinion += [{'title': "감정별 댓글", 'depth': 0, 'num': 4}]
+    table_of_public_opinion += [{'title': "감정별 댓글", 'depth': 0, 'num': '5'}]
 
     result = Content(title,
                      created_at,
@@ -86,57 +90,79 @@ if __name__ == '__main__':
     title = q
     created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+    # Record the start time of the entire process
+    start_time = time.time()
+
     today = datetime.today()
     one_months_ago = (today - timedelta(days=30)).replace(day=1).strftime('%Y-%m-%d')
     today = today.strftime('%Y-%m-%d')
+
+    # Record the time taken for setting up date variables
+    date_setup_time = time.time()
+    print(f"Time taken for date setup: {date_setup_time - start_time} seconds")
 
     keyword_groups = [
         {'groupName': q, 'keywords': [q]}
     ]
 
-    trend_search_data = RequestTrend.get_naver_trend_search_data(one_months_ago,
-                                                                 today,
-                                                                 'date',
-                                                                 keyword_groups)[0]['data']
+    # Measure time for trend search data retrieval
+    trend_search_start = time.time()
+    trend_search_data = RequestTrend.get_naver_trend_search_data(one_months_ago, today, 'date', keyword_groups)[0][
+        'data']
+    trend_search_time = time.time()
+    print(f"Time taken for trend search data retrieval: {trend_search_time - trend_search_start} seconds")
+
+    # Measure time for estimated search amount calculation
+    estimated_search_start = time.time()
     estimated_search_amount = get_estimated_search_amount(q, trend_search_data)
+    estimated_search_time = time.time()
+    print(
+        f"Time taken for estimated search amount calculation: {estimated_search_time - estimated_search_start} seconds")
 
+    # Measure time for collecting issues
+    collect_issues_start = time.time()
     a = collect_issues(q, estimated_search_amount)
-    b = create_embedding_result(a)
-    c = cluster_issues(b)
-    import pprint
+    collect_issues_time = time.time()
+    print(f"Time taken for collecting issues: {collect_issues_time - collect_issues_start} seconds")
 
-    pprint.pprint(c)
-    # start_time = time.time()
-    #
-    # step_start = time.time()
-    # a = collect_issues("쯔양")
-    # print(f"collect_issues took {time.time() - step_start:.2f} seconds")
-    #
-    # step_start = time.time()
-    # b = create_embedding_result(a)
-    # print(f"create_embedding_result took {time.time() - step_start:.2f} seconds")
-    #
-    # step_start = time.time()
-    # c = cluster_issues(b)
-    # print(f"cluster_issues took {time.time() - step_start:.2f} seconds")
-    #
-    # step_start = time.time()
-    # d = create_group_title(c)
-    # print(f"create_group_title took {time.time() - step_start:.2f} seconds")
-    #
-    # step_start = time.time()
-    # e = create_group_content(c)
-    # print(f"create_group_content took {time.time() - step_start:.2f} seconds")
-    #
-    # body = {"개요": "", "현재 이슈": {
-    #     cluster_num: {
-    #         "title": title,
-    #         "content": ""
-    #     } for cluster_num, title in d.items()
-    # }}
-    #
-    # for cluster_num, content in e.items():
-    #     body["현재 이슈"][cluster_num]["content"] = content
-    #
-    # pprint.pprint(body)
-    # print(f"Total execution took {time.time() - start_time:.2f} seconds")
+    # Measure time for creating embedding result
+    embedding_result_start = time.time()
+    b = create_embedding_result(a)
+    embedding_result_time = time.time()
+    print(f"Time taken for creating embedding result: {embedding_result_time - embedding_result_start} seconds")
+
+    # Measure time for clustering issues
+    cluster_issues_start = time.time()
+    c = cluster_issues(b)
+    cluster_issues_time = time.time()
+    print(f"Time taken for clustering issues: {cluster_issues_time - cluster_issues_start} seconds")
+
+    # Measure time for creating group title
+    group_title_start = time.time()
+    d = create_group_title(c)
+    group_title_time = time.time()
+    print(f"Time taken for creating group title: {group_title_time - group_title_start} seconds")
+
+    # Measure time for creating group content
+    group_content_start = time.time()
+    e = create_group_content(c)
+    group_content_time = time.time()
+    print(f"Time taken for creating group content: {group_content_time - group_content_start} seconds")
+
+    # Measure time for getting public opinion data
+    public_opinion_start = time.time()
+    public_opinion_word_frequency, public_opinion_sentiment, public_opinion_trend, public_opinion_summary = get_public_opinion(
+        c)
+    public_opinion_time = time.time()
+    print(f"Time taken for public opinion analysis: {public_opinion_time - public_opinion_start} seconds")
+
+    # Measure time for getting keyword suggestions
+    keyword_suggestions_start = time.time()
+    keyword_suggestions_data = get_suggestions_trend_data(q)
+    keyword_suggestions_time = time.time()
+    print(f"Time taken for keyword suggestions: {keyword_suggestions_time - keyword_suggestions_start} seconds")
+
+    # Record the end time of the entire process
+    end_time = time.time()
+    print(f"Total time taken: {end_time - start_time} seconds")
+

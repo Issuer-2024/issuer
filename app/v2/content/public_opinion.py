@@ -237,13 +237,14 @@ def get_public_opinion_summary(comments_df):
 
     sorted_by_sympathy_count = comments_df.sort_values(by='sympathy_count', ascending=False)
 
+    top_10_comments = sorted_by_sympathy_count.head(10)
     comment_text = ''
-    for index, row in sorted_by_sympathy_count.iterrows():
+    for index, row in top_10_comments.iterrows():
         comment_text += '\n' + row['contents']
 
     preset_text = [{"role": "system",
-                    "content": "- 내용을 정리하는 AI입니다."
-                               "- 반드시 본문과 관련된 내용만 출력합니다."
+                    "content": "- 댓글을 요약하는 AI 어시스턴트입니다."
+                               "- 반드시 댓글 내용에 관한 내용만 출력합니다."
                                "- 본문의 핵심 내용이 잘 드러나게 정리합니다."
                                "- 최소 300자 이내로 내용을 출력합니다."
                     },
