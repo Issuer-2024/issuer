@@ -1,23 +1,19 @@
+import os
 import time
-from datetime import datetime, timedelta
 
 import pandas as pd
-import requests
-from bs4 import BeautifulSoup
+from konlpy.tag import Okt
 
-from app.v2.external_request import get_news_summary, get_naver_news
+from app.v2.external_request import HCX003Chat
 from app.v2.external_request.request_clova_sentimet import get_clova_sentiment
 from app.v2.external_request.request_news_comments import RequestNewsComments
-from konlpy.tag import Okt
-from collections import Counter
+from dotenv import load_dotenv
 
-office_codes = ['1001', '1421', '1003', '1015', '1437']
-proxies = {'http': 'http://127.0.0.1:8080', 'https': 'http://127.0.0.1:8080'}
+load_dotenv()
 
-
+# office_codes = ['1001', '1421', '1003', '1015', '1437']
+# proxies = {'http': 'http://127.0.0.1:8080', 'https': 'http://127.0.0.1:8080'}
 # 연합뉴스, 뉴스1, 뉴시스, 한국경제 JTBC
-
-
 # def add_days(date_str, dur):
 #     date_format = '%Y%m%d'
 #     date = datetime.strptime(date_str, date_format)
@@ -131,6 +127,8 @@ proxies = {'http': 'http://127.0.0.1:8080', 'https': 'http://127.0.0.1:8080'}
 #     # date 필드의 날짜 형식을 YYYY-MM-DD 형태로 변환
 #     final_result['date'] = final_result['date'].astype(str)
 #     return final_result.to_dict(orient='list')
+
+
 def get_comments_from_clusters(clusters):
     comments = []
     for cluster in clusters.values():
@@ -158,6 +156,7 @@ def get_comments_from_clusters(clusters):
     df['date'] = pd.to_datetime(df['date']).dt.date
 
     return df
+
 
 
 def get_word_frequency(comments_df):
@@ -225,6 +224,47 @@ def get_trend_public_opinion(comments_df):
     }
 
     return trend_public_opinion
+
+def get_public_opinion_summary(comments_df):
+    chat = HCX003Chat(
+        host='https://clovastudio.stream.ntruss.com',
+        api_key=os.getenv('CLOVA_CHAT_COMPLETION_003_CLIENT_KEY'),
+        api_key_primary_val=os.getenv('CLOVA_CHAT_COMPLETION_003_CLIENT_KEY_PRIMARY_VAR'),
+        request_id=os.getenv('CLOVA_CHAT_COMPLETION_003_CLIENT_KEY_REQUEST_ID'),
+    )
+
+    sorted_by_sympathy_count = comments_df.sort_values(by='sympathy_count', ascending=False)
+
+    comment_text = ''
+    for index, row in sorted_by_sympathy_count.iterrows():
+        comment_text += '\n' + row['contents']
+
+    preset_text = [{"role": "system",
+                    "content": "- 내용을 정리하는 AI입니다."
+                               "- 반드시 본문과 관련된 내용만 출력합니다."
+                               "- 본문의 핵심 내용이 잘 드러나게 정리합니다."
+                               "- 최소 300자 이내로 내용을 출력합니다."
+                    },
+                   {"role": "user", "content": f"{comment_text}"}]
+
+    request_data = {
+        'messages': preset_text,
+        'topP': 0.8,
+        'topK': 0,
+        'maxTokens': 256,
+        'temperature': 0.5,
+        'repeatPenalty': 5.0,
+        'stopBefore': [],
+        'includeAiFilters': False,
+        'seed': 0
+    }
+    public_opinion_summary = None
+    while public_opinion_summary is None:
+        public_opinion_summary = chat.execute(request_data)
+        if public_opinion_summary is None:
+            time.sleep(5)
+
+    return public_opinion_summary
 
 
 def get_public_opinion(clusters):
