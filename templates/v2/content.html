@@ -257,19 +257,24 @@
                     {% endwith %}
                 </div>
                 <div>
-                    {% with title="공감 수가 높은 댓글 TOP", data=content.public_opinion_trend.high_sympathy, num=1 %}
+                    {% with title="여론 요약", data=content.public_opinion_summary, num=1, type='summary' %}
                         {% include "public_opinion_body.html" %}
                     {% endwith %}
                 </div>
                 <div>
-                    {% with title="상호 작용이 많은 댓글 TOP", data=content.public_opinion_trend.high_interaction, num=2 %}
+                    {% with title="공감 수가 높은 댓글 TOP", data=content.public_opinion_trend.high_sympathy, num=2, type='list' %}
+                        {% include "public_opinion_body.html" %}
+                    {% endwith %}
+                </div>
+                <div>
+                    {% with title="상호 작용이 많은 댓글 TOP", data=content.public_opinion_trend.high_interaction, num=3, type='list' %}
                         {% include "public_opinion_body.html" %}
                     {% endwith %}
                 </div>
             <div>
                 {% for data in content.public_opinion_word_frequency[:10] %}
                     <div>
-                        {% with title=data.keyword, data=data.comments[:10], num=loop.index %}
+                        {% with title=data.keyword, data=data.comments[:10], num=loop.index, type='list' %}
                             {% include "public_opinion_body.html" %}
                         {% endwith %}
                     </div>
