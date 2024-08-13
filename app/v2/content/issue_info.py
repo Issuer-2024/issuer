@@ -1,43 +1,23 @@
 import os
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime
 
 from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
 
-from app.v2.content.get_high_searching_news import get_high_searching_days, get_high_searching_news
 from app.v2.external_request import EmbeddingExecutor, get_naver_news, CompletionExecutor, \
     get_news_summary, HCX003Chat
 from app.v2.external_request.request_news_comments import RequestNewsComments
 
 
-def convert_pubDate_format(data):
-    for item in data:
-        try:
-            date_obj = datetime.strptime(item['pubDate'], '%a, %d %b %Y %H:%M:%S %z')
-            item['pubDate'] = date_obj.strftime('%Y%m%d')
-        except ValueError:
-            try:
-                date_obj = datetime.strptime(item['pubDate'], '%Y%m%d')
-                item['pubDate'] = date_obj.strftime('%Y%m%d')
-            except ValueError:
-                continue
-
-
-def collect_issues(q: str, estimated_search_amount: list):
-    #high_searching_news = get_high_searching_news(q, get_high_searching_days(estimated_search_amount))
-
+def collect_issues(q: str):
     naver_news_response = get_naver_news(q, 100, 1, sort='sim')
     news_items = naver_news_response.json().get('items', [])
-    news_items = [news_item for news_item in news_items if
-                  news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
-    #news_items += high_searching_news
-    convert_pubDate_format(news_items)
+    # news_items = [news_item for news_item in news_items if
+    #               news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
 
-    news_items = [news_item for news_item in news_items
-                  if RequestNewsComments.get_news_comments_num(news_item['link']) >= 10]
-    return news_items
+    news_items = sorted(news_items, key=lambda news_item: RequestNewsComments.get_news_comments_num(news_item['link']), reverse=True)
+    return news_items[:20]
 
 
 def create_embedding_result(issues: list):
@@ -50,15 +30,18 @@ def create_embedding_result(issues: list):
 
     def get_embedding(item):
         request_data = {"text": item['title']}
-        return embedding_executor.execute(request_data)
+        embedding = embedding_executor.execute(request_data)
+        while embedding == 'Error':
+            embedding = embedding_executor.execute(request_data)
+            time.sleep(1)
+        return embedding
 
     embedding_results = []
     with ThreadPoolExecutor(max_workers=10) as executor:
         future_to_item = {executor.submit(get_embedding, item): item for item in issues}
         for future in as_completed(future_to_item):
             embedding = future.result()
-            if embedding != "Error":
-                embedding_results.append((embedding, future_to_item[future]))
+            embedding_results.append((embedding, future_to_item[future]))
 
     return embedding_results
 

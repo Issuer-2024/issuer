@@ -31,4 +31,5 @@ def get_news_summary(url):
         news_summary = {'title': json_data['title'], 'summary': json_data['summary']}
         return news_summary
     except Exception as e:
+        print("error in news_summary")
         return None

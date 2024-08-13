@@ -29,13 +29,14 @@ class RequestNewsComments:
     def get_news_comments_num(url):
         media_id, article_id = parse_url(url)
         if not media_id or not article_id:
-            return None
+            return -1
         try:
             url = f"https://apis.naver.com/commentBox/cbox/web_naver_list_jsonp.json?ticket=news&pool=cbox5&_callback=&lang=ko&country=KR&objectId=news{media_id}%2C{article_id}&pageSize={5}"
             html = requests.get(url, headers=header)
             comment_text = json.loads(html.text.replace('_callback(', '')[:-2])
             return int(comment_text['result']['count']['comment'])
         except Exception as e:
+            print("error in get_news_comments_num")
             return -1
 
     @staticmethod
@@ -55,4 +56,5 @@ class RequestNewsComments:
                         for comment_info in comment_text['result']['commentList']]
             return comments
         except Exception as e:
+            print("error in get_news_comments")
             return None

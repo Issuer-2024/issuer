@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webpage Layout</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+{% include "header.html" %}
+<div class="flex gap-10" style="margin: 1rem 15% 0 15%">
+    <div style="width: 80%">
+        <div class="bg-white flex flex-col rounded p-6" style="border: 1px solid #ccc">
+            <span class="text-xl font-bold mb-4">최근 생성</span>
+            <div class="flex flex-col items-center">
+                <table class="min-w-full bg-white">
+                    <thead>
+                    <tr class="bg-gray-100 text-gray-800 uppercase text-sm leading-normal">
+                        <th class="py-3 px-6 text-left">키워드</th>
+                        <th class="py-3 px-6 text-left">
+                            <div class="flex gap-1 items-center">
+                                <span>생성 시간</span>
+                            </div>
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody class="text-gray-600 text-sm font-light">
+
+                    {% for item in recently_added_all %}
+                    <tr class="border-b border-gray-200 hover:bg-gray-100">
+                        <td class="py-3 px-6 text-left"><a href="/report?q={{ item.keyword }}">{{ item.keyword }}</a>
+                        </td>
+                        <td class="py-3 px-6 text-left">{{ item.elapsed_time }}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex flex-col gap-3">
+        <div>
+            {% include "keyword_rank.html" %}
+        </div>
+        <div>
+            {% include "recently_added_list.html" %}
+        </div>
+        <div>
+            {% include "creating_list.html" %}
+        </div>
+
+    </div>
+</div>
+<script>
+    window.onload = () => {
+        fetchChanges();
+        fetchCreating();
+        setInterval(fetchChanges, 15000)
+        setInterval(fetchCreating, 15000)
+    }
+</script>
+</body>
+</html>

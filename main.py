@@ -6,10 +6,11 @@ from fastapi import FastAPI, Request, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 from app.v1.request_external_api import get_google_trend_daily_rank
+from app.v2.config.rate_limit import check_rate_limit
 from app.v2.content import get_content, create_content
 from app.v2.creating.get_creating import get_creating_sep
 from app.v2.keyword_rank import get_keyword_rank
-from app.v2.recently_added.get_recently_added import get_recently_added_sep
+from app.v2.recently_added.get_recently_added import get_recently_added_sep, get_recently_added_all
 
 from app.v2.redis.redis_connection import connect_redis
 
@@ -27,6 +28,7 @@ app = FastAPI(lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates_v1 = Jinja2Templates(directory="templates/v1")
 templates_v2 = Jinja2Templates(directory="templates/v2")
+
 
 # @app.get("/")
 # async def render_main(request: Request):
@@ -72,10 +74,13 @@ async def render_main_v2(request: Request):
 
 @app.get("/report")
 async def render_report_v2(q: str, request: Request, background_task: BackgroundTasks):
-
     content = get_content(q)
     keyword_rank = get_keyword_rank()
     if not content:
+        rate_limit_info = check_rate_limit()
+        if not rate_limit_info['status']:
+            return rate_limit_info['message']
+
         background_task.add_task(create_content, q, background_task)
         return templates_v2.TemplateResponse(
             request=request, name="creating.html", context={
@@ -91,12 +96,25 @@ async def render_report_v2(q: str, request: Request, background_task: Background
         }
     )
 
+
 @app.get("/api/recent-add-sep")
-async def get_recent_add():
+async def get_recent_add_sep():
     return get_recently_added_sep()
+
 
 @app.get("/api/creating-sep")
 async def creating_sep():
     return get_creating_sep()
+
+
+@app.get("/recently-added")
+async def get_recently_add_all(request: Request):
+    return templates_v2.TemplateResponse(
+        request=request, name="recently_added_all.html", context={
+            'recently_added_all': get_recently_added_all(),
+            'keyword_rank': get_keyword_rank()
+        }
+    )
+
 
 uvicorn.run(app, host='0.0.0.0', port=8000)

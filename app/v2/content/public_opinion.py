@@ -154,8 +154,8 @@ def get_comments_from_clusters(clusters):
     df['total_interaction'] = df['antipathy_count'] + df['sympathy_count'] + df['reply_count']
     df['sympathy_ratio'] = df['sympathy_count'] / (df['antipathy_count'] + 1)
     # 날짜 형식 변환
-    df['date'] = pd.to_datetime(df['date']).dt.date
-
+    #df['date'] = pd.to_datetime(df['date']).dt.date
+    df['date'] = df['date'].astype(str)
     return df
 
 
@@ -172,6 +172,7 @@ def get_word_frequency(comments_df):
     for index, row in sorted_by_sympathy_count.iterrows():
         nouns = okt.nouns(row['contents'])
         nouns = [v for v in nouns if len(v) >= 2]
+        nouns = list(set(nouns))
         for noun in nouns:
             if noun not in keyword_map:
                 keyword_map[noun] = []
@@ -183,7 +184,6 @@ def get_word_frequency(comments_df):
             'comments': comments,
             'count': len(comments)
         })
-
     return word_frequency
 
 
@@ -241,11 +241,12 @@ def get_public_opinion_summary(comments_df):
     comment_text = ''
     for index, row in top_10_comments.iterrows():
         comment_text += '\n' + row['contents']
-
+    if not comment_text:
+        return None
     preset_text = [{"role": "system",
                     "content": "- 댓글을 요약하는 AI 어시스턴트입니다."
                                "- 반드시 댓글 내용에 관한 내용만 출력합니다."
-                               "- 본문의 핵심 내용이 잘 드러나게 정리합니다."
+                               "- 예를 들어, “찬성 의견이 60% 이상입니다” 또는 “주요 우려 사항은 X입니다”와 같은 분석 결과를 제공합니다."
                                "- 최소 300자 이내로 내용을 출력합니다."
                     },
                    {"role": "user", "content": f"{comment_text}"}]
