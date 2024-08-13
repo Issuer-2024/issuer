@@ -40,7 +40,7 @@ def create_content(q: str, background_task):
                                                                  keyword_groups)[0]['data']
     estimated_search_amount = get_estimated_search_amount(q, trend_search_data)
 
-    a = collect_issues(q, estimated_search_amount)
+    a = collect_issues(q)
     b = create_embedding_result(a)
     c = cluster_issues(b)
     d = create_group_title(c)

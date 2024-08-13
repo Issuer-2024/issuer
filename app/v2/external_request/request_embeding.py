@@ -29,4 +29,5 @@ class EmbeddingExecutor:
         if res['status']['code'] == '20000':
             return res['result']['embedding']
         else:
+            print("embedding", res['status']['code'])
             return 'Error'
