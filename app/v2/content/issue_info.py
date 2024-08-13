@@ -30,16 +30,17 @@ def create_embedding_result(issues: list):
 
     def get_embedding(item):
         request_data = {"text": item['title']}
-        return embedding_executor.execute(request_data)
+        embedding = embedding_executor.execute(request_data)
+        while embedding == 'Error':
+            embedding = embedding_executor.execute(request_data)
+            time.sleep(1)
+        return embedding
 
     embedding_results = []
     with ThreadPoolExecutor(max_workers=10) as executor:
         future_to_item = {executor.submit(get_embedding, item): item for item in issues}
         for future in as_completed(future_to_item):
             embedding = future.result()
-            while embedding == "Error":
-                time.sleep(1)
-                embedding = future.result()
             embedding_results.append((embedding, future_to_item[future]))
 
     return embedding_results

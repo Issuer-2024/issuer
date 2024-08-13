@@ -36,6 +36,7 @@ class RequestNewsComments:
             comment_text = json.loads(html.text.replace('_callback(', '')[:-2])
             return int(comment_text['result']['count']['comment'])
         except Exception as e:
+            print("error in get_news_comments_num")
             return -1
 
     @staticmethod
@@ -55,4 +56,5 @@ class RequestNewsComments:
                         for comment_info in comment_text['result']['commentList']]
             return comments
         except Exception as e:
+            print("error in get_news_comments")
             return None
