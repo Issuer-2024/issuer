@@ -43,3 +43,17 @@ def get_recently_added_sep():
         for item in items[:limit]
     ]
     return recently_added_list
+
+
+def get_recently_added_all():
+    query = ContentHash.find()
+    items = sorted([content for content in query], key=lambda x: x.created_at, reverse=True)
+
+    recently_added_list = [
+        RecentlyAdded(
+            keyword=item.keyword,
+            elapsed_time=calculate_elapsed_time(item.created_at)
+        )
+        for item in items[:]
+    ]
+    return recently_added_list

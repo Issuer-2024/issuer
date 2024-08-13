@@ -37,12 +37,12 @@ def save_to_caching(content: Content, background_tasks: BackgroundTasks):
 
 
 def save_creating(keyword: str):
-    KST = pytz.timezone('Asia/Seoul')
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     creating_hash = CreatingHash(keyword=keyword, started_at=now)
 
     creating_hash.save()
     creating_hash.expire(600)
+
 
 def read_creating(keyword: str):
     Migrator().run()
@@ -51,6 +51,7 @@ def read_creating(keyword: str):
         return None
     creating = [CreatingHash.get(key.pk) for key in keys]
     return creating[0]
+
 
 def remove_creating(keyword: str):
     Migrator().run()
