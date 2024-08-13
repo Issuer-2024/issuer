@@ -13,8 +13,8 @@ from app.v2.external_request.request_news_comments import RequestNewsComments
 def collect_issues(q: str):
     naver_news_response = get_naver_news(q, 100, 1, sort='sim')
     news_items = naver_news_response.json().get('items', [])
-    news_items = [news_item for news_item in news_items if
-                  news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
+    # news_items = [news_item for news_item in news_items if
+    #               news_item['link'].startswith('https://n.news.naver.com/mnews/article')]
 
     news_items = sorted(news_items, key=lambda news_item: RequestNewsComments.get_news_comments_num(news_item['link']), reverse=True)
     return news_items[:20]

@@ -32,6 +32,7 @@ def save_to_caching(content: Content, background_tasks: BackgroundTasks):
                                public_opinion_trend=content.public_opinion_trend,
                                public_opinion_summary=content.public_opinion_summary)
     content_hash.save()
+    content_hash.expire(7200)
     background_tasks.add_task(move_to_db_and_delete_from_cache, content_hash.pk)
 
 
@@ -41,6 +42,7 @@ def save_creating(keyword: str):
     creating_hash = CreatingHash(keyword=keyword, started_at=now)
 
     creating_hash.save()
+    creating_hash.expire(600)
 
 def read_creating(keyword: str):
     Migrator().run()
@@ -66,14 +68,3 @@ def read_cache_content(keyword: str):
         return None
     contents = [ContentHash.get(key.pk) for key in keys]
     return contents[0]
-
-def db_read(keyword: str):
-    keys = db_redis.keys(f"content:*")
-    contents = []
-    for key in keys:
-        content = db_redis.hgetall(key)
-        if content and content['keyword'] == keyword:
-            contents.append(content)
-    if not contents:
-        return None
-    return contents
