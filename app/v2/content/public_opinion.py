@@ -172,6 +172,7 @@ def get_word_frequency(comments_df):
     for index, row in sorted_by_sympathy_count.iterrows():
         nouns = okt.nouns(row['contents'])
         nouns = [v for v in nouns if len(v) >= 2]
+        nouns = list(set(nouns))
         for noun in nouns:
             if noun not in keyword_map:
                 keyword_map[noun] = []
@@ -183,7 +184,6 @@ def get_word_frequency(comments_df):
             'comments': comments,
             'count': len(comments)
         })
-
     return word_frequency
 
 
