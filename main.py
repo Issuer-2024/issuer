@@ -6,6 +6,7 @@ from fastapi import FastAPI, Request, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 from app.v1.request_external_api import get_google_trend_daily_rank
+from app.v2.config.rate_limit import check_rate_limit
 from app.v2.content import get_content, create_content
 from app.v2.creating.get_creating import get_creating_sep
 from app.v2.keyword_rank import get_keyword_rank
@@ -76,6 +77,10 @@ async def render_report_v2(q: str, request: Request, background_task: Background
     content = get_content(q)
     keyword_rank = get_keyword_rank()
     if not content:
+        rate_limit_info = check_rate_limit()
+        if not rate_limit_info['status']:
+            return rate_limit_info['message']
+
         background_task.add_task(create_content, q, background_task)
         return templates_v2.TemplateResponse(
             request=request, name="creating.html", context={
