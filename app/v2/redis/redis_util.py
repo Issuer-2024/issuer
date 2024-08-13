@@ -33,7 +33,6 @@ def save_to_caching(content: Content, background_tasks: BackgroundTasks):
                                public_opinion_summary=content.public_opinion_summary)
     content_hash.save()
     content_hash.expire(7200)
-    background_tasks.add_task(move_to_db_and_delete_from_cache, content_hash.pk)
 
 
 def save_creating(keyword: str):
@@ -62,10 +61,21 @@ def remove_creating(keyword: str):
         CreatingHash.delete(key.pk)
 
 
+# def read_cache_content(keyword: str):
+#     Migrator().run()
+#     keys = ContentHash.find(ContentHash.keyword == keyword).all()
+#     if not keys:
+#         return None
+#     contents = [ContentHash.get(key.pk) for key in keys]
+#     return contents[0]
+
 def read_cache_content(keyword: str):
-    Migrator().run()
-    keys = ContentHash.find(ContentHash.keyword == keyword).all()
+    Migrator().run()  # 마이그레이션 실행
+    keys = ContentHash.find(ContentHash.keyword == keyword).all()  # 키워드에 해당하는 모든 키 찾기
+
     if not keys:
         return None
-    contents = [ContentHash.get(key.pk) for key in keys]
-    return contents[0]
+
+    # 첫 번째 키에 해당하는 데이터를 압축 해제하여 반환
+    content = ContentHash.get_decompressed(keys[0].pk)
+    return content

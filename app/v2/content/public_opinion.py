@@ -154,8 +154,8 @@ def get_comments_from_clusters(clusters):
     df['total_interaction'] = df['antipathy_count'] + df['sympathy_count'] + df['reply_count']
     df['sympathy_ratio'] = df['sympathy_count'] / (df['antipathy_count'] + 1)
     # 날짜 형식 변환
-    df['date'] = pd.to_datetime(df['date']).dt.date
-
+    #df['date'] = pd.to_datetime(df['date']).dt.date
+    df['date'] = df['date'].astype(str)
     return df
 
 
