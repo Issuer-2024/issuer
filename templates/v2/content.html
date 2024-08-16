@@ -350,19 +350,30 @@
                 <div class="flex-1 p-8 rounded-lg max-w-lg w-full" style="border: 1px solid #ccc;">
                     <div class="text-center mb-6">
                         <h1 class="text-3xl font-bold text-gray-800 flex items-center justify-center">
-                            의견 보내기
+                            의견 찾기
                             <span class="ml-2">😊</span>
                         </h1>
-                        <p class="text-gray-600 mt-2">여러분의 소중한 의견을 기다리고 있습니다.</p>
+                        <p class="text-gray-600 mt-2">이슈와 여론을 확인하셨나요?<br>
+                            자신의 생각을 구체화 해보세요.<br>
+                            비슷한 의견을 찾아드립니다!</p>
                     </div>
                     <div class="mb-6">
                         <label for="feedback" class="block text-gray-800 font-semibold mb-2">의견 내용</label>
                         <textarea id="opinion-text" rows="6"
                                   class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-                                  placeholder="보내주실 의견을 편하게 입력해 주세요."></textarea>
+                                  placeholder="나의 생각을 구체적으로 작성해주세요!"></textarea>
                         <p class="text-xs text-gray-500 mt-2">
-                            의견이 보내질때 문제점 확인 및 서비스 개발에 참고하기 위하여 해당 페이지의 시스템 정보가 같이 보내집니다. ‘보내기’ 버튼을 누르면 개인정보 처리방침에 동의한
-                            것으로 간주됩니다.
+                            <ul>
+                                <li>
+                                    <p class="text-sm text-gray-500">의견을 클릭하면 해당 기사로 이동합니다.</p>
+                                </li>
+                                <li>
+                                    <p class="text-sm text-gray-500">좋아요나 답글을 남겨보세요!</p>
+                                </li>
+                                <li>
+                                    <p class="text-sm text-gray-500">해당 입력은 저장 되지 않습니다.</p>
+                                </li>
+                            </ul>
                         </p>
                     </div>
                     <div class="text-center">
@@ -372,27 +383,8 @@
                     </div>
                 </div>
                 <div class="flex-1">
-                        <ul class="bg-white shadow overflow-hidden sm:rounded-md">
-                            <li class="border-t border-gray-200" style="">
-                                <a href="1">
-                                    <div class="px-4 py-5 sm:px-6">
-                                        <div class="flex items-center justify-between">
-                                            <span>1</span>
-                                        </div>
-                                        <div class="flex items-center gap-4">
-                                            <p class="text-sm font-medium text-gray-500">좋아요:
-                                                <span class="text-red-600"></span>
-                                            </p>
-                                            <p class="text-sm font-medium text-gray-500">싫어요:
-                                                <span class="text-blue-600"></span>
-                                            </p>
-                                            <p class="text-sm font-medium text-gray-500">답글:
-                                                <span class="text-black-600"></span>
-                                            </p>
-                                        </div>
-                                    </div>
-                                </a>
-                            </li>
+                        <ul id='similar-opinion-list' class="bg-white overflow-hidden sm:rounded-md">
+                            <p class="1xl" style="color: #ccc">의견을 입력하면 비슷한 의견이 보여집니다.</p>
                         </ul>
                     </div>
                 </div>
@@ -454,12 +446,47 @@
                       })
                       .then(response => response.json())
                       .then(data => {
-                        console.log('Success:', data);
-                        // Handle the response data here
+                          document.getElementById('similar-opinion-list').innerHTML = ``
+                          renderSimilarOpinionData(data)
                       })
                       .catch((error) => {
                         console.error('Error:', error);
                       });
+                    }
+
+
+
+                    function renderSimilarOpinionData(data) {
+                        // 예제 데이터 렌더링 (여기서는 JSON 배열을 예상)
+                        let html = ``
+                        const elem = document.getElementById('similar-opinion-list')
+                        data.slice(0,5).forEach(item => {
+                            html += `
+                                    <li class="border-t border-gray-200" style="">
+                                    <a href="${item.link}">
+                                        <div class="px-4 py-5 sm:px-6">
+                                            <div class="flex items-center justify-between">
+                                                <span>${item.contents}</span>
+                                            </div>
+                                            <div class="flex items-center gap-4">
+                                                <p class="text-sm font-medium text-gray-500">좋아요:
+                                                    <span class="text-red-600">${item.sympathy_count}</span>
+                                                </p>
+                                                <p class="text-sm font-medium text-gray-500">싫어요:
+                                                    <span class="text-blue-600">${item.antipathy_count}</span>
+                                                </p>
+                                                <p class="text-sm font-medium text-gray-500">답글:
+                                                    <span class="text-black-600">${item.reply_count}</span>
+                                                </p>
+                                                <p class="text-sm font-medium text-gray-500">유사성:
+                                                    <span class="text-black-600">${(item.similarity).toFixed(2)}</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </li>`
+                        });
+                        elem.innerHTML = html
                     }
 
 
