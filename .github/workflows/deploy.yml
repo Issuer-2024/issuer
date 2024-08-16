@@ -101,6 +101,7 @@ jobs:
             export NAVER_AD_API_KEY=${{ secrets.NAVER_AD_API_KEY }}
             export NAVER_AD_SECRET_KEY=${{ secrets.NAVER_AD_SECRET_KEY }}
             export NAVER_AD_CUSTOMER_ID=${{ secrets.NAVER_AD_CUSTOMER_ID }}
+            export CLOVA_EMBEDDING_V2_REQUEST_ID=${{ secrets.CLOVA_EMBEDDING_V2_REQUEST_ID }}
             
             cd /
             docker-compose pull app
