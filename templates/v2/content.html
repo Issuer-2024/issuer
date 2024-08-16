@@ -447,7 +447,10 @@
                         headers: {
                           'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ opinion: opinion })
+                        body: JSON.stringify({
+                            keyword: "{{ content.keyword }}",
+                            opinion: opinion
+                        })
                       })
                       .then(response => response.json())
                       .then(data => {

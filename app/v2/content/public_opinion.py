@@ -279,7 +279,7 @@ def get_public_opinion(clusters):
     trend_public_opinion = get_trend_public_opinion(comments_df)
     public_opinion_summary = get_public_opinion_summary(comments_df)
 
-    return word_frequency, sentiment, trend_public_opinion, public_opinion_summary
+    return comments_df, word_frequency, sentiment, trend_public_opinion, public_opinion_summary
 
 
 if __name__ == '__main__':

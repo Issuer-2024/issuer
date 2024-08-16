@@ -119,12 +119,14 @@ async def get_recently_add_all(request: Request):
 
 
 class OpinionRequest(BaseModel):
+    keyword: str
     opinion: str
 
 
 @app.post("/find-opinion")
 async def find_opinion(request: OpinionRequest):
     print(request.opinion)
+    print(request.keyword)
 
     return
 

@@ -1,6 +1,7 @@
 import time
 from datetime import datetime, timedelta
 
+from app.v2.content.find_opinion import save_comments_embedding
 from app.v2.content.get_estimated_search_amount import get_estimated_search_amount
 from app.v2.content.issue_info import collect_issues, create_embedding_result, cluster_issues, create_group_title, \
     create_group_content
@@ -46,8 +47,14 @@ def create_content(q: str, background_task):
     d = create_group_title(c)
     e = create_group_content(c)
 
-    public_opinion_word_frequency, public_opinion_sentiment, public_opinion_trend, public_opinion_summary = get_public_opinion(
-        c)
+    (comments_df,
+     public_opinion_word_frequency,
+     public_opinion_sentiment,
+     public_opinion_trend,
+     public_opinion_summary) = get_public_opinion(c)
+
+    save_comments_embedding(q, comments_df)
+
     keyword_suggestions_data = get_suggestions_trend_data(q)
 
     table_of_contents = [{'title': "개요", 'depth': 0, 'num': '1'}, {'title': "현재 이슈", 'depth': 0, 'num': '2'}]
