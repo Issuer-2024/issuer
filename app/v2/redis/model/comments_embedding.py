@@ -21,16 +21,17 @@ def decompress_data(base64_data: str) -> Any:
 
 class CommentsEmbedding(JsonModel):
     keyword: str = Field(index=True)
-    comments_embedding: Any  # 압축된 데이터로 저장
+    embedding_results: Any  # 압축된 데이터로 저장
 
     def save(self, *args, **kwargs):
         # 저장하기 전에 데이터를 압축합니다.
-        self.comments_embedding = compress_data(self.comments_embedding)
+        self.embedding_results = compress_data(self.embedding_results)
+        super().save(*args, **kwargs)
 
     @classmethod
     def get_decompressed(cls, pk: str):
         # 압축을 해제하여 데이터를 가져옵니다.
         instance = cls.get(pk)
-        instance.comments_embedding = decompress_data(instance.comments_embedding)
+        instance.embedding_results = decompress_data(instance.embedding_results)
 
         return instance
