@@ -1,10 +1,9 @@
 import base64
-from typing import List, Dict, Any
+import json
+import zlib
+from typing import Any
 
 from redis_om import Field, JsonModel
-
-import zlib
-import json
 
 
 def compress_data(data: Any) -> str:

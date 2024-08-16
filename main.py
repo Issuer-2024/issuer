@@ -4,10 +4,12 @@ import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 from starlette.templating import Jinja2Templates
 from app.v1.request_external_api import get_google_trend_daily_rank
 from app.v2.config.rate_limit import check_rate_limit
 from app.v2.content import get_content, create_content
+from app.v2.content.find_opinion import find_similar_opinion
 from app.v2.creating.get_creating import get_creating_sep
 from app.v2.keyword_rank import get_keyword_rank
 from app.v2.recently_added.get_recently_added import get_recently_added_sep, get_recently_added_all
@@ -115,6 +117,16 @@ async def get_recently_add_all(request: Request):
             'keyword_rank': get_keyword_rank()
         }
     )
+
+
+class OpinionRequest(BaseModel):
+    keyword: str
+    opinion: str
+
+
+@app.post("/find-opinion")
+async def find_opinion(request: OpinionRequest):
+    return find_similar_opinion(request.keyword, request.opinion)
 
 
 uvicorn.run(app, host='0.0.0.0', port=8000)
