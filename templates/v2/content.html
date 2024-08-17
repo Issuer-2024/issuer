@@ -252,7 +252,7 @@
         <div id="issue-data" style="display: none;">
             <div class="flex flex-col">
                 <div class="flex">
-                    {% with table_of_contents=content.table_of_contents %}
+                    {% with table_of_contents=content.table_of_contents, type="issue-info" %}
                     {% include "table_of_contents.html" %}
                     {% endwith %}
                 </div>
@@ -269,7 +269,7 @@
         <div id="public-opinion-data" style="display: none;">
             <div class="flex flex-col">
                 <div class="flex">
-                    {% with table_of_contents=content.table_of_public_opinion %}
+                    {% with table_of_contents=content.table_of_public_opinion, type="public-opinion" %}
                     {% include "table_of_contents.html" %}
                     {% endwith %}
                 </div>
@@ -291,9 +291,12 @@
                     {% endwith %}
                 </div>
                 <div>
+                    {% with title="키워드 별 댓글", data="", num=4, type='list' %}
+                    {% include "public_opinion_body.html" %}
+                    {% endwith %}
                     {% for data in content.public_opinion_word_frequency[:10] %}
                     <div>
-                        {% with title=data.keyword, data=data.comments[:10], num=loop.index, type='list' %}
+                        {% with title=data.keyword, data=data.comments[:10], num="4." + loop.index|string, type='list' %}
                         {% include "public_opinion_body.html" %}
                         {% endwith %}
                     </div>
@@ -301,10 +304,10 @@
                 </div>
             </div>
 
-            <div class="flex items-center mb-4">
+            <div id="public-opinion-section-5" class="flex items-center mb-4">
 <!--                <img src="https://placehold.co/40x40" alt="Title Icon" class="w-10 h-10 mr-2">-->
                 <div class="flex gap-2">
-                    <a href="" style="color: #0275d8; font-size: 1.8em; font-weight: 600">4.</a>
+                    <a href="" style="color: #0275d8; font-size: 1.8em; font-weight: 600">5.</a>
                     <h3 class="font-bold" style="font-size: 1.8em">감정별 댓글</h3>
                 </div>
             </div>

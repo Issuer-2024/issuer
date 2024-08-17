@@ -3,7 +3,10 @@
     <span>목차</span>
     <div class="flex flex-col">
         {% for item in table_of_contents %}
-            <div style="margin-left: {{ item.depth }}rem;">{{ item.num }}. {{ item.title }}</div>
+            <div style="margin-left: {{ item.depth }}rem;">
+                <a href="#{{ type }}-section-{{ item.num }}" style="color: #0275d8;">{{ item.num }}.</a>
+                <span>{{ item.title }}</span>
+            </div>
         {% endfor %}
     </div>
 </div>
