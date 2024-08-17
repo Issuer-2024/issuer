@@ -411,18 +411,32 @@
                     }
                 </style>
                 <script>
+
+                    function remove_focus_section_decoration() {
+                        const idList = ['data-analysis-btn', 'issue-data-btn', 'public-opinion-btn', 'find-opinion-btn']
+
+                        idList.forEach(i => document.getElementById(i).classList.remove('underline'));
+                    }
+
                     document.getElementById('report-main').innerHTML = document.getElementById('data-analysis').innerHTML
+                    document.getElementById('data-analysis-btn').classList.toggle('underline')
                     document.getElementById('data-analysis-btn').addEventListener('click', function () {
                         location.reload()
                     });
                     document.getElementById('issue-data-btn').addEventListener('click', function () {
                         document.getElementById('report-main').innerHTML = document.getElementById('issue-data').innerHTML
+                        remove_focus_section_decoration()
+                        document.getElementById('issue-data-btn').classList.toggle('underline')
                     });
                     document.getElementById('public-opinion-btn').addEventListener('click', function () {
                         document.getElementById('report-main').innerHTML = document.getElementById('public-opinion-data').innerHTML
+                        remove_focus_section_decoration()
+                        document.getElementById('public-opinion-btn').classList.toggle('underline')
                     });
                     document.getElementById('find-opinion-btn').addEventListener('click', function () {
                         document.getElementById('report-main').innerHTML = document.getElementById('find-opinion').innerHTML
+                        remove_focus_section_decoration()
+                        document.getElementById('find-opinion-btn').classList.toggle('underline')
                     });
 
 
