@@ -3,7 +3,7 @@
         <div class="flex items-center mb-4">
 <!--            <img src="https://placehold.co/40x40" alt="Title Icon" class="w-10 h-10 mr-2">-->
             <div class="flex gap-2">
-                <a href="" style="color: #0275d8; font-size: 1.8em; font-weight: 600">{{ num }}.</a>
+                <a href="#issue-info-section-{{ num }}" style="color: #0275d8; font-size: 1.8em; font-weight: 600">{{ num }}.</a>
                 <h3 class="font-bold" style="font-size: 1.8em">{{ title }}</h3>
             </div>
         </div>
@@ -18,7 +18,7 @@
             </div>
             <div class="flex mb-6 gap-4">
             {% for r in ref[:3] %}
-                <a href="{{ r.link }}" class="flex items-center justify-start p-4 bg-slate-100 rounded-lg" style="border: 1px solid #ccc; width: 10rem; height: 6rem">
+                <a href="{{ r.link }}" class="hover:bg-gray-100 flex items-center justify-start p-4 bg-slate-100 rounded-lg" style="border: 1px solid #ccc; width: 10rem; height: 6rem">
                     <div class="ml-4">
                         <h3 id="ref-title" class="text-xs text-teal-400">{{ r.title[:15] }}... - naver news</h3>
                     </div>
