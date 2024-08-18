@@ -20,22 +20,22 @@
             {% for r in ref[:3] %}
                 <a href="{{ r.link }}" class="hover:bg-gray-100 flex items-center justify-start p-4 bg-slate-100 rounded-lg" style="border: 1px solid #ccc; width: 10rem; height: 6rem">
                     <div class="ml-4">
-                        <h3 id="ref-title" class="text-xs text-teal-400">{{ r.title[:15]|safe }} {{ "</b>"|safe }}... - naver news</h3>
+                        <h3 id="ref-title" class="text-xs text-teal-400">{{ r.title | safe }}... - naver news</h3>
                     </div>
                 </a>
             {% endfor %}
             {% if (ref | length) > 3 %}
-                <button onclick="openModal('modelConfirm')" class="hover:bg-gray-100 flex items-center justify-start p-4 bg-slate-100 rounded-lg" style="border: 1px solid #ccc; width: 10rem; height:6rem">
+                <button onclick="openModal('modelConfirm-{{ num }}')" class="hover:bg-gray-100 flex items-center justify-start p-4 bg-slate-100 rounded-lg" style="border: 1px solid #ccc; width: 10rem; height:6rem">
                     <div class="ml-4">
                         <h3 id="ref-title" class="text-xs text-gray-400">{{ (ref | length) - 3 }}개 더보기</h3>
                     </div>
                 </button>
 
-                <div id="modelConfirm" class="fixed hidden z-50 inset-0 bg-gray-900 bg-opacity-60 overflow-y-auto h-full w-full px-4 ">
+                <div id="modelConfirm-{{ num }}" class="fixed hidden z-50 inset-0 bg-gray-900 bg-opacity-60 overflow-y-auto h-full w-full px-4 ">
                     <div class="relative top-40 mx-auto shadow-xl rounded-md bg-white max-w-md">
 
                         <div class="flex justify-end p-2">
-                            <button onclick="closeModal('modelConfirm')" type="button"
+                            <button onclick="closeModal('modelConfirm-{{ num }}')" type="button"
                                 class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center">
                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                     <path fill-rule="evenodd"
@@ -68,18 +68,18 @@
 
                                             {% for r in ref[3:] %}
                                             <tr class="border-b border-gray-200 hover:bg-gray-100">
-                                                <td class="py-3 px-6 text-left"><a href="/report?q={{ item.keyword }}"><a href="{{ r.link }}"> {{ r.title|safe }} {{ "</b>"|safe }}</a></td>
+                                                <td class="py-3 px-6 text-left"><a href="/report?q={{ item.keyword }}"><a href="{{ r.link }}"> {{ r.title|safe }}</a></td>
                                             </tr>
                                             {% endfor %}
                                             </tbody>
                                         </table>
                                     </div>
                                 </div>
-                            <a href="#" onclick="closeModal('modelConfirm')"
+                            <button onclick="closeModal('modelConfirm-{{ num }}')"
                                 class="mt-5 text-gray-900 bg-white hover:bg-gray-100 focus:ring-4 focus:ring-cyan-200 border border-gray-200 font-medium inline-flex items-center rounded-lg text-base px-3 py-2.5 text-center"
                                 data-modal-toggle="delete-user-modal">
                                 닫기
-                            </a>
+                            </button>
                         </div>
 
                     </div>

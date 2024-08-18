@@ -10,23 +10,32 @@
     {% include "header.html" %}
     <div class="flex gap-10" style="margin: 1rem 15% 0 15%">
         <div>
-            <div class="flex flex-col items-center justify-center bg-white rounded p-6" style="border: 1px solid #ccc">
-                <span class="m-5" style="font-size: 2.25rem; font-weight: 500; height: 1;">
-                    생성 중인 문서입니다. 나중에 들어오시면 확인하실 수 있어요🥺
-                </span>
+            <div class="flex flex-col gap-6 bg-white rounded p-6" style="border: 1px solid #ccc">
+                <div class="flex flex-col">
+                    <span style="font-size: 2.25rem; font-weight: 700; height: 1;">
+                        {{ keyword }}
+                    </span>
+                    <span style="font-size:0.9rem; color: dimgray">문서 생성 시각:
+                        {{ created_at }}
+                    </span>
+                </div>
+                <div class="flex flex-col gap-4 items-center justify-center">
+                    <span class="m-5" style="font-size: 2.25rem; font-weight: 500; height: 1;">
+                        생성 중인 문서입니다. 나중에 들어오시면 확인하실 수 있어요🥺
+                    </span>
 
-                <div class="flex gap-3">
-                    <div>
-                        {% include "keyword_rank.html" %}
-                    </div>
-                    <div>
-                        {% include "recently_added_list.html" %}
-                    </div>
-                    <div>
-                        {% include "creating_list.html" %}
+                    <div class="flex gap-3">
+                        <div>
+                            {% include "keyword_rank.html" %}
+                        </div>
+                        <div>
+                            {% include "recently_added_list.html" %}
+                        </div>
+                        <div>
+                            {% include "creating_list.html" %}
+                        </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
