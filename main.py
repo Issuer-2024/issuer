@@ -1,4 +1,7 @@
+import json
+import time
 from contextlib import asynccontextmanager
+from datetime import datetime
 
 import uvicorn
 from dotenv import load_dotenv
@@ -6,15 +9,19 @@ from fastapi import FastAPI, Request, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from starlette.templating import Jinja2Templates
+
 from app.v1.request_external_api import get_google_trend_daily_rank
 from app.v2.config.rate_limit import check_rate_limit
 from app.v2.content import get_content, create_content
 from app.v2.content.find_opinion import find_similar_opinion
+from app.v2.content.get_content import event_queue
 from app.v2.creating.get_creating import get_creating_sep
 from app.v2.keyword_rank import get_keyword_rank
 from app.v2.recently_added.get_recently_added import get_recently_added_sep, get_recently_added_all
-
 from app.v2.redis.redis_connection import connect_redis
+from fastapi.responses import StreamingResponse
+
+from app.v2.redis.redis_util import read_creating, save_creating
 
 
 @asynccontextmanager
@@ -83,13 +90,29 @@ async def render_report_v2(q: str, request: Request, background_task: Background
         if not rate_limit_info['status']:
             return rate_limit_info['message']
 
-        background_task.add_task(create_content, q, background_task)
-        return templates_v2.TemplateResponse(
-            request=request, name="creating.html", context={
-                'keyword': q,
-                'keyword_rank': keyword_rank
-            }
-        )
+        creating = read_creating(q)
+        if creating:
+            return templates_v2.TemplateResponse(
+                request=request, name="creating.html", context={
+                    'keyword': q,
+                    'created_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    'keyword_rank': keyword_rank,
+                    'ratio': creating.ratio,
+                    'status': creating.status
+                }
+            )
+        if not creating:
+            creating = save_creating(q)
+            background_task.add_task(create_content, q)
+            return templates_v2.TemplateResponse(
+                request=request, name="creating.html", context={
+                    'keyword': q,
+                    'created_at': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    'keyword_rank': keyword_rank,
+                    'ratio': creating.ratio,
+                    'status': creating.status
+                }
+            )
 
     return templates_v2.TemplateResponse(
         request=request, name="report.html", context={
@@ -125,8 +148,27 @@ class OpinionRequest(BaseModel):
 
 
 @app.post("/find-opinion")
-async def find_opinion(request: OpinionRequest):
-    return find_similar_opinion(request.keyword, request.opinion)
+def find_opinion(request: OpinionRequest):
+    time.sleep(0.5)
+    result = find_similar_opinion(request.keyword, request.opinion)
+    if not result:
+        return {"status": 429, "message": "잠시 후에 시도해주세요."}
+    return {"status": 200, "result": result}
+
+
+@app.get("/stream")
+async def sse(request: Request):
+    async def event_generator():
+        while True:
+            if await request.is_disconnected():
+                print("Client disconnected")
+                break
+
+            if not event_queue.empty():
+                message = event_queue.get()
+                yield f"data: {json.dumps(message, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(event_generator(), media_type='text/event-stream')
 
 
 uvicorn.run(app, host='0.0.0.0', port=8000)

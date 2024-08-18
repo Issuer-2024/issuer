@@ -26,6 +26,19 @@
 
         </div>
     </div>
+    <!-- Scroll Buttons -->
+    <div class="fixed right-5 bottom-5 flex flex-col space-y-1">
+        <button onclick="scrollToTop()" class="bg-white p-3 rounded-md shadow-md hover:bg-gray-100">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 text-gray-700">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
+            </svg>
+        </button>
+        <button onclick="scrollToBottom()" class="bg-white p-3 rounded-md shadow-md hover:bg-gray-100">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 text-gray-700">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+        </button>
+    </div>
 <script>
     window.onload = () => {
         fetchChanges();
@@ -33,6 +46,15 @@
         setInterval(fetchChanges, 15000)
         setInterval(fetchCreating, 15000)
     }
-</script>
+
+    function scrollToTop() {
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    function scrollToBottom() {
+        window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'});
+    }
+
+    </script>
 </body>
 </html>
