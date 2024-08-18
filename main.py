@@ -1,4 +1,5 @@
 import json
+import time
 from contextlib import asynccontextmanager
 from datetime import datetime
 
@@ -147,11 +148,12 @@ class OpinionRequest(BaseModel):
 
 
 @app.post("/find-opinion")
-async def find_opinion(request: OpinionRequest):
-    return find_similar_opinion(request.keyword, request.opinion)
-
-
-
+def find_opinion(request: OpinionRequest):
+    time.sleep(0.5)
+    result = find_similar_opinion(request.keyword, request.opinion)
+    if not result:
+        return {"status": 429, "message": "잠시 후에 시도해주세요."}
+    return {"status": 200, "result": result}
 
 
 @app.get("/stream")

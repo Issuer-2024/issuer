@@ -59,7 +59,7 @@
         // Line 타입의 프로그레스 바 생성
         var bar = new ProgressBar.Line(container, {
             strokeWidth: 2,
-            color: '#FFEA82',
+            color: '#000',
             trailColor: '#eee',
             trailWidth: 1,
             easing: 'easeInOut',
@@ -84,21 +84,19 @@
         var eventSource = new EventSource('/stream');
 
         eventSource.onmessage = function (event) {
-            console.log(event.data)
             var data = JSON.parse(event.data);
             var target = "{{ keyword }}";  // 현재 target을 'q'로 설정 (실제 로직에서는 동적으로 설정 가능)
 
             if (data.target === target) {
                 bar.animate(data.ratio / 100);  // 프로그레스 바의 비율 설정
                 document.getElementById('creating-status').innerText = data.message
-                console.log(data.message);
 
                 // 메시지와 관련된 추가 UI 업데이트 로직을 여기에 추가할 수 있습니다.
 
                 if (data.ratio === 100) {
                     setTimeout(function () {
-                        location.reload();  // 완료 후 1초 뒤 새로고침
-                    }, 1000);
+                        location.reload();  // 완료 후 3초 뒤 새로고침
+                    }, 3000);
                 }
             }
         };

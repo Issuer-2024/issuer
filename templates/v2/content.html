@@ -451,6 +451,9 @@
 
                     function sendOpinion() {
                       const opinion = document.getElementById("opinion-text").value  // Replace with your actual opinion text or a variable
+                      const sendButton = document.getElementById('send-opinion-btn')
+                        sendButton.disabled = true;
+                        sendButton.innerText = '로딩중...';
                       fetch('/find-opinion', {
                         method: 'POST',
                         headers: {
@@ -464,11 +467,16 @@
                       .then(response => response.json())
                       .then(data => {
                           document.getElementById('similar-opinion-list').innerHTML = ``
-                          renderSimilarOpinionData(data)
+                          renderSimilarOpinionData(data.result)
                       })
                       .catch((error) => {
-                        console.error('Error:', error);
-                      });
+                        const elem = document.getElementById('similar-opinion-list')
+                          elem.innerHTML = `
+                          <p class="1xl" style="color: #FF0000">요청이 많습니다. 잠시 후에 시도해주세요.</p>`
+                      }).finally(() =>{
+                          sendButton.disabled = false;
+                          sendButton.innerText = '보내기';
+                      })
                     }
 
 
