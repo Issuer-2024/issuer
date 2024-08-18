@@ -3,11 +3,10 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import numpy as np
+from dotenv import load_dotenv
 from redis_om import Migrator
 
 from app.v2.external_request.request_embedding_v2 import EmbeddingV2Executor
-from dotenv import load_dotenv
-
 from app.v2.redis.model.comments_embedding import CommentsEmbedding
 
 load_dotenv()

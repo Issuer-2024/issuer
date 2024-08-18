@@ -1,5 +1,8 @@
+import queue
 import time
 from datetime import datetime, timedelta
+
+from pyee import BaseEventEmitter
 
 from app.v2.content.find_opinion import save_comments_embedding
 from app.v2.content.get_estimated_search_amount import get_estimated_search_amount
@@ -11,6 +14,8 @@ from app.v2.external_request import RequestTrend
 from app.v2.model.content import Content
 from app.v2.redis.redis_util import read_cache_content, save_to_caching, save_creating, remove_creating, read_creating
 
+emitter = BaseEventEmitter()
+
 
 def get_content(q: str):
     caching = read_cache_content(q)
@@ -19,11 +24,9 @@ def get_content(q: str):
     return None
 
 
-def create_content(q: str, background_task):
-    if read_creating(q):
-        return
+def create_content(q: str):
 
-    save_creating(q)
+    emitter.emit('content_loader', {'target': q, 'message': '수집 준비중', 'ratio': 0})
     title = q
     created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -41,12 +44,15 @@ def create_content(q: str, background_task):
                                                                  keyword_groups)[0]['data']
     estimated_search_amount = get_estimated_search_amount(q, trend_search_data)
 
+    emitter.emit('content_loader', {'target': q, 'message': '이슈 수집중', 'ratio': 20})
     a = collect_issues(q)
     b = create_embedding_result(a)
+    emitter.emit('content_loader', {'target': q, 'message': '이슈 요약중', 'ratio': 40})
     c = cluster_issues(b)
     d = create_group_title(c)
     e = create_group_content(c)
 
+    emitter.emit('content_loader', {'target': q, 'message': '여론 분석중', 'ratio': 60})
     (comments_df,
      public_opinion_word_frequency,
      public_opinion_sentiment,
@@ -55,6 +61,7 @@ def create_content(q: str, background_task):
 
     save_comments_embedding(q, comments_df)
 
+    emitter.emit('content_loader', {'target': q, 'message': '보고서 생성중', 'ratio': 80})
     keyword_suggestions_data = get_suggestions_trend_data(q)
 
     table_of_contents = [{'title': "개요", 'depth': 0, 'num': '1'}, {'title': "현재 이슈", 'depth': 0, 'num': '2'}]
@@ -87,11 +94,23 @@ def create_content(q: str, background_task):
                      table_of_public_opinion,
                      public_opinion_trend,
                      public_opinion_summary)
-    save_to_caching(result, background_task)
+    save_to_caching(result)
+    emitter.emit('content_loader', {'target': q, 'message': '완료', 'ratio': 100})
 
     remove_creating(q)
 
 
+event_queue = queue.Queue()
+
+
+@emitter.on('content_loader')
+def event_listener(message):
+
+    creating = read_creating(message['target'])
+    creating.ratio = message['ratio']
+    creating.status = message['message']
+    creating.save()
+    event_queue.put(message)
 
 
 if __name__ == '__main__':
@@ -174,4 +193,3 @@ if __name__ == '__main__':
     # Record the end time of the entire process
     end_time = time.time()
     print(f"Total time taken: {end_time - start_time} seconds")
-

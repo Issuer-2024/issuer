@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Webpage Layout</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/progressbar.js@1.0.1/dist/progressbar.min.js"></script>
 </head>
 <body class="bg-gray-100">
     {% include "header.html" %}
@@ -23,6 +24,8 @@
                     <span class="m-5" style="font-size: 2.25rem; font-weight: 500; height: 1;">
                         생성 중인 문서입니다. 나중에 들어오시면 확인하실 수 있어요🥺
                     </span>
+                    <div id="creating-progress-container" class="rounded-lg" style="width: 70%"></div>
+                    <span id="creating-status" class="text-gray-500">{{ status }}</span>
 
                     <div class="flex gap-3">
                         <div>
@@ -49,5 +52,65 @@
         setInterval(fetchChanges, 15000)
         setInterval(fetchCreating, 15000)
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var container = document.getElementById('creating-progress-container');
+
+        // Line 타입의 프로그레스 바 생성
+        var bar = new ProgressBar.Line(container, {
+            strokeWidth: 2,
+            color: '#FFEA82',
+            trailColor: '#eee',
+            trailWidth: 1,
+            easing: 'easeInOut',
+            duration: 3000,  // 애니메이션을 비활성화하려면 0으로 설정
+            svgStyle: {width: '100%', height: '100%'},
+            from: {color: '#FFEA82'},
+            to: {color: '#ED6A5A'},
+            step: (state, line) => {
+                line.path.setAttribute('stroke', state.color);
+                var value = Math.round(line.value() * 100);
+                if (value === 0) {
+                    line.setText('');
+                } else {
+                    line.setText(value + '%');
+                }
+            }
+        });
+
+        bar.animate({{ ratio / 100 }}); // 초기 값을 0으로 설정
+
+        // SSE 연결
+        var eventSource = new EventSource('/stream');
+
+        eventSource.onmessage = function (event) {
+            console.log(event.data)
+            var data = JSON.parse(event.data);
+            var target = "{{ keyword }}";  // 현재 target을 'q'로 설정 (실제 로직에서는 동적으로 설정 가능)
+
+            if (data.target === target) {
+                bar.animate(data.ratio / 100);  // 프로그레스 바의 비율 설정
+                document.getElementById('creating-status').innerText = data.message
+                console.log(data.message);
+
+                // 메시지와 관련된 추가 UI 업데이트 로직을 여기에 추가할 수 있습니다.
+
+                if (data.ratio === 100) {
+                    setTimeout(function () {
+                        location.reload();  // 완료 후 1초 뒤 새로고침
+                    }, 1000);
+                }
+            }
+        };
+
+        eventSource.onerror = function () {
+            console.error('SSE connection error');
+        };
+
+         window.addEventListener('beforeunload', function () {
+            eventSource.close();
+            console.log('SSE connection closed');
+        });
+    });
 </script>
 </html>

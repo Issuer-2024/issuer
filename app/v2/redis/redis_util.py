@@ -19,7 +19,7 @@ def move_to_db_and_delete_from_cache(content_id: str):
         ContentHash.delete(content_id)
 
 
-def save_to_caching(content: Content, background_tasks: BackgroundTasks):
+def save_to_caching(content: Content):
     content_hash = ContentHash(keyword=content.keyword,
                                created_at=content.created_at,
                                keyword_trend_data=content.keyword_trend_data,
@@ -37,10 +37,12 @@ def save_to_caching(content: Content, background_tasks: BackgroundTasks):
 
 def save_creating(keyword: str):
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    creating_hash = CreatingHash(keyword=keyword, started_at=now)
+    creating_hash = CreatingHash(keyword=keyword, started_at=now, ratio= 0, status="로딩중")
 
     creating_hash.save()
     creating_hash.expire(600)
+
+    return creating_hash
 
 
 def read_creating(keyword: str):
