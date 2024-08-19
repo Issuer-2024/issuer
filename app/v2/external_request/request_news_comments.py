@@ -43,7 +43,7 @@ class RequestNewsComments:
     def get_news_comments(url, num=5):
         media_id, article_id = parse_url(url)
         if not media_id or not article_id:
-            return None
+            return []
         try:
             url = f"https://apis.naver.com/commentBox/cbox/web_naver_list_jsonp.json?ticket=news&pool=cbox5&_callback=&lang=ko&country=KR&objectId=news{media_id}%2C{article_id}&pageSize={num}"
             html = requests.get(url, headers=header)

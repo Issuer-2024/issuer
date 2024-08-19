@@ -101,7 +101,7 @@ def create_content(q: str):
 
 
 event_queue = queue.Queue()
-
+all_q = []
 
 @emitter.on('content_loader')
 def event_listener(message):
@@ -110,7 +110,8 @@ def event_listener(message):
     creating.ratio = message['ratio']
     creating.status = message['message']
     creating.save()
-    event_queue.put(message)
+    for q in all_q:
+        q.put(message)
 
 
 if __name__ == '__main__':

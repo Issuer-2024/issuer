@@ -1,4 +1,5 @@
 import json
+import queue
 import time
 from contextlib import asynccontextmanager
 from datetime import datetime
@@ -14,7 +15,7 @@ from app.v1.request_external_api import get_google_trend_daily_rank
 from app.v2.config.rate_limit import check_rate_limit
 from app.v2.content import get_content, create_content
 from app.v2.content.find_opinion import find_similar_opinion
-from app.v2.content.get_content import event_queue
+from app.v2.content.get_content import event_queue, all_q
 from app.v2.creating.get_creating import get_creating_sep
 from app.v2.keyword_rank import get_keyword_rank
 from app.v2.recently_added.get_recently_added import get_recently_added_sep, get_recently_added_all
@@ -156,16 +157,22 @@ def find_opinion(request: OpinionRequest):
     return {"status": 200, "result": result}
 
 
+
+
+
 @app.get("/stream")
 async def sse(request: Request):
+    q = queue.Queue()
+    all_q.append(q)
+
     async def event_generator():
         while True:
             if await request.is_disconnected():
                 print("Client disconnected")
                 break
 
-            if not event_queue.empty():
-                message = event_queue.get()
+            if not q.empty():
+                message = q.get()
                 yield f"data: {json.dumps(message, ensure_ascii=False)}\n\n"
 
     return StreamingResponse(event_generator(), media_type='text/event-stream')
