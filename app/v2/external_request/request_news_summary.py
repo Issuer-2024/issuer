@@ -18,7 +18,7 @@ def parse_url(url):
 def get_news_summary(url):
     media_id, article_id = parse_url(url)
     if not media_id or not article_id:
-        return None
+        return {'title': '', 'summary': ''}
     try:
         url = f"https://tts.news.naver.com/article/{media_id}/{article_id}/summary"
         response = requests.get(url)
