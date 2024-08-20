@@ -238,7 +238,7 @@
 
                     {% for item in content.public_opinion_word_frequency[:10] %}
                     <tr class="border-b border-gray-200 hover:bg-gray-100">
-                        <td class="py-3 px-6 text-left"><a href="/report?q={{ item.keyword }}">{{ item.keyword }}</a>
+                        <td class="py-3 px-6 text-left">{{ item.keyword }}
                         </td>
                         <td class="py-3 px-6 text-left">{{ item.count }}</td>
                     </tr>
