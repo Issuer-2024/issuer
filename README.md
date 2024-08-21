@@ -23,6 +23,7 @@
 <img src="https://github.com/user-attachments/assets/f31d4169-9a2c-4c6f-b17a-ba50abeb2bb3" width="480" style="max-height: 1440px; object-fit: cover;"/>
 -->
 ## 🔖 WorkFlow
+<img width="1035" alt="image" src="https://github.com/user-attachments/assets/4aaf0df8-9a03-4d74-9b42-cda25844578e">
 
 
 ## 🔖 아키텍처
