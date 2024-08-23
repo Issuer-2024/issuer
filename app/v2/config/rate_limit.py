@@ -14,7 +14,7 @@ def check_rate_limit():
         if api_call_count.count > RATE_LIMIT:
             return {'status': False, 'count': api_call_count.count, 'message': '금일 할당량을 초과했습니다.'}
 
-        api_call_count.count += 1
+        api_call_count.count += 1e
         api_call_count.save()
         return {'status': True, 'count': api_call_count.count}
 

@@ -263,10 +263,16 @@ def get_public_opinion_summary(comments_df):
         'seed': 0
     }
     public_opinion_summary = None
+    try_count = 0
     while public_opinion_summary is None:
+
+        if try_count >= 5:
+            break
+
         public_opinion_summary = chat.execute(request_data)
         if public_opinion_summary is None:
             time.sleep(5)
+        try_count += 1
 
     return public_opinion_summary
 

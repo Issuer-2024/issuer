@@ -22,6 +22,7 @@ class HCX003Chat:
 
         if response.status_code == 200:
             return response.json()['result']['message']['content']
+
         else:
             print("Error : " + response.text)
             return None
