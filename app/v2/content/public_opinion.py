@@ -266,7 +266,7 @@ def get_public_opinion_summary(comments_df):
     try_count = 0
     while public_opinion_summary is None:
 
-        if try_count >= 5:
+        if try_count >= 100:
             break
 
         public_opinion_summary = chat.execute(request_data)
