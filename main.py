@@ -1,4 +1,5 @@
 import json
+import logging
 import queue
 import time
 from contextlib import asynccontextmanager
@@ -82,10 +83,15 @@ async def render_main_v2(request: Request):
     )
 
 
+logging.basicConfig(level=logging.INFO)
+
+
 @app.get("/report")
 async def render_report_v2(q: str, request: Request, background_task: BackgroundTasks):
     content = get_content(q)
     keyword_rank = get_keyword_rank()
+    client_ip = request.headers.get('X-Forwarded-For', request.client.host)
+    logging.info(f"Client IP: {client_ip}")
     if not content:
         rate_limit_info = check_rate_limit()
         if not rate_limit_info['status']:
@@ -155,9 +161,6 @@ def find_opinion(request: OpinionRequest):
     if not result:
         return {"status": 429, "message": "잠시 후에 시도해주세요."}
     return {"status": 200, "result": result}
-
-
-
 
 
 @app.get("/stream")
