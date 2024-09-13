@@ -1,5 +1,7 @@
 # ISSUER
 
+[개발 노션](http://zeldahagoshipda.com](https://www.notion.so/Issuer-53ffc43a593648abb0628da3cc0f27b4?pvs=4)
+
 ## 🛠️사용 기술 및 환경
 * FastAPI
 * Redis
