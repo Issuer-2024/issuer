@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 
 def get_google_trend_daily_rank():
     # RSS 피드 URL
-    url = 'https://trends.google.com/trends/trendingsearches/daily/rss?geo=KR'
+    url = 'https://trends.google.com/trending/rss?geo=KR'
 
     # RSS 피드 데이터 가져오기
     response = requests.get(url)

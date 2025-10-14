@@ -3,7 +3,7 @@ from datetime import datetime
 import pytz
 
 from app.v2.model.creating import Creating
-from app.v2.redis.model.creating_hash import CreatingHash
+from app.v2.redis.model.creating import Creating as CreatingRedisModel
 
 
 def calculate_elapsed_time(created_at_str: str) -> str:
@@ -32,7 +32,7 @@ def calculate_elapsed_time(created_at_str: str) -> str:
 
 def get_creating_sep():
     limit = 10
-    query = CreatingHash.find()
+    query = CreatingRedisModel.find()
     items = sorted([creating for creating in query], key=lambda x: x.started_at, reverse=True)
 
     creating_list = [

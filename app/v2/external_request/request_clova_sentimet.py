@@ -19,4 +19,5 @@ def get_clova_sentiment(content):
     if response.status_code == 200:
         return response.json()
     else:
-        print("Error : " + response.text)
+        print()
+        #print("Error : " + response.text)

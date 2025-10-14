@@ -10,7 +10,6 @@ def get_suggestion_trend(q: str):  # 키워드의 제안 검색어의 일주일 
     one_week_ago = (today - timedelta(days=7)).strftime('%Y-%m-%d')
     today = today.strftime('%Y-%m-%d')
     suggestions = RequestSuggestions.get_suggestions(q)
-    keyword_groups = []
     if len(suggestions) <= 1:
         keyword_groups = [{'groupName': q, 'keywords': [q]}]
     else:

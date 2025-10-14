@@ -1,5 +1,8 @@
 import json
 import http.client
+import os
+
+import numpy as np
 
 
 class EmbeddingExecutor:
@@ -18,16 +21,31 @@ class EmbeddingExecutor:
         }
 
         conn = http.client.HTTPSConnection(self._host)
-        conn.request('POST', '/testapp/v1/api-tools/embedding/clir-sts-dolphin/4b9c8110bed04f15ab171c03233e424a', json.dumps(completion_request), headers)
+        conn.request('POST', '/testapp/v1/api-tools/embedding/clir-sts-dolphin/4b9c8110bed04f15ab171c03233e424a',
+                     json.dumps(completion_request), headers)
         response = conn.getresponse()
         result = json.loads(response.read().decode(encoding='utf-8'))
         conn.close()
         return result
 
+    def _mock_embedding(self):
+        """1024차원 랜덤 mock embedding"""
+        return {
+            "status": {"code": "20000", "message": "OK"},
+            "result": {
+                "embedding": np.random.uniform(-1, 1, 1024).round(7).tolist(),
+                "inputTokens": 4
+            }
+        }
+
     def execute(self, completion_request):
-        res = self._send_request(completion_request)
-        if res['status']['code'] == '20000':
-            return res['result']['embedding']
+        if os.getenv("ENV") == "TEST":
+            res = self._mock_embedding()
         else:
-            print("embedding", res['status']['code'])
-            return 'Error'
+            res = self._send_request(completion_request)
+
+        if res["status"]["code"] == "20000":
+            return res["result"]["embedding"]
+        else:
+            print("embedding", res["status"]["code"])
+            return "Error"
