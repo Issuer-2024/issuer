@@ -1,19 +1,71 @@
 from datetime import datetime
+from enum import Enum
+
 from redis_om import Migrator
 from app.v2.model.content import Content
+from app.v2.redis.model import PickleContent, JSONContent
 from app.v2.redis.redis_util import RedisUtil
-from app.v2.redis.model import JSONContent, PickleContent
 from app.v2.redis.model.creating import Creating
+
+
+class ObjectType(str, Enum):
+    JSON = "json"
+    PICKLE = "pickle"
+
+
+class CompressType(str, Enum):
+    BROTli = "brotli"
+    ZSTD = "zstd"
+    ZLIB = "zlib"
+    NONE = "none"
+
+
+OBJ_MAP = {
+    ObjectType.JSON: JSONContent,
+    ObjectType.PICKLE: PickleContent,
+}
+
+SERIALIZE_FUNC_MAP = {
+    ObjectType.JSON: RedisUtil.json_serialize,
+    ObjectType.PICKLE: RedisUtil.pickle_serialize,
+}
+
+DESERIALIZE_FUNC_MAP = {
+    ObjectType.JSON: RedisUtil.json_deserialize,
+    ObjectType.PICKLE: RedisUtil.pickle_deserialize,
+}
+
+COMPRESS_FUNC_MAP = {
+    CompressType.ZSTD: RedisUtil.compress_zstd,
+    CompressType.BROTli: RedisUtil.compress_brotli,
+    CompressType.ZLIB: RedisUtil.compress_zlib,
+    CompressType.NONE: (lambda x: x),  # 압축 안 하는 경우
+}
+
+DECOMPRESS_FUNC_MAP = {
+    CompressType.ZSTD: RedisUtil.decompress_zstd,
+    CompressType.BROTli: RedisUtil.decompress_brotli,
+    CompressType.ZLIB: RedisUtil.decompress_zlib,
+    CompressType.NONE: (lambda x: x),  # 압축 안 하는 경우
+}
 
 
 class RedisManager:
     @staticmethod
-    def read_content(keyword):
-        return RedisContentManager.read_json_content(keyword)
+    def read_content(
+            keyword: str,
+            object_type: ObjectType = ObjectType.JSON,
+            compress_type: CompressType = CompressType.NONE
+    ):
+        return RedisContentManager.read_content(object_type, compress_type, keyword)
 
     @staticmethod
-    def save_content(content: Content):
-        return RedisContentManager.save_json_content(content)
+    def save_content(
+            content: Content,
+            object_type: ObjectType = ObjectType.JSON,
+            compress_type: CompressType = CompressType.NONE
+    ):
+        return RedisContentManager.save_content(object_type, compress_type, content)
 
     @staticmethod
     def read_creating(keyword):
@@ -57,63 +109,26 @@ class RedisCreatingManager:
 
 class RedisContentManager:
     @staticmethod
-    def save_json_content(content: Content):
-        json_content = JSONContent(keyword=content.keyword,
-                                   created_at=content.created_at,
-                                   keyword_trend_data=content.keyword_trend_data,
-                                   keyword_suggestions_data=content.keyword_suggestions_data,
-                                   public_opinion_sentiment=content.public_opinion_sentiment,
-                                   public_opinion_word_frequency=content.public_opinion_word_frequency,
-                                   table_of_contents=content.table_of_contents,
-                                   body=content.body,
-                                   table_of_public_opinion=content.table_of_public_opinion,
-                                   public_opinion_trend=content.public_opinion_trend,
-                                   public_opinion_summary=content.public_opinion_summary)
-        json_content.save()
-        json_content.expire(7200)
+    def save_content(object_type: ObjectType, compress_type: CompressType, content: Content):
+        obj = OBJ_MAP[object_type]
+        serialize_func = SERIALIZE_FUNC_MAP[object_type]
+        compress_func = COMPRESS_FUNC_MAP[compress_type]
+
+        content_model = obj(keyword=content.keyword,
+                            created_at=content.created_at,
+                            data=serialize_func(content))
+        content_model.savef(compress_func)
+        content_model.expire(7200)
 
     @staticmethod
-    def save_pickle_content(content: Content):
-        pickle_content = PickleContent(keyword=content.keyword,
-                                       created_at=content.created_at,
-                                       keyword_trend_data=content.keyword_trend_data,
-                                       keyword_suggestions_data=content.keyword_suggestions_data,
-                                       public_opinion_sentiment=content.public_opinion_sentiment,
-                                       public_opinion_word_frequency=content.public_opinion_word_frequency,
-                                       table_of_contents=content.table_of_contents,
-                                       body=content.body,
-                                       table_of_public_opinion=content.table_of_public_opinion,
-                                       public_opinion_trend=content.public_opinion_trend,
-                                       public_opinion_summary=content.public_opinion_summary)
-        pickle_content.save()
-        pickle_content.expire(7200)
+    def read_content(object_type: ObjectType, compress_type: CompressType, keyword: str):
+        obj = OBJ_MAP[object_type]
+        deserialize_func = DESERIALIZE_FUNC_MAP[object_type]
+        decompress_func = DECOMPRESS_FUNC_MAP[compress_type]
 
-    @staticmethod
-    def read_json_content(keyword: str, func=None):
-        def noop(data):
-            return data
-
-        if func is None:
-            func = noop
-
-        Migrator().run()  # 마이그레이션 실행
-        keys = JSONContent.find(JSONContent.keyword == keyword).all()  # 키워드에 해당하는 모든 키 찾기
+        keys = obj.find(obj.keyword == keyword).all()
 
         if not keys:
             return None
-
-        # 첫 번째 키에 해당하는 데이터를 압축 해제하여 반환
-        content = JSONContent.get_decompressed(keys[0].pk, func)
+        content = obj.get_decompressed(keys[0].pk, deserialize_func, decompress_func)
         return content
-
-if __name__ == '__main__':
-    import time
-    start = time.time()
-    RedisContentManager.read_json_content("캄보디아 대학생")
-    end = time.time()
-    print(f"캄보디아 대학생 실행 시간: {end - start:.3f}초")
-
-    start = time.time()
-    RedisContentManager.read_json_content("김다현", RedisUtil.decompress_data)
-    end = time.time()
-    print(f"김다현 실행 시간: {end - start:.3f}초")

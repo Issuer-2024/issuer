@@ -123,7 +123,7 @@ async def render_report_v2(q: str, request: Request, background_task: Background
 
     return templates_v2.TemplateResponse(
         request=request, name="report.html", context={
-            'content': content,
+            'content': content.data,
             'keyword_rank': keyword_rank
         }
     )

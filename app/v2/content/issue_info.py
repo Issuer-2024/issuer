@@ -13,12 +13,12 @@ from app.v2.external_request.request_news_comments import RequestNewsComments
 def collect_issues(q: str):
     naver_news_response = get_naver_news(q, 100, 1, sort='sim')
     news_items = naver_news_response.json().get('items', [])
-    news_items = sorted(news_items, key=lambda news_item: RequestNewsComments.get_news_comments_num(news_item['link']), reverse=True)
+    news_items = sorted(news_items, key=lambda news_item: RequestNewsComments.get_news_comments_num(news_item['link']),
+                        reverse=True)
     return news_items[:20]
 
 
 def create_embedding_result(issues: list):
-
     embedding_executor = EmbeddingExecutor(
         host='clovastudio.apigw.ntruss.com',
         api_key=os.getenv("CLOVA_EMBEDDING_CLIENT_KEY"),
@@ -58,6 +58,18 @@ def cluster_issues(embedding_results):
         if label not in clustered_issues:
             clustered_issues[label] = []
         clustered_issues[label].append(item)
+
+    # --- TEST 환경이면 강제로 1000개의 군집으로 나누기 ---
+    if os.getenv("ENV") == "TEST":
+        total_items = list(items)
+        n_clusters = 1000
+        clusters = {i: [] for i in range(n_clusters)}
+
+        # 라운드로빈 방식으로 아이템을 10개 클러스터에 분배
+        for idx, item in enumerate(total_items):
+            clusters[idx % n_clusters].append(item)
+
+        return clusters
 
     return clustered_issues
 

@@ -1,3 +1,5 @@
+import json
+import pprint
 from datetime import datetime, timedelta
 
 from pyee import BaseEventEmitter
@@ -115,3 +117,8 @@ def event_listener(message):
     creating.save()
     for q in all_q:
         q.put(message)
+
+
+if __name__ == '__main__':
+    emitter = BaseEventEmitter()
+    create_content("코스피")

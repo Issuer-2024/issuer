@@ -55,7 +55,3 @@ def get_suggestions_trend_data(q: str):
         suggestion_entire_data[i]['trend_proportion'] = suggestion_entire_data[i]['score'] / (total_score + 1) * 100
     suggestion_entire_data.sort(key=lambda x: x['search_amount'], reverse=True)
     return suggestion_entire_data
-
-
-if __name__ == '__main__':
-    print(get_suggestions_trend_data("슈가"))
