@@ -16,14 +16,14 @@ from app.v1.request_external_api import get_google_trend_daily_rank
 from app.v2.config.rate_limit import check_rate_limit
 from app.v2.content import get_content, create_content
 from app.v2.content.find_opinion import find_similar_opinion
-from app.v2.content.get_content import event_queue, all_q
+from app.v2.content.get_content import all_q
 from app.v2.creating.get_creating import get_creating_sep
 from app.v2.keyword_rank import get_keyword_rank
 from app.v2.recently_added.get_recently_added import get_recently_added_sep, get_recently_added_all
 from app.v2.redis.redis_connection import connect_redis
 from fastapi.responses import StreamingResponse
 
-from app.v2.redis.redis_util import read_creating, save_creating
+from app.v2.redis.redis_manager import RedisManager
 
 
 @asynccontextmanager
@@ -97,7 +97,7 @@ async def render_report_v2(q: str, request: Request, background_task: Background
         if not rate_limit_info['status']:
             return rate_limit_info['message']
 
-        creating = read_creating(q)
+        creating = RedisManager.read_creating(q)
         if creating:
             return templates_v2.TemplateResponse(
                 request=request, name="creating.html", context={
@@ -109,7 +109,7 @@ async def render_report_v2(q: str, request: Request, background_task: Background
                 }
             )
         if not creating:
-            creating = save_creating(q)
+            creating = RedisManager.save_creating(q)
             background_task.add_task(create_content, q)
             return templates_v2.TemplateResponse(
                 request=request, name="creating.html", context={
@@ -123,7 +123,7 @@ async def render_report_v2(q: str, request: Request, background_task: Background
 
     return templates_v2.TemplateResponse(
         request=request, name="report.html", context={
-            'content': content,
+            'content': content.data,
             'keyword_rank': keyword_rank
         }
     )

@@ -3,7 +3,7 @@ from datetime import datetime
 import pytz
 
 from app.v2.model.recently_added import RecentlyAdded
-from app.v2.redis.model import ContentHash
+from app.v2.redis.model import JSONContent
 
 
 def calculate_elapsed_time(created_at_str: str) -> str:
@@ -32,7 +32,7 @@ def calculate_elapsed_time(created_at_str: str) -> str:
 
 def get_recently_added_sep():
     limit = 10
-    query = ContentHash.find()
+    query = JSONContent.find()
     items = sorted([content for content in query], key=lambda x: x.created_at, reverse=True)
 
     recently_added_list = [
@@ -46,7 +46,7 @@ def get_recently_added_sep():
 
 
 def get_recently_added_all():
-    query = ContentHash.find()
+    query = JSONContent.find()
     items = sorted([content for content in query], key=lambda x: x.created_at, reverse=True)
 
     recently_added_list = [

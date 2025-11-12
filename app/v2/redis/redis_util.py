@@ -1,83 +1,114 @@
-import time
-from datetime import datetime
+import json
+import base64
+import pickle
+import zlib
 
-import pytz
-from redis_om import Migrator
-
-from app.v2.model.content import Content
-from app.v2.redis.model import ContentHash
-from app.v2.redis.model.creating_hash import CreatingHash
-from app.v2.redis.redis_connection import db_redis
-from fastapi import BackgroundTasks
+import brotli
+import zstandard as zstd
 
 
-def move_to_db_and_delete_from_cache(content_id: str):
-    time.sleep(3600)  # 1 hour
-    content = ContentHash.get(content_id)
-    if content:
-        db_redis.hset(f"content:{content_id}", mapping=content.dict())
-        ContentHash.delete(content_id)
+class RedisUtil:
+    # ---------- 공통 유틸 ----------
+    @staticmethod
+    def _ensure_bytes(data: any) -> bytes:
+        """bytes | str | (dict/list 등 JSON 직렬화 대상) → bytes"""
+        if isinstance(data, (bytes, bytearray, memoryview)):
+            return bytes(data)
+        if isinstance(data, str):
+            return data.encode("utf-8")
+        # dict/list 등은 JSON 문자열로 변환
+        return json.dumps(data, ensure_ascii=False).encode("utf-8")
 
+    @staticmethod
+    def _text_or_bytes(raw_bytes: bytes):
+        """
+        UTF-8로 디코드 후 JSON 여부만 확인하고,
+        JSON이면 문자열(str), 아니면 bytes를 반환(기존 zlib 구현과 동일 정책).
+        """
+        try:
+            text = raw_bytes.decode("utf-8")
+            # JSON 여부만 확인 (파싱 결과는 버리고 문자열을 반환)
+            json.loads(text)
+            return text
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            return raw_bytes
 
-def save_to_caching(content: Content):
-    content_hash = ContentHash(keyword=content.keyword,
-                               created_at=content.created_at,
-                               keyword_trend_data=content.keyword_trend_data,
-                               keyword_suggestions_data=content.keyword_suggestions_data,
-                               public_opinion_sentiment=content.public_opinion_sentiment,
-                               public_opinion_word_frequency=content.public_opinion_word_frequency,
-                               table_of_contents=content.table_of_contents,
-                               body=content.body,
-                               table_of_public_opinion=content.table_of_public_opinion,
-                               public_opinion_trend=content.public_opinion_trend,
-                               public_opinion_summary=content.public_opinion_summary)
-    content_hash.save()
-    content_hash.expire(7200)
+    # ---------- zlib (기존) ----------
+    @staticmethod
+    def compress_zlib(data: any) -> str:
+        raw = RedisUtil._ensure_bytes(data)
+        compressed = zlib.compress(raw)
+        return base64.b64encode(compressed).decode("utf-8")
 
+    @staticmethod
+    def decompress_zlib(encoded: str):
+        compressed = base64.b64decode(encoded)
+        raw = zlib.decompress(compressed)
+        return RedisUtil._text_or_bytes(raw)
 
-def save_creating(keyword: str):
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    creating_hash = CreatingHash(keyword=keyword, started_at=now, ratio= 0, status="로딩중")
+    # ---------- zstd ----------
+    @staticmethod
+    def compress_zstd(data: any, level: int = 3) -> str:
+        raw = RedisUtil._ensure_bytes(data)
+        cctx = zstd.ZstdCompressor(level=level)
+        compressed = cctx.compress(raw)
+        return base64.b64encode(compressed).decode("utf-8")
 
-    creating_hash.save()
-    creating_hash.expire(600)
+    @staticmethod
+    def decompress_zstd(encoded: str):
+        compressed = base64.b64decode(encoded)
+        dctx = zstd.ZstdDecompressor()
+        raw = dctx.decompress(compressed)
+        return RedisUtil._text_or_bytes(raw)
 
-    return creating_hash
+    # ---------- brotli ----------
+    @staticmethod
+    def compress_brotli(data: any, quality: int = 5, mode: str = "text") -> str:
+        raw = RedisUtil._ensure_bytes(data)
+        # mode: "text" | "font" | "generic"
+        mode_map = {"text": brotli.MODE_TEXT, "font": brotli.MODE_FONT, "generic": brotli.MODE_GENERIC}
+        compressed = brotli.compress(raw, quality=quality, mode=mode_map.get(mode, brotli.MODE_TEXT))
+        return base64.b64encode(compressed).decode("utf-8")
 
+    @staticmethod
+    def decompress_brotli(encoded: str):
+        compressed = base64.b64decode(encoded)
+        raw = brotli.decompress(compressed)
+        return RedisUtil._text_or_bytes(raw)
 
-def read_creating(keyword: str):
-    Migrator().run()
-    keys = CreatingHash.find(CreatingHash.keyword == keyword).all()
-    if not keys:
-        return None
-    creating = [CreatingHash.get(key.pk) for key in keys]
-    return creating[0]
+    # # ---------- snappy ----------
+    # @staticmethod
+    # def compress_snappy(data: any) -> str:
+    #     raw = RedisUtil._ensure_bytes(data)
+    #     compressed = snappy.compress(raw)
+    #     return base64.b64encode(compressed).decode("utf-8")
+    #
+    # @staticmethod
+    # def decompress_snappy(encoded: str):
+    #     compressed = base64.b64decode(encoded)
+    #     raw = snappy.uncompress(compressed)
+    #     return RedisUtil._text_or_bytes(raw)
 
+    # ---------- JSON / Pickle ----------
+    @staticmethod
+    def json_serialize(data: any) -> str:
+        # 객체 → dict 변환 시도
+        if hasattr(data, "model_dump"):      # pydantic v2
+            data = data.model_dump()
+        elif hasattr(data, "dict"):          # pydantic v1
+            data = data.dict()
+        elif not isinstance(data, (dict, list)):
+            data = vars(data)  # 또는 data.__dict__
+        return json.dumps(data, ensure_ascii=False)
 
-def remove_creating(keyword: str):
-    Migrator().run()
-    keys = CreatingHash.find(CreatingHash.keyword == keyword).all()
-    if not keys:
-        return
-    for key in keys:
-        CreatingHash.delete(key.pk)
+    @staticmethod
+    def json_deserialize(data: str) -> any:
+        return json.loads(data)
 
+    @staticmethod
+    def pickle_serialize(data: any) -> bytes:
+        return pickle.dumps(data, protocol=pickle.HIGHEST_PROTOCOL)
 
-# def read_cache_content(keyword: str):
-#     Migrator().run()
-#     keys = ContentHash.find(ContentHash.keyword == keyword).all()
-#     if not keys:
-#         return None
-#     contents = [ContentHash.get(key.pk) for key in keys]
-#     return contents[0]
-
-def read_cache_content(keyword: str):
-    Migrator().run()  # 마이그레이션 실행
-    keys = ContentHash.find(ContentHash.keyword == keyword).all()  # 키워드에 해당하는 모든 키 찾기
-
-    if not keys:
-        return None
-
-    # 첫 번째 키에 해당하는 데이터를 압축 해제하여 반환
-    content = ContentHash.get_decompressed(keys[0].pk)
-    return content
+    @staticmethod
+    def pickle_deserialize(data: bytes) -> any:
+        return pickle.loads(data)

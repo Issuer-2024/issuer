@@ -1,5 +1,8 @@
 import json
 import http.client
+import os
+
+import numpy as np
 
 
 class EmbeddingV2Executor:
@@ -24,7 +27,20 @@ class EmbeddingV2Executor:
         conn.close()
         return result
 
+    def _mock_embedding(self):
+        """1024차원 랜덤 mock embedding"""
+        return {
+            "status": {"code": "20000", "message": "OK"},
+            "result": {
+                "embedding": np.random.uniform(-1, 1, 1024).round(7).tolist(),
+                "inputTokens": 4
+            }
+        }
+
     def execute(self, completion_request):
+        if os.getenv("ENV") == "TEST":
+            return self._mock_embedding()
+
         res = self._send_request(completion_request)
         if res['status']['code'] == '20000':
             return res['result']['embedding']
