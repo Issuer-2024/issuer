@@ -26,6 +26,7 @@ def get_content(keyword: str):
 
 
 def create_content(q: str):
+    print(q)
     emitter.emit('content_loader', {'target': q, 'message': '수집 준비중', 'ratio': 0})
     title = q
     created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

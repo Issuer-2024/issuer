@@ -4,6 +4,7 @@ import queue
 import time
 from contextlib import asynccontextmanager
 from datetime import datetime
+from threading import Thread
 
 import uvicorn
 from dotenv import load_dotenv
@@ -20,6 +21,7 @@ from app.v2.content.get_content import all_q
 from app.v2.creating.get_creating import get_creating_sep
 from app.v2.keyword_rank import get_keyword_rank
 from app.v2.recently_added.get_recently_added import get_recently_added_sep, get_recently_added_all
+from app.v2.redis.pubsub.worker import enqueue_issue_job, worker_loop
 from app.v2.redis.redis_connection import connect_redis
 from fastapi.responses import StreamingResponse
 
@@ -28,9 +30,13 @@ from app.v2.redis.redis_manager import RedisManager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # 1) Redis 연결
     connect_redis()
+
+    # 2) worker를 데몬 쓰레드로 실행
+    t = Thread(target=worker_loop, daemon=True)
+    t.start()
     yield
-    # Clean up the ML models and release the resources
 
 
 load_dotenv()
@@ -110,7 +116,8 @@ async def render_report_v2(q: str, request: Request, background_task: Background
             )
         if not creating:
             creating = RedisManager.save_creating(q)
-            background_task.add_task(create_content, q)
+            # background_task.add_task(create_content, q)
+            enqueue_issue_job(q)
             return templates_v2.TemplateResponse(
                 request=request, name="creating.html", context={
                     'keyword': q,

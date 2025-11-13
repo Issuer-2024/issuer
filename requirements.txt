@@ -14,3 +14,6 @@ numpy~=1.26.4
 pydantic~=2.7.4
 pyee~=11.1.0
 pytest~=8.2.2
+Brotli~=1.1.0
+zstandard~=0.25.0
+redis~=5.0.8
