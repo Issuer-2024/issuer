@@ -21,7 +21,7 @@ from app.v2.content.get_content import all_q
 from app.v2.creating.get_creating import get_creating_sep
 from app.v2.keyword_rank import get_keyword_rank
 from app.v2.recently_added.get_recently_added import get_recently_added_sep, get_recently_added_all
-from app.v2.redis.pubsub.worker import enqueue_issue_job, worker_loop
+from app.v2.redis.job.worker import enqueue_issue_job, worker_loop
 from app.v2.redis.redis_connection import connect_redis
 from fastapi.responses import StreamingResponse
 
