@@ -2,6 +2,8 @@ import os
 
 import requests
 
+from app.v2.external_request.clova_rate_limiter import ClovaRateLimiter
+
 
 class CompletionExecutor:
     def __init__(self, host, api_key, api_key_primary_val, request_id):
@@ -59,12 +61,14 @@ class CompletionExecutor:
         }
 
         try:
-            response = requests.post(
-                f"{self._host}/testapp/v1/chat-completions/HCX-DASH-001",
-                headers=headers,
-                json=completion_request,
-                timeout=15
-            )
+            with ClovaRateLimiter() as limiter:
+                response = requests.post(
+                    f"{self._host}/testapp/v1/chat-completions/HCX-DASH-001",
+                    headers=headers,
+                    json=completion_request,
+                    timeout=15
+                )
+                limiter.update_from_response(response)
 
             if response.status_code == 200:
                 return response.json()['result']['message']['content']

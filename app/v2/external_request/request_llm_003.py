@@ -2,6 +2,8 @@ import os
 
 import requests
 
+from app.v2.external_request.clova_rate_limiter import ClovaRateLimiter
+
 
 class HCX003Chat:
     def __init__(self, host, api_key, api_key_primary_val, request_id):
@@ -83,8 +85,14 @@ class HCX003Chat:
             'Accept': 'application/json'
         }
 
-        response = requests.post(self._host + '/testapp/v1/chat-completions/HCX-003',
-                                 headers=headers, json=completion_request)
+        try:
+            with ClovaRateLimiter() as limiter:
+                response = requests.post(self._host + '/testapp/v1/chat-completions/HCX-003',
+                                         headers=headers, json=completion_request)
+                limiter.update_from_response(response)
+        except Exception as e:
+            print("CLOVA request blocked:", e)
+            return None
 
         if response.status_code == 200:
             return response.json()['result']['message']['content']
@@ -92,5 +100,4 @@ class HCX003Chat:
         else:
             print("Error : " + response.text)
             return None
-
 
