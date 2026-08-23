@@ -5,7 +5,7 @@ import pandas as pd
 from konlpy.tag import Okt
 
 from app.v2.external_request import HCX003Chat
-from app.v2.external_request.request_clova_sentimet import get_clova_sentiment
+from app.v2.external_request.request_clova_sentiment import get_clova_sentiment
 from app.v2.external_request.request_news_comments import RequestNewsComments
 from dotenv import load_dotenv
 
