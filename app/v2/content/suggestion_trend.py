@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 from app.v2.external_request import RequestTrend
 from app.v2.external_request.request_naver_ad import get_search_amount
-from app.v2.external_request.request_suggestions import RequestSuggestions
+from app.v2.external_request.suggestion import RequestSuggestions
 
 
 def get_suggestion_trend(q: str):  # 키워드의 제안 검색어의 일주일 트랜드 데이터를 가져옵니다.
